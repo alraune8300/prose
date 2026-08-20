@@ -1,0 +1,6 @@
+{
+  "name": "Không gian viết",
+  "description": "Thanh lịch và tối giản - Không gian sáng tác văn bản không xao nhãng",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

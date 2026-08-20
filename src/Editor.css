@@ -1,0 +1,184 @@
+/* Editor-specific styles for tiptap/ProseMirror */
+.kgv-editor,
+.ProseMirror.kgv-editor {
+  outline: none;
+  line-height: 1.8;
+  letter-spacing: 0.01em;
+  word-spacing: 0.05em;
+  min-height: 60vh;
+  direction: ltr !important;
+  text-align: left;
+  pointer-events: auto !important;
+  user-select: text !important;
+  -webkit-user-select: text !important;
+  caret-color: currentColor;
+  font-family: var(--kgv-body-font, 'Merriweather', Georgia, serif);
+}
+
+.ProseMirror:focus {
+  outline: none;
+}
+
+/* Prevent page break gaps from bleeding into text by giving blocks an opaque background */
+.kgv-editor > * {
+  background-color: var(--page-surface, transparent);
+  position: relative;
+  z-index: 1;
+}
+
+.kgv-editor h1,
+.kgv-editor h2,
+.kgv-editor h3,
+.kgv-editor h4,
+.kgv-editor h5,
+.kgv-editor h6,
+.ProseMirror h1,
+.ProseMirror h2,
+.ProseMirror h3,
+.ProseMirror h4,
+.ProseMirror h5,
+.ProseMirror h6 {
+  font-family: var(--kgv-heading-font, 'Playfair Display', serif) !important;
+}
+
+.kgv-editor h1 *,
+.kgv-editor h2 *,
+.kgv-editor h3 *,
+.kgv-editor h4 *,
+.kgv-editor h5 *,
+.kgv-editor h6 *,
+.ProseMirror h1 *,
+.ProseMirror h2 *,
+.ProseMirror h3 *,
+.ProseMirror h4 *,
+.ProseMirror h5 *,
+.ProseMirror h6 * {
+  font-family: inherit !important;
+}
+
+.kgv-editor h1 {
+  font-size: 2em;
+  font-weight: 700;
+  margin: 0.8em 0 0.4em;
+  line-height: 1.3;
+}
+
+.kgv-editor h2 {
+  font-size: 1.5em;
+  font-weight: 700;
+  margin: 0.7em 0 0.3em;
+  line-height: 1.3;
+}
+
+.kgv-editor h3 {
+  font-size: 1.2em;
+  font-weight: 600;
+  margin: 0.6em 0 0.3em;
+  line-height: 1.4;
+}
+
+.kgv-editor p,
+.kgv-editor li,
+.kgv-editor blockquote,
+.ProseMirror p,
+.ProseMirror li,
+.ProseMirror blockquote {
+  font-family: var(--kgv-body-font, 'Merriweather', Georgia, serif);
+}
+
+.kgv-editor code,
+.kgv-editor pre,
+.ProseMirror code,
+.ProseMirror pre {
+  font-family: var(--kgv-mono-font, 'JetBrains Mono', monospace) !important;
+}
+
+.kgv-editor code *,
+.kgv-editor pre *,
+.ProseMirror code *,
+.ProseMirror pre * {
+  font-family: inherit !important;
+}
+
+.kgv-editor p {
+  margin: 0 0 0.6em;
+}
+
+.kgv-editor ul,
+.kgv-editor ol {
+  padding-left: 1.5em;
+  margin: 0.5em 0;
+}
+
+.kgv-editor ul { list-style: disc !important; list-style-type: disc !important; }
+.kgv-editor ul li { list-style-type: disc !important; }
+.kgv-editor ol { list-style: decimal !important; list-style-type: decimal !important; }
+.kgv-editor ol li { list-style-type: decimal !important; }
+
+.kgv-editor ul ul, .kgv-editor ul ul li { list-style-type: circle !important; }
+.kgv-editor ol ol, .kgv-editor ol ol li { list-style-type: lower-alpha !important; }
+.kgv-editor ul ol, .kgv-editor ol ul, .kgv-editor ul ol li, .kgv-editor ol ul li { list-style-type: lower-roman !important; }
+
+.kgv-editor li p { margin: 0; }
+.kgv-editor li {
+  margin: 0.2em 0;
+}
+
+.kgv-editor a {
+  color: #2563eb;
+  text-decoration: underline;
+}
+
+.kgv-editor::selection {
+  background: rgba(37, 99, 235, 0.15);
+}
+
+.kgv-editor:empty::before,
+.ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  color: #a8a8a8;
+  pointer-events: none;
+  font-style: italic;
+}
+
+.ProseMirror p.is-editor-empty:first-child::before {
+  float: left;
+  height: 0;
+}
+
+.kgv-editor .kgv-footnote-marker {
+  font-size: 0.7em;
+  vertical-align: super;
+  color: #2563eb;
+  cursor: pointer;
+  font-weight: 600;
+  padding: 0 1px;
+}
+
+.kgv-editor .kgv-footnote-marker:hover {
+  text-decoration: underline;
+}
+
+.kgv-footnotes-section {
+  margin-top: 3rem;
+  padding-top: 1rem;
+  border-top: 1px solid;
+  font-size: 0.85em;
+  line-height: 1.6;
+}
+
+.kgv-footnotes-section ol {
+  padding-left: 1.2em;
+}
+
+.kgv-footnotes-section li {
+  margin: 0.3em 0;
+}
+
+.ProseMirror img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+  display: block;
+  margin: 1rem auto;
+}
