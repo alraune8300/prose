@@ -71,7 +71,7 @@ export default function SearchPanel({ c, uiFont, lang, headingFont, onClose }: S
             onChange={e => setFindText(e.target.value)}
             style={{
               width: '100%',
-              padding: '8px 32px 8px 12px',
+              padding: '8px 64px 8px 12px',
               borderRadius: 8,
               border: `1px solid ${c.borderFaint}`,
               background: 'transparent',
@@ -81,19 +81,37 @@ export default function SearchPanel({ c, uiFont, lang, headingFont, onClose }: S
               outline: 'none',
             }}
           />
-          {findText && (
-            <button
-              onClick={() => setFindText('')}
-              style={{
-                position: 'absolute',
-                right: 8, top: '50%', transform: 'translateY(-50%)',
-                background: 'none', border: 'none', color: c.textFaint,
-                cursor: 'pointer', padding: 4, display: 'flex'
-              }}
-            >
-              <X size={14} />
-            </button>
-          )}
+          <div style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', display: 'flex', alignItems: 'center', gap: 2 }}>
+            {findText && (
+              <>
+                <button
+                  onClick={() => window.dispatchEvent(new CustomEvent('kgv-search-nav', { detail: { direction: 'prev', find: findText, matchCase, wholeWord, regex } }))}
+                  style={{ background: 'none', border: 'none', color: c.textMuted, cursor: 'pointer', padding: 2, display: 'flex' }}
+                  title="Previous match"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
+                </button>
+                <button
+                  onClick={() => window.dispatchEvent(new CustomEvent('kgv-search-nav', { detail: { direction: 'next', find: findText, matchCase, wholeWord, regex } }))}
+                  style={{ background: 'none', border: 'none', color: c.textMuted, cursor: 'pointer', padding: 2, display: 'flex' }}
+                  title="Next match"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </button>
+              </>
+            )}
+            {findText && (
+              <button
+                onClick={() => setFindText('')}
+                style={{
+                  background: 'none', border: 'none', color: c.textFaint,
+                  cursor: 'pointer', padding: '4px 2px', display: 'flex', marginLeft: 2
+                }}
+              >
+                <X size={14} />
+              </button>
+            )}
+          </div>
         </div>
       </div>
 

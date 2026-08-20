@@ -15,7 +15,7 @@ import { SearchHighlightExtension, searchHighlightKey } from './SearchHighlightE
 import { SmartFormatting } from './SmartFormattingExtension';
 import type { ThemeColors, FormatState } from './types';
 import type { Dict } from './i18n';
-import { executeSearchReplace } from './searchReplaceFix';
+import { executeSearchReplace, executeSearchNav } from './searchReplaceFix';
 
 
 type Props = {
@@ -314,6 +314,12 @@ function Editor({
       executeSearchReplace(editor, detail);
     }
     
+    function handleSearchNav(e: Event) {
+      if (!editor) return;
+      const detail = (e as CustomEvent).detail;
+      executeSearchNav(editor, detail);
+    }
+    
     function handleSearchQuery(e: Event) {
       if (!editor) return;
       const detail = (e as CustomEvent).detail;
@@ -343,8 +349,10 @@ function Editor({
     
 
     window.addEventListener('kgv-search-replace', handleSearchReplace);
+    window.addEventListener('kgv-search-nav', handleSearchNav);
     return () => {
       window.removeEventListener('kgv-search-replace', handleSearchReplace);
+      window.removeEventListener('kgv-search-nav', handleSearchNav);
       window.removeEventListener('kgv-search-query', handleSearchQuery);
       window.removeEventListener('kgv-spellcheck', handleSpellcheck);
       window.removeEventListener('kgv-spellcheck-replace', handleSpellcheckReplace);

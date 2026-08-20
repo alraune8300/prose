@@ -123,6 +123,18 @@ export default function App() {
   const [monoFont, setMonoFont] = useState(() => loadMonoFont());
   const [uiFont, setUiFont] = useState('Inter');
   const [customFonts, setCustomFonts] = useState<CustomFont[]>(() => loadCustomFonts());
+  const [injectedGoogleFonts, setInjectedGoogleFonts] = useState<string[]>(() => {
+    try {
+      const raw = localStorage.getItem('kgv-injected-gfonts');
+      return raw ? JSON.parse(raw) : [];
+    } catch { return []; }
+  });
+
+  useEffect(() => {
+    const handleInjected = (e: Event) => setInjectedGoogleFonts((e as CustomEvent).detail);
+    window.addEventListener('kgv-gfont-injected', handleInjected);
+    return () => window.removeEventListener('kgv-gfont-injected', handleInjected);
+  }, []);
   const [customFont, setCustomFont] = useState<CustomFont | null>(() => {
     const list = loadCustomFonts();
     return list.length > 0 ? list[list.length - 1] : null;
@@ -518,8 +530,13 @@ export default function App() {
         fonts.unshift({ family: fam, label: `${fam} (${t.customFontSuffix || 'Tùy chỉnh'})` });
       }
     });
+    injectedGoogleFonts.forEach((fam) => {
+      if (fam && !fonts.some((f) => f.family === fam)) {
+        fonts.unshift({ family: fam, label: `${fam} (Google)` });
+      }
+    });
     return fonts;
-  }, [customFonts, t]);
+  }, [customFonts, injectedGoogleFonts, t]);
   // Sync document body styles with the current active theme
   useEffect(() => {
     document.body.style.background = theme.bg;

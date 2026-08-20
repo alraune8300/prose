@@ -34,7 +34,7 @@ export function getSearchHighlightPlugin() {
            return oldState;
         }
 
-        let decos: Decoration[] = [];
+        const decos: Decoration[] = [];
         let resultsCount = 0;
 
         if (searchTerm) {
@@ -44,7 +44,7 @@ export function getSearchHighlightPlugin() {
             if (wholeWord) {
                 reStr = `\\b${reStr}\\b`;
             }
-            const re = new RegExp(reStr, flags);
+            
             
             tr.doc.descendants((node, pos) => {
               if (node.isText && node.text) {
@@ -61,7 +61,7 @@ export function getSearchHighlightPlugin() {
                 }
               }
             });
-          } catch(e) {}
+          } catch(_e) { /* ignore */ }
         }
         
         if (changed || tr.docChanged) {

@@ -25,6 +25,7 @@ function saveInjectedFont(family: string): void {
     if (!list.includes(family)) {
       list.push(family);
       localStorage.setItem(INJECTED_KEY, JSON.stringify(list));
+      window.dispatchEvent(new CustomEvent('kgv-gfont-injected', { detail: list }));
     }
   } catch { /* ignore */ }
 }
