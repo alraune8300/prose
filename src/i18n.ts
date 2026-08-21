@@ -308,7 +308,7 @@ export const translations: { en: Strings } & Record<Lang, Partial<Strings>> = {
     subline: 'A quiet space for essays, stories, and long-form writing. Organise drafts, format with intention, and focus.',
     newDocument: '+ New Document',
     newDoc: 'New Doc',
-    importFile: '↑ Import File',
+    
     recentFiles: 'Recent',
     documents: 'documents',
     words: 'words',
@@ -320,7 +320,7 @@ export const translations: { en: Strings } & Record<Lang, Partial<Strings>> = {
     fonts: 'Fonts',
     arrange: '⠿ Arrange',
     timer: '◷ Timer',
-    preview: '◉ Preview',
+    
     insertImage: 'Insert Image',
     imageTooLarge: 'Image size exceeds 25MB limit.',
   versionHistory: 'Version History',
@@ -370,7 +370,7 @@ export const translations: { en: Strings } & Record<Lang, Partial<Strings>> = {
     resetToDefault: 'Reset to default',
     fontRoles: 'Font roles',
     availableFonts: 'Available fonts',
-    importFile: 'Import File (DOCX, PDF, MD, HTML, TXT)',
+    
     exportPdf: 'Export as PDF',
     exportDocx: 'Export as DOCX (Word)',
     exportHtml: 'Export as HTML',
@@ -378,24 +378,24 @@ export const translations: { en: Strings } & Record<Lang, Partial<Strings>> = {
     exportTxt: 'Export as Plain Text (.txt)',
     backupJson: 'Backup Workspace (JSON)',
     printDoc: 'Print Document',
-    done: 'Done',
-    duration: 'Duration',
-    min: 'min',
+    
+    
+    
     clickToBrowse: 'or click to browse',
     appName: 'Prose · Writing app',
     showFormatRibbon: 'Show Format Ribbon',
     exit: 'Exit',
     exitFocusMode: 'Exit Focus Mode',
     exitPreviewMode: 'Exit Preview Mode',
-    preview: 'Preview',
+    
     customFonts: 'Custom fonts',
     dropFontHere: 'Drop font file here',
     orClickToBrowse: 'or click to browse',
     copyToClipboard: 'Copy to clipboard',
     copied: 'Copied!',
     downloadAs: 'Download as',
-    duration: 'Duration',
-    min: 'min',
+    
+    
     focusSessionInProgress: 'Focus session in progress',
     sessionComplete: 'Session complete!',
     reset: 'Reset',
@@ -412,7 +412,7 @@ export const translations: { en: Strings } & Record<Lang, Partial<Strings>> = {
     pageless: 'Pageless',
     pages2: 'Pages',
     dragToReorder: 'Drag sections to reorder',
-    done: 'Done',
+    
     arrangeMode: 'Arrange mode',
     dndMode: 'Arrange',
     exitDndMode: 'Exit arrange mode',
@@ -613,7 +613,7 @@ export const translations: { en: Strings } & Record<Lang, Partial<Strings>> = {
     subline: 'Không gian yên tĩnh cho tiểu luận, truyện và viết lách dài. Tổ chức bản thảo, định dạng có chủ đích và tập trung.',
     newDocument: '+ Tài liệu mới',
     newDoc: 'Tài liệu mới',
-    importFile: '↑ Nhập tệp',
+    
     recentFiles: 'Gần đây',
     documents: 'tài liệu',
     words: 'từ',
@@ -625,7 +625,7 @@ export const translations: { en: Strings } & Record<Lang, Partial<Strings>> = {
     fonts: 'Phông chữ',
     arrange: '⠿ Sắp xếp',
     timer: '◷ Hẹn giờ',
-    preview: '◉ Xem trước',
+    
     insertImage: 'Chèn ảnh',
     imageTooLarge: 'Kích thước ảnh vượt quá giới hạn 25MB.',
   versionHistory: 'Lịch sử phiên bản',
@@ -675,7 +675,7 @@ export const translations: { en: Strings } & Record<Lang, Partial<Strings>> = {
     resetToDefault: 'Đặt lại mặc định',
     fontRoles: 'Vai trò phông chữ',
     availableFonts: 'Phông chữ có sẵn',
-    importFile: 'Nhập tệp (DOCX, PDF, MD, HTML, TXT)',
+    
     exportPdf: 'Xuất PDF',
     exportDocx: 'Xuất DOCX (Word)',
     exportHtml: 'Xuất HTML',
@@ -683,24 +683,24 @@ export const translations: { en: Strings } & Record<Lang, Partial<Strings>> = {
     exportTxt: 'Xuất văn bản (.txt)',
     backupJson: 'Sao lưu (JSON)',
     printDoc: 'In tài liệu',
-    done: 'Xong',
-    duration: 'Thời lượng',
-    min: 'phút',
+    
+    
+    
     clickToBrowse: 'hoặc bấm để chọn',
     appName: 'Prose · Ứng dụng viết',
     showFormatRibbon: 'Hiện thanh định dạng',
     exit: 'Thoát',
     exitFocusMode: 'Thoát chế độ tập trung',
     exitPreviewMode: 'Thoát xem trước',
-    preview: 'Xem trước',
+    
     customFonts: 'Phông chữ tuỳ chỉnh',
     dropFontHere: 'Thả tệp phông chữ vào đây',
     orClickToBrowse: 'hoặc nhấp để duyệt',
     copyToClipboard: 'Sao chép',
     copied: 'Đã sao chép!',
     downloadAs: 'Tải xuống dạng',
-    duration: 'Thời gian',
-    min: 'phút',
+    
+    
     focusSessionInProgress: 'Đang trong phiên tập trung',
     sessionComplete: 'Hoàn thành phiên!',
     reset: 'Đặt lại',
@@ -717,7 +717,7 @@ export const translations: { en: Strings } & Record<Lang, Partial<Strings>> = {
     pageless: 'Không trang',
     pages2: 'Có trang',
     dragToReorder: 'Kéo để sắp xếp lại',
-    done: 'Xong',
+    
     arrangeMode: 'Chế độ sắp xếp',
     dndMode: 'Sắp xếp',
     exitDndMode: 'Thoát chế độ sắp xếp',
@@ -925,7 +925,7 @@ export const translations: { en: Strings } & Record<Lang, Partial<Strings>> = {
     trash: 'Corbeille',
     new: 'Nouveau',
     newDoc: 'Nouveau Doc',
-    importFile: '↑ Importer',
+    
     recentFiles: 'Récents',
     documents: 'documents',
     words: 'mots',
@@ -937,7 +937,7 @@ export const translations: { en: Strings } & Record<Lang, Partial<Strings>> = {
     fonts: 'Polices',
     arrange: '⠿ Organiser',
     timer: '◷ Minuteur',
-    preview: '◉ Aperçu',
+    
     language: 'Langue',
     pages: 'Pages',
     drafts: 'Brouillons',
@@ -978,7 +978,7 @@ export const translations: { en: Strings } & Record<Lang, Partial<Strings>> = {
     resetToDefault: 'Réinitialiser',
     fontRoles: 'Rôles des polices',
     availableFonts: 'Polices disponibles',
-    importFile: 'Importer un fichier (DOCX, PDF, MD, HTML, TXT)',
+    
     exportPdf: 'Exporter en PDF',
     exportDocx: 'Exporter en DOCX (Word)',
     exportHtml: 'Exporter en HTML',
@@ -986,23 +986,23 @@ export const translations: { en: Strings } & Record<Lang, Partial<Strings>> = {
     exportTxt: 'Exporter en texte (.txt)',
     backupJson: 'Sauvegarde (JSON)',
     printDoc: 'Imprimer le document',
-    done: 'Terminé',
-    duration: 'Durée',
-    min: 'min',
+    
+    
+    
     clickToBrowse: 'ou cliquez pour parcourir',
     appName: 'Prose · Application d\'écriture',
     showFormatRibbon: 'Afficher le ruban de format',
     exit: 'Quitter',
 exitFocusMode: 'Quitter le mode focus',    exitPreviewMode: 'Quitter l\'aperçu',
-    preview: 'Aperçu',
+    
     customFonts: 'Polices personnalisées',
     dropFontHere: 'Déposez le fichier de police ici',
     orClickToBrowse: 'ou cliquez pour parcourir',
     copyToClipboard: 'Copier',
     copied: 'Copié!',
     downloadAs: 'Télécharger en',
-    duration: 'Durée',
-    min: 'min',
+    
+    
     focusSessionInProgress: 'Session de concentration en cours',
     sessionComplete: 'Session terminée!',
     reset: 'Réinitialiser',
@@ -1019,7 +1019,7 @@ exitFocusMode: 'Quitter le mode focus',    exitPreviewMode: 'Quitter l\'aperçu'
     pageless: 'Sans page',
     pages2: 'Pages',
     dragToReorder: 'Glissez pour réorganiser',
-    done: 'Terminé',
+    
     arrangeMode: 'Mode organisation',
     dndMode: 'Organiser',
     exitDndMode: 'Quitter le mode organisation',
@@ -1188,7 +1188,7 @@ exitFocusMode: 'Quitter le mode focus',    exitPreviewMode: 'Quitter l\'aperçu'
     trash: 'Papierkorb',
     new: 'Neu',
     newDoc: 'Neues Dok',
-    importFile: '↑ Importieren',
+    
     recentFiles: 'Zuletzt',
     documents: 'Dokumente',
     words: 'Wörter',
@@ -1200,7 +1200,7 @@ exitFocusMode: 'Quitter le mode focus',    exitPreviewMode: 'Quitter l\'aperçu'
     fonts: 'Schriften',
     arrange: '⠿ Anordnen',
     timer: '◷ Timer',
-    preview: '◉ Vorschau',
+    
     language: 'Sprache',
     pages: 'Seiten',
     drafts: 'Entwürfe',
@@ -1241,7 +1241,7 @@ exitFocusMode: 'Quitter le mode focus',    exitPreviewMode: 'Quitter l\'aperçu'
     resetToDefault: 'Zurücksetzen',
     fontRoles: 'Schriftrollen',
     availableFonts: 'Verfügbare Schriften',
-    importFile: 'Datei importieren (DOCX, PDF, MD, HTML, TXT)',
+    
     exportPdf: 'Als PDF exportieren',
     exportDocx: 'Als DOCX (Word) exportieren',
     exportHtml: 'Als HTML exportieren',
@@ -1249,24 +1249,24 @@ exitFocusMode: 'Quitter le mode focus',    exitPreviewMode: 'Quitter l\'aperçu'
     exportTxt: 'Als Text (.txt) exportieren',
     backupJson: 'Sicherung (JSON)',
     printDoc: 'Dokument drucken',
-    done: 'Fertig',
-    duration: 'Dauer',
-    min: 'Min',
+    
+    
+    
     clickToBrowse: 'oder zum Durchsuchen klicken',
     appName: 'Prose · Schreib-App',
     showFormatRibbon: 'Formatierungsleiste anzeigen',
     exit: 'Beenden',
     exitFocusMode: 'Fokusmodus beenden',
     exitPreviewMode: 'Vorschau beenden',
-    preview: 'Vorschau',
+    
     customFonts: 'Eigene Schriften',
     dropFontHere: 'Schriftdatei hier ablegen',
     orClickToBrowse: 'oder klicken zum Durchsuchen',
     copyToClipboard: 'Kopieren',
     copied: 'Kopiert!',
     downloadAs: 'Herunterladen als',
-    duration: 'Dauer',
-    min: 'Min.',
+    
+    
     focusSessionInProgress: 'Fokussitzung läuft',
     sessionComplete: 'Sitzung abgeschlossen!',
     reset: 'Zurücksetzen',
@@ -1283,7 +1283,7 @@ exitFocusMode: 'Quitter le mode focus',    exitPreviewMode: 'Quitter l\'aperçu'
     pageless: 'Seitenlos',
     pages2: 'Seiten',
     dragToReorder: 'Ziehen zum Neuordnen',
-    done: 'Fertig',
+    
     arrangeMode: 'Anordnungsmodus',
     dndMode: 'Anordnen',
     exitDndMode: 'Anordnungsmodus verlassen',
@@ -1452,7 +1452,7 @@ exitFocusMode: 'Quitter le mode focus',    exitPreviewMode: 'Quitter l\'aperçu'
     trash: 'Cestino',
     new: 'Nuovo',
     newDoc: 'Nuovo Doc',
-    importFile: '↑ Importa',
+    
     recentFiles: 'Recenti',
     documents: 'documenti',
     words: 'parole',
@@ -1464,7 +1464,7 @@ exitFocusMode: 'Quitter le mode focus',    exitPreviewMode: 'Quitter l\'aperçu'
     fonts: 'Caratteri',
     arrange: '⠿ Organizza',
     timer: '◷ Timer',
-    preview: '◉ Anteprima',
+    
     language: 'Lingua',
     pages: 'Pagine',
     drafts: 'Bozze',
@@ -1505,7 +1505,7 @@ exitFocusMode: 'Quitter le mode focus',    exitPreviewMode: 'Quitter l\'aperçu'
     resetToDefault: 'Ripristina',
     fontRoles: 'Ruoli carattere',
     availableFonts: 'Caratteri disponibili',
-    importFile: 'Importa file (DOCX, PDF, MD, HTML, TXT)',
+    
     exportPdf: 'Esporta come PDF',
     exportDocx: 'Esporta come DOCX (Word)',
     exportHtml: 'Esporta come HTML',
@@ -1513,24 +1513,24 @@ exitFocusMode: 'Quitter le mode focus',    exitPreviewMode: 'Quitter l\'aperçu'
     exportTxt: 'Esporta come Testo (.txt)',
     backupJson: 'Backup (JSON)',
     printDoc: 'Stampa documento',
-    done: 'Fatto',
-    duration: 'Durata',
-    min: 'min',
+    
+    
+    
     clickToBrowse: 'o clicca per sfogliare',
     appName: 'Prose · App di scrittura',
     showFormatRibbon: 'Mostra barra formattazione',
     exit: 'Esci',
     exitFocusMode: 'Esci dalla modalità focus',
     exitPreviewMode: 'Esci dall\'anteprima',
-    preview: 'Anteprima',
+    
     customFonts: 'Caratteri personalizzati',
     dropFontHere: 'Trascina il file carattere qui',
     orClickToBrowse: 'o clicca per sfogliare',
     copyToClipboard: 'Copia',
     copied: 'Copiato!',
     downloadAs: 'Scarica come',
-    duration: 'Durata',
-    min: 'min',
+    
+    
     focusSessionInProgress: 'Sessione di concentrazione in corso',
     sessionComplete: 'Sessione completata!',
     reset: 'Ripristina',
@@ -1547,7 +1547,7 @@ exitFocusMode: 'Quitter le mode focus',    exitPreviewMode: 'Quitter l\'aperçu'
     pageless: 'Senza pagine',
     pages2: 'Pagine',
     dragToReorder: 'Trascina per riordinare',
-    done: 'Fatto',
+    
     arrangeMode: 'Modalità organizzazione',
     dndMode: 'Organizza',
     exitDndMode: 'Esci dalla modalità organizzazione',
@@ -1716,7 +1716,7 @@ exitFocusMode: 'Quitter le mode focus',    exitPreviewMode: 'Quitter l\'aperçu'
     trash: 'Papelera',
     new: 'Nuevo',
     newDoc: 'Nuevo Doc',
-    importFile: '↑ Importar',
+    
     recentFiles: 'Recientes',
     documents: 'documentos',
     words: 'palabras',
@@ -1728,7 +1728,7 @@ exitFocusMode: 'Quitter le mode focus',    exitPreviewMode: 'Quitter l\'aperçu'
     fonts: 'Fuentes',
     arrange: '⠿ Organizar',
     timer: '◷ Temporizador',
-    preview: '◉ Vista previa',
+    
     language: 'Idioma',
     pages: 'Páginas',
     drafts: 'Borradores',
@@ -1769,7 +1769,7 @@ exitFocusMode: 'Quitter le mode focus',    exitPreviewMode: 'Quitter l\'aperçu'
     resetToDefault: 'Restablecer',
     fontRoles: 'Roles de fuente',
     availableFonts: 'Fuentes disponibles',
-    importFile: 'Importar archivo (DOCX, PDF, MD, HTML, TXT)',
+    
     exportPdf: 'Exportar como PDF',
     exportDocx: 'Exportar como DOCX (Word)',
     exportHtml: 'Exportar como HTML',
@@ -1777,24 +1777,24 @@ exitFocusMode: 'Quitter le mode focus',    exitPreviewMode: 'Quitter l\'aperçu'
     exportTxt: 'Exportar como Texto (.txt)',
     backupJson: 'Copia de seguridad (JSON)',
     printDoc: 'Imprimir documento',
-    done: 'Hecho',
-    duration: 'Duración',
-    min: 'min',
+    
+    
+    
     clickToBrowse: 'o haz clic para buscar',
     appName: 'Prose · Aplicación de escritura',
     showFormatRibbon: 'Mostrar cinta de formato',
     exit: 'Salir',
     exitFocusMode: 'Salir del modo enfoque',
     exitPreviewMode: 'Salir de la vista previa',
-    preview: 'Vista previa',
+    
     customFonts: 'Fuentes personalizadas',
     dropFontHere: 'Soltar archivo de fuente aquí',
     orClickToBrowse: 'o hacer clic para explorar',
     copyToClipboard: 'Copiar',
     copied: '¡Copiado!',
     downloadAs: 'Descargar como',
-    duration: 'Duración',
-    min: 'min',
+    
+    
     focusSessionInProgress: 'Sesión de concentración en curso',
     sessionComplete: '¡Sesión completada!',
     reset: 'Restablecer',
@@ -1811,7 +1811,7 @@ exitFocusMode: 'Quitter le mode focus',    exitPreviewMode: 'Quitter l\'aperçu'
     pageless: 'Sin páginas',
     pages2: 'Páginas',
     dragToReorder: 'Arrastra para reordenar',
-    done: 'Hecho',
+    
     arrangeMode: 'Modo organización',
     dndMode: 'Organizar',
     exitDndMode: 'Salir del modo organización',
@@ -1980,7 +1980,7 @@ exitFocusMode: 'Quitter le mode focus',    exitPreviewMode: 'Quitter l\'aperçu'
     trash: '휴지통',
     new: '새로 만들기',
     newDoc: '새 문서',
-    importFile: '↑ 파일 가져오기',
+    
     recentFiles: '최근',
     documents: '문서',
     words: '단어',
@@ -1992,7 +1992,7 @@ exitFocusMode: 'Quitter le mode focus',    exitPreviewMode: 'Quitter l\'aperçu'
     fonts: '글꼴',
     arrange: '⠿ 정렬',
     timer: '◷ 타이머',
-    preview: '◉ 미리보기',
+    
     language: '언어',
     pages: '페이지',
     drafts: '초안',
@@ -2033,7 +2033,7 @@ exitFocusMode: 'Quitter le mode focus',    exitPreviewMode: 'Quitter l\'aperçu'
     resetToDefault: '기본값으로 재설정',
     fontRoles: '글꼴 역할',
     availableFonts: '사용 가능한 글꼴',
-    importFile: '파일 가져오기 (DOCX, PDF, MD, HTML, TXT)',
+    
     exportPdf: 'PDF로 내보내기',
     exportDocx: 'DOCX (Word)로 내보내기',
     exportHtml: 'HTML로 내보내기',
@@ -2041,24 +2041,24 @@ exitFocusMode: 'Quitter le mode focus',    exitPreviewMode: 'Quitter l\'aperçu'
     exportTxt: '텍스트 (.txt)로 내보내기',
     backupJson: '백업 (JSON)',
     printDoc: '문서 인쇄',
-    done: '완료',
-    duration: '지속 시간',
-    min: '분',
+    
+    
+    
     clickToBrowse: '또는 클릭하여 찾아보기',
     appName: 'Prose · 쓰기 앱',
     showFormatRibbon: '서식 리본 표시',
     exit: '종료',
     exitFocusMode: '집중 모드 종료',
     exitPreviewMode: '미리보기 종료',
-    preview: '미리보기',
+    
     customFonts: '사용자 정의 글꼴',
     dropFontHere: '여기에 글꼴 파일 놓기',
     orClickToBrowse: '또는 클릭하여 찾아보기',
     copyToClipboard: '복사',
     copied: '복사됨!',
     downloadAs: '다음으로 다운로드',
-    duration: '지속 시간',
-    min: '분',
+    
+    
     focusSessionInProgress: '집중 세션 진행 중',
     sessionComplete: '세션 완료!',
     reset: '재설정',
@@ -2075,7 +2075,7 @@ exitFocusMode: 'Quitter le mode focus',    exitPreviewMode: 'Quitter l\'aperçu'
     pageless: '페이지 없음',
     pages2: '페이지',
     dragToReorder: '드래그하여 순서 변경',
-    done: '완료',
+    
     arrangeMode: '정렬 모드',
     dndMode: '정렬',
     exitDndMode: '정렬 모드 종료',
@@ -2244,7 +2244,7 @@ exitFocusMode: 'Quitter le mode focus',    exitPreviewMode: 'Quitter l\'aperçu'
     trash: '回收站',
     new: '新建',
     newDoc: '新建文档',
-    importFile: '↑ 导入文件',
+    
     recentFiles: '最近',
     documents: '文档',
     words: '词',
@@ -2256,7 +2256,7 @@ exitFocusMode: 'Quitter le mode focus',    exitPreviewMode: 'Quitter l\'aperçu'
     fonts: '字体',
     arrange: '⠿ 排列',
     timer: '◷ 计时器',
-    preview: '◉ 预览',
+    
     language: '语言',
     pages: '页面',
     drafts: '草稿',
@@ -2297,7 +2297,7 @@ exitFocusMode: 'Quitter le mode focus',    exitPreviewMode: 'Quitter l\'aperçu'
     resetToDefault: '重置为默认',
     fontRoles: '字体角色',
     availableFonts: '可用字体',
-    importFile: '导入文件 (DOCX, PDF, MD, HTML, TXT)',
+    
     exportPdf: '导出为 PDF',
     exportDocx: '导出为 DOCX (Word)',
     exportHtml: '导出为 HTML',
@@ -2305,24 +2305,24 @@ exitFocusMode: 'Quitter le mode focus',    exitPreviewMode: 'Quitter l\'aperçu'
     exportTxt: '导出为 文本 (.txt)',
     backupJson: '备份 (JSON)',
     printDoc: '打印文档',
-    done: '完成',
-    duration: '时长',
-    min: '分钟',
+    
+    
+    
     clickToBrowse: '或点击浏览',
     appName: 'Prose · 写作应用',
     showFormatRibbon: '显示格式功能区',
     exit: '退出',
     exitFocusMode: '退出专注模式',
     exitPreviewMode: '退出预览',
-    preview: '预览',
+    
     customFonts: '自定义字体',
     dropFontHere: '在此处放置字体文件',
     orClickToBrowse: '或点击浏览',
     copyToClipboard: '复制',
     copied: '已复制!',
     downloadAs: '下载为',
-    duration: '时长',
-    min: '分钟',
+    
+    
     focusSessionInProgress: '专注会话进行中',
     sessionComplete: '会话完成!',
     reset: '重置',
@@ -2339,7 +2339,7 @@ exitFocusMode: 'Quitter le mode focus',    exitPreviewMode: 'Quitter l\'aperçu'
     pageless: '无页',
     pages2: '分页',
     dragToReorder: '拖动以重新排序',
-    done: '完成',
+    
     arrangeMode: '排列模式',
     dndMode: '排列',
     exitDndMode: '退出排列模式',
@@ -2508,7 +2508,7 @@ exitFocusMode: 'Quitter le mode focus',    exitPreviewMode: 'Quitter l\'aperçu'
     trash: 'ゴミ箱',
     new: '新規',
     newDoc: '新規ドキュメント',
-    importFile: '↑ インポート',
+    
     recentFiles: '最近',
     documents: '文書',
     words: '語',
@@ -2520,7 +2520,7 @@ exitFocusMode: 'Quitter le mode focus',    exitPreviewMode: 'Quitter l\'aperçu'
     fonts: 'フォント',
     arrange: '⠿ 整列',
     timer: '◷ タイマー',
-    preview: '◉ プレビュー',
+    
     language: '言語',
     pages: 'ページ',
     drafts: '下書き',
@@ -2561,7 +2561,7 @@ exitFocusMode: 'Quitter le mode focus',    exitPreviewMode: 'Quitter l\'aperçu'
     resetToDefault: 'デフォルトにリセット',
     fontRoles: 'フォントの役割',
     availableFonts: '利用可能なフォント',
-    importFile: 'ファイルのインポート (DOCX, PDF, MD, HTML, TXT)',
+    
     exportPdf: 'PDFとしてエクスポート',
     exportDocx: 'DOCX (Word)としてエクスポート',
     exportHtml: 'HTMLとしてエクスポート',
@@ -2569,24 +2569,24 @@ exitFocusMode: 'Quitter le mode focus',    exitPreviewMode: 'Quitter l\'aperçu'
     exportTxt: 'テキスト (.txt)としてエクスポート',
     backupJson: 'バックアップ (JSON)',
     printDoc: 'ドキュメントを印刷',
-    done: '完了',
-    duration: '期間',
-    min: '分',
+    
+    
+    
     clickToBrowse: 'またはクリックして参照',
     appName: 'Prose · ライティングアプリ',
     showFormatRibbon: 'フォーマットリボンを表示',
     exit: '終了',
     exitFocusMode: '集中モードを終了',
     exitPreviewMode: 'プレビューを終了',
-    preview: 'プレビュー',
+    
     customFonts: 'カスタムフォント',
     dropFontHere: 'フォントファイルをここにドロップ',
     orClickToBrowse: 'またはクリックして参照',
     copyToClipboard: 'コピー',
     copied: 'コピーしました!',
     downloadAs: 'としてダウンロード',
-    duration: '時間',
-    min: '分',
+    
+    
     focusSessionInProgress: '集中セッション進行中',
     sessionComplete: 'セッション完了!',
     reset: 'リセット',
@@ -2603,7 +2603,7 @@ exitFocusMode: 'Quitter le mode focus',    exitPreviewMode: 'Quitter l\'aperçu'
     pageless: 'ページなし',
     pages2: 'ページあり',
     dragToReorder: 'ドラッグして並べ替え',
-    done: '完了',
+    
     arrangeMode: '整列モード',
     dndMode: '整列',
     exitDndMode: '整列モードを終了',

@@ -8,7 +8,8 @@ import SearchPanel from './SearchPanel'
 import VersionHistoryPanel from './VersionHistoryPanel'
 import { Lang, t as i18nT, LANG_LABELS, LANG_FLAGS } from './i18n'
 import { CustomSelect } from './CustomSelect'
-import { Download, Upload, FileText, Printer, Copy, Check, FileCode, FileSpreadsheet, FileDown } from 'lucide-react'
+import { Download, Upload, FileText, Printer, Copy, Check, FileCode, FileSpreadsheet, FileDown } from 'lucide-react';
+import { PanelRightClose } from 'lucide-react'
 
 interface TiptapEditorType {
   chain: () => {
@@ -455,27 +456,11 @@ ${content.split('\n\n').map(para => {
               )
             })}
             <div style={{ flex: 1 }} />
-            <button
-              title="Close panel"
-              onClick={onClose}
-              style={{
-                width: 40, height: 36,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                border: 'none', background: 'none',
-                color: c.textFaint, cursor: 'pointer', fontSize: '1rem',
-                transition: 'color 0.12s',
-              }}
-              onMouseEnter={e => (e.currentTarget.style.color = c.text)}
-              onMouseLeave={e => (e.currentTarget.style.color = c.textFaint)}
-            >
-              ×
-            </button>
           </div>
 
           {/* Content area */}
           <div style={{ flex: 1, height: '100%', maxHeight: '100%', overflowY: 'auto', overflowX: 'hidden', padding: '14px 16px', minWidth: 0, minHeight: 0 }}>
             {/* Header bar with title and explicit collapse button */}
-            {panel !== 'search' && panel !== 'spellcheck' && (
             <div style={{
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
               paddingBottom: 10, marginBottom: 12, borderBottom: `1px solid ${c.borderFaint}`,
@@ -489,7 +474,8 @@ ${content.split('\n\n').map(para => {
                  panel === 'timer' ? (t(lang, 'timer') || 'Timer') :
                  panel === 'history' ? (t(lang, 'versionHistory') || 'History') :
                  panel === 'review' ? ('Review Center') :
-                 panel === 'search' ? 'Find and replace' :
+                 panel === 'search' ? (t(lang, 'findAndReplace') || 'Find and replace') :
+                 panel === 'spellcheck' ? (t(lang, 'spellCheck') || 'Spellcheck') :
                  (t(lang, 'settings') || 'Settings')}
               </span>
               <button
@@ -498,19 +484,15 @@ ${content.split('\n\n').map(para => {
                 title={t(lang, 'collapse') || 'Collapse'}
                 style={{
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  width: 24, height: 24, borderRadius: 6,
-                  border: `1px solid ${c.borderFaint}`,
-                  background: c.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
-                  color: c.textMuted, cursor: 'pointer', fontFamily: uiFont,
-                  fontSize: '0.9rem', lineHeight: 1, transition: 'all 0.15s',
+                  background: 'transparent', border: 'none', color: c.textMuted,
+                  cursor: 'pointer', padding: 4, borderRadius: 4, transition: 'all 0.15s'
                 }}
-                onMouseEnter={e => { e.currentTarget.style.color = c.text; e.currentTarget.style.background = c.accentLight }}
-                onMouseLeave={e => { e.currentTarget.style.color = c.textMuted; e.currentTarget.style.background = c.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)' }}
+                onMouseEnter={e => { e.currentTarget.style.color = c.text; e.currentTarget.style.background = c.isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' }}
+                onMouseLeave={e => { e.currentTarget.style.color = c.textMuted; e.currentTarget.style.background = 'transparent' }}
               >
-                ×
+                <PanelRightClose size={16} />
               </button>
             </div>
-            )}
 
         {/* FORMAT PANEL */}
         {panel === 'format' && (
@@ -1440,11 +1422,11 @@ ${content.split('\n\n').map(para => {
         {/* SETTINGS PANEL */}
 
         {panel === 'spellcheck' && (
-          <SpellcheckPanel c={c} uiFont={uiFont} headingFont={props.headingFont as string || 'Playfair Display'} lang={lang} onClose={onClose} />
+          <SpellcheckPanel c={c} uiFont={uiFont} lang={lang} />
         )}
 
         {panel === 'search' && (
-          <SearchPanel c={c} uiFont={uiFont} lang={lang} headingFont={props.headingFont as string || 'Playfair Display'} onClose={onClose} />
+          <SearchPanel c={c} uiFont={uiFont} lang={lang} />
         )}
 
         {panel === 'settings' && (

@@ -7,7 +7,7 @@ import { getDict, type Dict } from './i18n';
 import { exportTxt, exportJson } from './exportUtils';
 import { importFile, exportToPdf, exportToDocx, exportToHtmlFile, exportToMarkdownFile, exportToJsonBackup } from './fileHandlers';
 import { saveApiKey, loadApiKey, injectGoogleFont, reinjectSavedFonts } from './googleFontsApi';
-import { Minimize2, X, Plus, Minus, ZoomIn, Eye, Maximize2, PanelLeft, Settings } from 'lucide-react';
+import { X, Plus, Minus, ZoomIn, Eye, Maximize2, PanelLeft, Hourglass, Coffee, Settings } from 'lucide-react';
 import { type Editor as TiptapEditorType } from '@tiptap/react';
 import LeftPanel from './LeftPanel';
 import RightPanel from './RightPanel';
@@ -142,7 +142,6 @@ export default function App() {
   const [lang, setLang] = useState<Lang>(() => loadLang());
   const [fontSize, setFontSize] = useState(18);
   const [apiKey, setApiKey] = useState('');
-  const [showRibbon, setShowRibbon] = useState(() => LS.get('kgv-show-ribbon') !== 'false');
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [rightOpen, setRightOpen] = useState(true);
@@ -347,44 +346,8 @@ export default function App() {
     };
   }, [recalculatePagination]);
 
-  const [mobileRibbonStyle, setMobileRibbonStyle] = useState<React.CSSProperties>({});
-
-  // 2. STICKY TOOLBAR ENGINE: Position Format Ribbon dynamically on mobile Viewport
-  useEffect(() => {
-    const viewport = window.visualViewport;
-    if (!viewport) return;
-
-    const updateToolbarPosition = () => {
-      if (window.innerWidth < 768) {
-        setMobileRibbonStyle({
-          position: 'fixed',
-          top: `${viewport.offsetTop}px`,
-          left: `${viewport.offsetLeft}px`,
-          width: `${viewport.width}px`,
-          zIndex: 40,
-          boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-          transition: 'none',
-        });
-      } else {
-        setMobileRibbonStyle({});
-      }
-    };
-
-    viewport.addEventListener('resize', updateToolbarPosition);
-    viewport.addEventListener('scroll', updateToolbarPosition);
-    window.addEventListener('resize', updateToolbarPosition);
-
-    updateToolbarPosition();
-
-    return () => {
-      viewport.removeEventListener('resize', updateToolbarPosition);
-      viewport.removeEventListener('scroll', updateToolbarPosition);
-      window.removeEventListener('resize', updateToolbarPosition);
-    };
-  }, [showRibbon]);
-
   const [viewportAppStyle, setViewportAppStyle] = useState<React.CSSProperties>({});
-  
+
   // 3. LOCK APP VIEWPORT: Prevent virtual keyboard from pushing the entire layout up
   useEffect(() => {
     const viewport = window.visualViewport;
@@ -1684,6 +1647,42 @@ export default function App() {
               <PanelLeft size={18} />
             </button>
 
+            <div className="absolute top-4 right-16 z-50 flex items-center gap-2 pr-2">
+              <WordCountDropdown wordCount={wordCount} charCount={charCount} readMin={Math.ceil(wordCount / 200)} theme={theme} uiFont={uiFont} />
+              <button
+                onClick={handleToggleFocusMode}
+                className="p-1.5 rounded transition-all hover:opacity-80 active:scale-95"
+                style={{
+                  color: isFocusMode ? theme.accent : theme.text,
+                }}
+                title={isFocusMode ? (t.exitFocus || 'Exit Focus') : (t.focus || 'Focus Mode (DND)')}
+              >
+                <Hourglass size={16} />
+              </button>
+              <button
+                onClick={handleTogglePreviewMode}
+                className="p-1.5 rounded transition-all hover:opacity-80 active:scale-95"
+                style={{
+                  color: isPreviewMode ? theme.accent : theme.text,
+                }}
+                title={t.preview || 'Preview Mode'}
+              >
+                <Coffee size={16} />
+              </button>
+              <button
+                onClick={handleToggleTypewriterMode}
+                className="p-1.5 rounded transition-all hover:opacity-80 active:scale-95"
+                style={{
+                  color: typewriterMode ? theme.accent : theme.text,
+                }}
+                title={t.typewriterMode || 'Typewriter Scroll'}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4 14h16M7 18h10M12 14v4M9 10v4M15 10v4M6 10v4M18 10v4M4 8h16v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8zM8 4h8v4H8z"/>
+                </svg>
+              </button>
+            </div>
+
             <button
               onClick={() => {
                 if (rightOpen && rightPanelTab === 'settings') setRightOpen(false);
@@ -1699,8 +1698,6 @@ export default function App() {
             >
               <Settings size={18} />
             </button>
-
-            <WordCountDropdown wordCount={wordCount} charCount={charCount} readMin={Math.ceil(wordCount / 200)} theme={theme} uiFont={uiFont} />
           </>
         )}
 
@@ -1732,143 +1729,49 @@ export default function App() {
           </div>
         )}
 
-        {!isFocusMode && !isPreviewMode && editorInstance && showRibbon && (
-          <div 
-            className="w-full border-b border-neutral-200/20 dark:border-neutral-800/20 my-2 flex items-center justify-between pl-6 pr-4 md:pr-[72px] transition-all duration-200"
-            style={{
-              backgroundColor: 'transparent',
-              ...mobileRibbonStyle
+        {!isFocusMode && !isPreviewMode && editorInstance && (
+          <Toolbar
+            editor={editorInstance as TiptapEditorType}
+            theme={theme}
+            uiFont={uiFont}
+            t={t}
+            lang={lang}
+            selectedFont={formatState.fontFam || docFont}
+            selectedSize={formatState.fontSize || fontSize}
+            availableFonts={availableFonts}
+            onFontChange={(fam) => {
+              (editorInstance as TiptapEditorType)?.chain().focus().setFontFamily(fam).run();
             }}
-          >
-            <div className="flex-1 min-w-0">
-              <Toolbar
-                editor={editorInstance as TiptapEditorType}
-                theme={theme}
-                uiFont={uiFont}
-                t={t}
-                selectedFont={formatState.fontFam || docFont}
-                selectedSize={formatState.fontSize || fontSize}
-                availableFonts={availableFonts}
-                                onFontChange={(fam) => {
-                  (editorInstance as TiptapEditorType)?.chain().focus().setFontFamily(fam).run();
-                }}
-                onSizeChange={(delta) => {
-                  const currentSz = editorInstance?.getAttributes('textStyle')?.fontSize?.replace('px', '') || formatState.fontSize;
-                  const newSz = Math.max(8, Math.min(96, Number(currentSz) + delta));
-                  (editorInstance as TiptapEditorType)?.chain().focus().setFontSize(String(newSz)).run();
-                }}
-                onSizeInput={(sz) => {
-                  (editorInstance as TiptapEditorType)?.chain().focus().setFontSize(String(sz)).run();
-                }}
-        onOpenGithubCloudSave={handleOpenGithubCloudSave}
-                isFocusMode={isFocusMode}
-                onToggleFocusMode={handleToggleFocusMode}
-                isPreviewMode={isPreviewMode}
-                onTogglePreviewMode={handleTogglePreviewMode}
-                typewriterMode={typewriterMode}
-                onToggleTypewriterMode={handleToggleTypewriterMode}
-                onUndo={() => (editorInstance as TiptapEditorType)?.chain().focus().undo().run()}
-                onRedo={() => (editorInstance as TiptapEditorType)?.chain().focus().redo().run()}
-                canUndo={Boolean(!editorInstance?.isDestroyed && (editorInstance as unknown as { can: () => { undo: () => boolean, redo: () => boolean } })?.can?.()?.undo?.())}
-                canRedo={Boolean(!editorInstance?.isDestroyed && (editorInstance as unknown as { can: () => { undo: () => boolean, redo: () => boolean } })?.can?.()?.redo?.())}
-                zoomPercent={zoomPercent}
-                zoomInput={zoomInput}
-                onZoomIn={() => setZoomPercent(prev => Math.min(250, prev + 10))}
-                onZoomOut={() => setZoomPercent(prev => Math.max(50, prev - 10))}
-                onZoomReset={() => setZoomPercent(100)}
-                onZoomInputChange={(val) => {
-                  setZoomInput(val);
-                  const num = parseInt(val, 10);
-                  if (!isNaN(num) && num >= 50 && num <= 250 && val.length >= 2) {
-                    setZoomPercent(num);
-                  }
-                }}
-                onZoomInputBlur={commitZoomInput}
-              />
-            </div>
-            <button
-              type="button"
-              onClick={() => { setShowRibbon(false); LS.set('kgv-show-ribbon', 'false'); }}
-              title="Hide Format Ribbon"
-              aria-label="Hide Format Ribbon"
-              className="p-1.5 rounded-md hover:bg-black/5 dark:hover:bg-white/10 transition-colors ml-2 cursor-pointer shrink-0"
-              style={{ color: theme.muted }}
-            >
-              <Minimize2 size={15} />
-            </button>
-          </div>
-        )}
-
-        {!isFocusMode && !isPreviewMode && !showRibbon && (
-          <div className="flex items-center justify-between px-6 pt-2 select-none">
-            <div
-              className="flex items-center gap-1.5 px-3 py-1 rounded-full border shadow-sm backdrop-blur-md"
-              style={{ backgroundColor: theme.surface, borderColor: theme.border, color: theme.text, fontFamily: uiFont }}
-            >
-              <ZoomIn size={13} className="opacity-70 mr-0.5" />
-              <button
-                type="button"
-                onClick={() => setZoomPercent(prev => Math.max(50, prev - 10))}
-                className="w-5 h-5 flex items-center justify-center rounded hover:bg-black/10 dark:hover:bg-white/10 active:scale-95 transition-all cursor-pointer"
-                title="Thu nhỏ (-10%)"
-              >
-                <Minus size={12} />
-              </button>
-              <div className="flex items-center px-0.5">
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                  value={zoomInput}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    setZoomInput(val);
-                    const num = parseInt(val, 10);
-                    if (!isNaN(num) && num >= 50 && num <= 250 && val.length >= 2) {
-                      setZoomPercent(num);
-                    }
-                  }}
-                  onBlur={commitZoomInput}
-                  className="w-7 text-center text-xs font-semibold bg-transparent outline-none cursor-text"
-                />
-                <span className="text-xs font-semibold opacity-70 -ml-0.5">%</span>
-              </div>
-              <button
-                type="button"
-                onClick={() => setZoomPercent(prev => Math.min(250, prev + 10))}
-                className="w-5 h-5 flex items-center justify-center rounded hover:bg-black/10 dark:hover:bg-white/10 active:scale-95 transition-all cursor-pointer"
-                title="Phóng to (+10%)"
-              >
-                <Plus size={12} />
-              </button>
-              {zoomPercent !== 100 && (
-                <button
-                  type="button"
-                  onClick={() => setZoomPercent(100)}
-                  className="ml-1 text-[10px] font-semibold px-1.5 py-0.5 rounded bg-black/10 dark:bg-white/10 hover:opacity-80 active:scale-95 transition-all cursor-pointer"
-                  title="Đặt lại 100%"
-                >
-                  100%
-                </button>
-              )}
-            </div>
-
-            <button
-              type="button"
-              onClick={() => { setShowRibbon(true); LS.set('kgv-show-ribbon', 'true'); }}
-              className="text-xs px-3 py-1.5 rounded-lg border flex items-center gap-1.5 shadow-sm backdrop-blur-md transition-all hover:scale-105 cursor-pointer"
-              style={{ backgroundColor: theme.surface, borderColor: theme.border, color: theme.text }}
-            >
-              <span>{(t.showFormatRibbon || 'Show Format Ribbon')}</span>
-            </button>
-          </div>
+            onFontAssign={(role, fontName) => {
+              if (role === 'body') handleSelectDocFont(fontName);
+              else if (role === 'heading') handleSelectHeadingFont(fontName);
+              else if (role === 'mono') handleSelectMonoFont(fontName);
+              else if (role === 'ui') handleSelectUiFont(fontName);
+            }}
+            onUndo={() => (editorInstance as TiptapEditorType)?.chain().focus().undo().run()}
+            onRedo={() => (editorInstance as TiptapEditorType)?.chain().focus().redo().run()}
+            canUndo={Boolean(!editorInstance?.isDestroyed && (editorInstance as unknown as { can: () => { undo: () => boolean, redo: () => boolean } })?.can?.()?.undo?.())}
+            canRedo={Boolean(!editorInstance?.isDestroyed && (editorInstance as unknown as { can: () => { undo: () => boolean, redo: () => boolean } })?.can?.()?.redo?.())}
+            zoomPercent={zoomPercent}
+            zoomInput={zoomInput}
+            onZoomIn={() => setZoomPercent(prev => Math.min(250, prev + 10))}
+            onZoomOut={() => setZoomPercent(prev => Math.max(50, prev - 10))}
+            onZoomInputChange={(val) => {
+              setZoomInput(val);
+              const num = parseInt(val, 10);
+              if (!isNaN(num) && num >= 50 && num <= 250 && val.length >= 2) {
+                setZoomPercent(num);
+              }
+            }}
+            onZoomInputBlur={commitZoomInput}
+          />
         )}
 
         {/* Floating Paper Sheet Container & Dynamic Page Format Wrapper with momentum scroll & GPU locking */}
         <div className={`flex-1 overflow-y-auto kgv-scroll kgv-momentum-scroll kgv-hardware-accelerated transition-all duration-300 ease-in-out flex flex-col items-center pb-36 px-3 sm:px-6 ${
           (isFocusMode || isPreviewMode) 
             ? 'pt-12 sm:pt-16 md:pt-20' 
-            : (showRibbon ? 'pt-20 md:pt-5' : 'pt-3 sm:pt-4 md:pt-5')
+            : 'pt-3 sm:pt-4 md:pt-5'
         }`}>
           <div className="w-full flex flex-col items-center transition-all duration-200" style={{ zoom: zoomPercent / 100 }}>
           {(() => {

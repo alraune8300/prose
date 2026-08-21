@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { PanelRightClose, Info } from 'lucide-react';
+import { Info } from 'lucide-react';
 import { Lang, LANG_LABELS, LANG_FLAGS, t } from './i18n';
 import nspell from 'nspell';
 
@@ -9,12 +9,12 @@ interface SpellcheckPanelProps {
   uiFont: string;
   headingFont: string;
   lang: Lang;
-  onClose: () => void;
+
 }
 
 const loadedCheckers: Record<string, ReturnType<typeof nspell>> = {};
 
-export default function SpellcheckPanel({ c, uiFont, headingFont, lang, onClose }: SpellcheckPanelProps) {
+export default function SpellcheckPanel({ c, uiFont, headingFont, lang, }: SpellcheckPanelProps) {
   const [enabled, setEnabled] = useState(false);
   const [spellLang, setSpellLang] = useState<Lang>(lang);
   const [loading, setLoading] = useState(false);
@@ -78,15 +78,6 @@ export default function SpellcheckPanel({ c, uiFont, headingFont, lang, onClose 
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
-        <button onClick={onClose} style={{ background: 'none', border: 'none', color: c.accent, cursor: 'pointer', padding: 0 }}>
-          <PanelRightClose size={20} />
-        </button>
-      </div>
-      <h2 style={{ fontFamily: `'${headingFont}', serif`, fontSize: '2rem', fontWeight: 500, color: c.text, margin: 0, letterSpacing: '-0.02em' }}>
-        {t(lang, 'spellCheck')}
-      </h2>
-      
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <span style={{ fontFamily: uiFont, fontSize: '1rem', color: c.text }}>{t(lang, 'checkSpelling')}</span>

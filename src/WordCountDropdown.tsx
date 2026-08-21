@@ -24,7 +24,7 @@ export default function WordCountDropdown({ wordCount, charCount, readMin, theme
   }, []);
 
   return (
-    <div className="absolute top-4 right-16 z-50 flex items-center h-[34px]" ref={containerRef}>
+    <div className="relative z-50 flex items-center h-[34px]" ref={containerRef}>
       <button 
         onClick={() => setOpen(!open)}
         className="flex items-center gap-1 transition-all hover:opacity-80 active:scale-95 px-2 py-1 outline-none"

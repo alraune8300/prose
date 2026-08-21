@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Search, RotateCw, X, ArrowLeft, PanelRightClose } from 'lucide-react';
+import { Search, RotateCw, X } from 'lucide-react';
 import { Lang, t } from './i18n';
 
 interface SearchPanelProps {
-  headingFont: string;
-  onClose: () => void;
+ 
+ 
   c: Record<string, string>;
   uiFont: string;
   lang: Lang;
 }
 
-export default function SearchPanel({ c, uiFont, lang, headingFont, onClose }: SearchPanelProps) {
+export default function SearchPanel({ c, uiFont, lang, }: SearchPanelProps) {
   const [findText, setFindText] = useState('');
   const [replaceText, setReplaceText] = useState('');
   const [matchCase, setMatchCase] = useState(false);
@@ -42,18 +42,6 @@ export default function SearchPanel({ c, uiFont, lang, headingFont, onClose }: S
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <button onClick={onClose} style={{ background: 'none', border: 'none', color: c.accent, cursor: 'pointer', padding: 0 }}>
-          <ArrowLeft size={20} />
-        </button>
-        <button onClick={onClose} style={{ background: 'none', border: 'none', color: c.accent, cursor: 'pointer', padding: 0 }}>
-          <PanelRightClose size={20} />
-        </button>
-      </div>
-      <h2 style={{ fontFamily: headingFont || uiFont, fontSize: '1.5rem', fontWeight: 600, color: c.text, margin: 0, letterSpacing: '-0.02em' }}>
-        {t(lang, 'findAndReplace')}
-      </h2>
-
       <div style={{ padding: '0 4px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
           <Search size={16} color={c.textFaint} />
