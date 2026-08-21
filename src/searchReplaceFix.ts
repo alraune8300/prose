@@ -40,12 +40,14 @@ export function executeSearchReplace(editor: import("@tiptap/react").Editor, det
      }
   } else {
      // Replace all from back to front
-     const tr = state.tr;
-     for (let i = results.length - 1; i >= 0; i--) {
-        const r = results[i];
-        tr.insertText(replace, r.from, r.to);
-     }
-     editor.view.dispatch(tr);
+     editor.commands.command(({ tr, dispatch }) => {
+        for (let i = results.length - 1; i >= 0; i--) {
+           const r = results[i];
+           tr.insertText(replace, r.from, r.to);
+        }
+        if (dispatch) dispatch(tr);
+        return true;
+     });
   }
 }
 

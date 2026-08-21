@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Key, Eye, EyeOff, AlertCircle } from 'lucide-react';
-import { fetchGoogleFonts, GoogleFontItem } from './googleFontsApi';
+import { fetchGoogleFonts, GoogleFontItem, injectGoogleFont } from './googleFontsApi';
 import type { ThemeColors } from './types';
 import type { Theme } from './theme';
 import { t, Lang } from './i18n';
@@ -50,28 +50,7 @@ const FONT_CATEGORIES = [
 const loadedFonts = new Set<string>();
 
 function loadGoogleFont(name: string) {
-  if (loadedFonts.has(name)) return;
-  loadedFonts.add(name);
-  const fontSlug = name.toLowerCase().replace(/\s+/g, '-');
-  const id = `gf-${fontSlug}`;
-  if (document.getElementById(id)) return;
-
-  const style = document.createElement('style');
-  style.id = id;
-  style.textContent = `
-    @font-face {
-      font-family: '${name}';
-      src: url('/fonts/${fontSlug}.woff2') format('woff2'),
-           url('https://fonts.googleapis.com/css2?family=${encodeURIComponent(name)}:ital,wght@0,400;0,700;1,400&display=swap');
-      font-display: swap;
-    }
-  `;
-  document.head.appendChild(style);
-
-  const link = document.createElement('link');
-  link.rel = 'stylesheet';
-  link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(name)}:ital,wght@0,400;0,700;1,400&display=swap`;
-  document.head.appendChild(link);
+  injectGoogleFont(name);
 }
 
 interface TiptapEditorType {
@@ -100,6 +79,111 @@ interface GoogleFontsPanelProps {
   bodyFont?: string;
   headingFont?: string;
   uiFontRole?: string;
+}
+
+
+function FontRow({
+  name, isLoaded, isSelected, isFav, c, uiFont, preview, lang, handleApplyToSelection, handleLoad, toggleFav
+}: {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+  name: string; isLoaded: boolean; isSelected: boolean; isFav: boolean; c: any; uiFont: string; preview: string; lang: Lang;
+  handleApplyToSelection: (name: string, e?: React.MouseEvent) => void; handleLoad: (name: string) => void; toggleFav: (name: string, e: React.MouseEvent) => void;
+}) {
+  const ref = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    if (isLoaded) return;
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        handleLoad(name);
+        observer.disconnect();
+      }
+    }, { rootMargin: '200px' });
+    if (ref.current) observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, [isLoaded, name, handleLoad]);
+
+  return (
+    <div
+      ref={ref}
+      onClick={() => handleApplyToSelection(name)}
+      style={{
+        padding: '6px 8px',
+        cursor: 'pointer',
+        background: isSelected ? c.accentLight : 'transparent',
+        borderRadius: 6,
+        borderBottom: `1px solid ${c.borderFaint}`,
+        transition: 'background 0.1s',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: 6,
+        boxSizing: 'border-box',
+      }}
+      onMouseOver={(e) => {
+        if (!isSelected) (e.currentTarget as HTMLDivElement).style.background = c.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)';
+      }}
+      onMouseOut={(e) => {
+        if (!isSelected) (e.currentTarget as HTMLDivElement).style.background = 'transparent';
+      }}
+    >
+      <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
+        <div style={{
+          fontFamily: isLoaded ? `'${name}', serif` : uiFont,
+          fontSize: '0.88rem',
+          color: isSelected ? c.accent : c.text,
+          lineHeight: 1.3,
+          whiteSpace: 'nowrap',
+          textOverflow: 'ellipsis',
+          overflow: 'hidden',
+        }}>
+          {preview || name}
+        </div>
+        <div style={{
+          fontFamily: uiFont, fontSize: '0.66rem',
+          color: isSelected ? c.accentMid : c.textFaint,
+          marginTop: 1,
+          display: 'flex', alignItems: 'center', gap: 4,
+        }}>
+          <span>{name}</span>
+          {isSelected && <span style={{ fontSize: '0.6rem', background: c.accent, color: '#fff', padding: '0 4px', borderRadius: 3 }}>{t(lang, 'selectedFontBadge')}</span>}
+        </div>
+      </div>
+      <div style={{ display: 'flex', gap: 3, flexShrink: 0, alignItems: 'center' }}>
+        <button
+          type="button"
+          onClick={(e) => toggleFav(name, e)}
+          title={isFav ? t(lang, 'removeFromFavorites') : t(lang, 'addToFavorites')}
+          style={{
+            padding: '3px 6px', borderRadius: 4,
+            border: `1px solid ${isFav ? '#f59e0b' : c.border}`,
+            background: isFav ? (c.isDark ? 'rgba(245,158,11,0.2)' : '#fef3c7') : 'transparent',
+            color: isFav ? '#f59e0b' : c.textFaint,
+            fontSize: '0.75rem', cursor: 'pointer',
+          }}
+        >
+          {isFav ? '★' : '☆'}
+        </button>
+        <button
+          type="button"
+          onClick={(e) => handleApplyToSelection(name, e)}
+          title={t(lang, 'applyFontToSelection')}
+          style={{
+            padding: '3px 7px', borderRadius: 4,
+            border: `1px solid ${isSelected ? c.accent : c.border}`,
+            background: isSelected ? c.accent : 'transparent',
+            color: isSelected ? (c.isDark ? c.bg : '#ffffff') : c.accent,
+            fontFamily: uiFont,
+            fontSize: '0.68rem', fontWeight: 600,
+            cursor: 'pointer',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {t(lang, 'applyFont')}
+        </button>
+      </div>
+    </div>
+  );
 }
 
 export default function GoogleFontsPanel(props: GoogleFontsPanelProps & { hideRoles?: boolean }) {
@@ -610,95 +694,22 @@ export default function GoogleFontsPanel(props: GoogleFontsPanelProps & { hideRo
                   <span style={{ fontSize: '0.65rem', color: c.textFaint, fontWeight: 'normal' }}>{cat.fonts.length}</span>
                 </div>
 
-                {cat.fonts.map(name => {
-                  const isLoaded = loaded.has(name);
-                  const isSelected = selected === name;
-                  const isFav = favorites.has(name);
-
-                  return (
-                    <div
-                      key={name}
-                      onClick={() => handleApplyToSelection(name)}
-                      onMouseEnter={() => handleLoad(name)}
-                      style={{
-                        padding: '6px 8px',
-                        cursor: 'pointer',
-                        background: isSelected ? c.accentLight : 'transparent',
-                        borderRadius: 6,
-                        borderBottom: `1px solid ${c.borderFaint}`,
-                        transition: 'background 0.1s',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        gap: 6,
-                        boxSizing: 'border-box',
-                      }}
-                      onMouseOver={(e) => {
-                        if (!isSelected) (e.currentTarget as HTMLDivElement).style.background = c.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)';
-                      }}
-                      onMouseOut={(e) => {
-                        if (!isSelected) (e.currentTarget as HTMLDivElement).style.background = 'transparent';
-                      }}
-                    >
-                      <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
-                        <div style={{
-                          fontFamily: isLoaded ? `'${name}', serif` : uiFont,
-                          fontSize: '0.88rem',
-                          color: isSelected ? c.accent : c.text,
-                          lineHeight: 1.3,
-                          whiteSpace: 'nowrap',
-                          textOverflow: 'ellipsis',
-                          overflow: 'hidden',
-                        }}>
-                          {preview || name}
-                        </div>
-                        <div style={{
-                          fontFamily: uiFont, fontSize: '0.66rem',
-                          color: isSelected ? c.accentMid : c.textFaint,
-                          marginTop: 1,
-                          display: 'flex', alignItems: 'center', gap: 4,
-                        }}>
-                          <span>{name}</span>
-                          {isSelected && <span style={{ fontSize: '0.6rem', background: c.accent, color: '#fff', padding: '0 4px', borderRadius: 3 }}>{t(lang, 'selectedFontBadge')}</span>}
-                        </div>
-                      </div>
-
-                      <div style={{ display: 'flex', gap: 3, flexShrink: 0, alignItems: 'center' }}>
-                        <button
-                          type="button"
-                          onClick={(e) => toggleFav(name, e)}
-                          title={isFav ? t(lang, 'removeFromFavorites') : t(lang, 'addToFavorites')}
-                          style={{
-                            padding: '3px 6px', borderRadius: 4,
-                            border: `1px solid ${isFav ? '#f59e0b' : c.border}`,
-                            background: isFav ? (c.isDark ? 'rgba(245,158,11,0.2)' : '#fef3c7') : 'transparent',
-                            color: isFav ? '#f59e0b' : c.textFaint,
-                            fontSize: '0.75rem', cursor: 'pointer',
-                          }}
-                        >
-                          {isFav ? '★' : '☆'}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={(e) => handleApplyToSelection(name, e)}
-                          title={t(lang, 'applyFontToSelection')}
-                          style={{
-                            padding: '3px 7px', borderRadius: 4,
-                            border: `1px solid ${isSelected ? c.accent : c.border}`,
-                            background: isSelected ? c.accent : 'transparent',
-                            color: isSelected ? (c.isDark ? c.bg : '#ffffff') : c.accent,
-                            fontFamily: uiFont,
-                            fontSize: '0.68rem', fontWeight: 600,
-                            cursor: 'pointer',
-                            whiteSpace: 'nowrap',
-                          }}
-                        >
-                          {t(lang, 'applyFont')}
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
+                {cat.fonts.map(name => (
+                  <FontRow
+                    key={name}
+                    name={name}
+                    isLoaded={loaded.has(name)}
+                    isSelected={selected === name}
+                    isFav={favorites.has(name)}
+                    c={c}
+                    uiFont={uiFont}
+                    preview={preview}
+                    lang={lang}
+                    handleApplyToSelection={handleApplyToSelection}
+                    handleLoad={handleLoad}
+                    toggleFav={toggleFav}
+                  />
+                ))}
               </div>
             ))}
 

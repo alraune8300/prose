@@ -15,63 +15,63 @@ export const SmartFormatting = Extension.create({
       // Smart Quotes
       new InputRule({
         find: /(?:^|[\s{(<'"\u2018\u201C[])(")$/,
-        handler: ({ state, range, match }) => {
+        handler: ({ chain, range, match }) => {
           if (!window.__formatState?.smartQuotes) return null;
-          const { tr } = state;
-          tr.insertText('“', range.from + match[0].length - 1, range.to);
+          
+          chain().insertContentAt({ from: range.from + match[0].length - 1, to: range.to }, '“').run();
         },
       }),
       new InputRule({
         find: /"$/,
-        handler: ({ state, range }) => {
+        handler: ({ chain, range }) => {
           if (!window.__formatState?.smartQuotes) return null;
-          state.tr.insertText('”', range.from, range.to);
+          chain().insertContentAt({ from: range.from, to: range.to }, '”').run();
         },
       }),
       new InputRule({
         find: /(?:^|[\s{(<'"\u2018\u201C[])(')$/,
-        handler: ({ state, range, match }) => {
+        handler: ({ chain, range, match }) => {
           if (!window.__formatState?.smartQuotes) return null;
-          const { tr } = state;
-          tr.insertText('‘', range.from + match[0].length - 1, range.to);
+          
+          chain().insertContentAt({ from: range.from + match[0].length - 1, to: range.to }, '‘').run();
         },
       }),
       new InputRule({
         find: /'$/,
-        handler: ({ state, range }) => {
+        handler: ({ chain, range }) => {
           if (!window.__formatState?.smartQuotes) return null;
-          state.tr.insertText('’', range.from, range.to);
+          chain().insertContentAt({ from: range.from, to: range.to }, '’').run();
         },
       }),
 
       // Ellipses
       new InputRule({
         find: /\.\.\.$/,
-        handler: ({ state, range }) => {
+        handler: ({ chain, range }) => {
           if (!window.__formatState?.smartEllipses) return null;
-          state.tr.insertText('…', range.from, range.to);
+          chain().insertContentAt({ from: range.from, to: range.to }, '…').run();
         },
       }),
 
       // Dashes
       new InputRule({
         find: /--$/,
-        handler: ({ state, range }) => {
+        handler: ({ chain, range }) => {
           const mode = window.__formatState?.dashesMode || 'em';
           if (mode === 'disabled') return null;
           if (mode === 'em') {
-            state.tr.insertText('—', range.from, range.to);
+            chain().insertContentAt({ from: range.from, to: range.to }, '—').run();
           } else if (mode === 'en-em') {
-            state.tr.insertText('–', range.from, range.to);
+            chain().insertContentAt({ from: range.from, to: range.to }, '–').run();
           }
         },
       }),
       new InputRule({
         find: /–-$/, // en-dash followed by hyphen
-        handler: ({ state, range }) => {
+        handler: ({ chain, range }) => {
           const mode = window.__formatState?.dashesMode || 'em';
           if (mode === 'en-em') {
-            state.tr.insertText('—', range.from, range.to);
+            chain().insertContentAt({ from: range.from, to: range.to }, '—').run();
           }
         }
       })

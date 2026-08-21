@@ -171,7 +171,7 @@ function Editor({
           if (prevChar === ' ') {
             const charBeforeThat = from >= 2 ? view.state.doc.textBetween(from - 2, from - 1) : '';
             if (charBeforeThat !== ' ' && charBeforeThat !== '.') {
-              view.dispatch(view.state.tr.insertText('. ', from - 1, to));
+              const tr = view.state.tr; tr.insertText('. ', from - 1, to); view.dispatch(tr);
               return true;
             }
           }
@@ -181,7 +181,7 @@ function Editor({
         if (state.toggleHeadings === false && text === ' ') {
           const before = view.state.doc.textBetween(Math.max(0, from - 4), from);
           if (before.match(/(?:^|\n)(#{1,3})$/)) {
-            view.dispatch(view.state.tr.insertText(' ', from, to));
+            const tr = view.state.tr; tr.insertText(' ', from, to); view.dispatch(tr);
             return true;
           }
         }
@@ -191,16 +191,16 @@ function Editor({
           if (text === ' ') {
             const before = view.state.doc.textBetween(Math.max(0, from - 4), from);
             if (before.match(/(?:^|\n)([*>+-]|\d+\.)$/)) {
-              view.dispatch(view.state.tr.insertText(' ', from, to));
+              const tr = view.state.tr; tr.insertText(' ', from, to); view.dispatch(tr);
               return true;
             }
           }
           if (text === '-' && from >= 2 && view.state.doc.textBetween(from - 2, from) === '--') {
-            view.dispatch(view.state.tr.insertText('-', from, to));
+            const tr = view.state.tr; tr.insertText('-', from, to); view.dispatch(tr);
             return true;
           }
           if (text === '`' && from >= 2 && view.state.doc.textBetween(from - 2, from) === '``') {
-            view.dispatch(view.state.tr.insertText('`', from, to));
+            const tr = view.state.tr; tr.insertText('`', from, to); view.dispatch(tr);
             return true;
           }
         }
@@ -323,16 +323,18 @@ function Editor({
       if (!editor) return;
       const detail = (e as CustomEvent).detail;
       const { find, matchCase, wholeWord, regex } = detail;
-      const tr = editor.state.tr;
-      tr.setMeta(searchHighlightKey, { searchTerm: find, matchCase, wholeWord, regex });
-      editor.view.dispatch(tr);
+      editor.commands.command(({ tr, dispatch }) => {
+        if (dispatch) dispatch(tr.setMeta(searchHighlightKey, { searchTerm: find, matchCase, wholeWord, regex }));
+        return true;
+      });
     }
     function handleSpellcheck(e: Event) {
       if (!editor) return;
       const detail = (e as CustomEvent).detail;
-      const tr = editor.state.tr;
-      tr.setMeta(spellcheckKey, { enabled: detail.enabled, checker: detail.checker });
-      editor.view.dispatch(tr);
+      editor.commands.command(({ tr, dispatch }) => {
+        if (dispatch) dispatch(tr.setMeta(spellcheckKey, { enabled: detail.enabled, checker: detail.checker }));
+        return true;
+      });
     }
     
     function handleSpellcheckReplace(e: Event) {
