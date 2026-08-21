@@ -226,7 +226,6 @@ function RightPanel(props: Record<string, unknown>) {
   const bodyFont = (props.bodyFont || props.docFont || formatState.fontFam || 'Merriweather') as string
   const headingFont = (props.headingFont || formatState.headingFontFam || 'Playfair Display') as string
   const uiFont2 = (props.uiFont2 || props.uiFont || 'Inter') as string
-  const monoFont2 = (props.monoFont2 || props.monoFont || formatState.monoFontFam || 'JetBrains Mono') as string
 
   const customFontsProp = props.customFont as { family?: string; name?: string; id?: string } | undefined
   const customFonts: CustomFont[] = (props.customFonts as CustomFont[]) || (customFontsProp ? [{ id: customFontsProp.id || 'cf-1', name: customFontsProp.name || customFontsProp.family || 'CustomFont', family: customFontsProp.family || customFontsProp.name || 'CustomFont', fileName: customFontsProp.name || customFontsProp.family || 'CustomFont' }] : [])
@@ -1230,7 +1229,6 @@ ${content.split('\n\n').map(para => {
                 { role: 'body' as const, label: 'Body', value: bodyFont },
                 { role: 'heading' as const, label: 'Heading', value: headingFont },
                 { role: 'ui' as const, label: 'UI', value: uiFont2 },
-                { role: 'mono' as const, label: 'Mono', value: monoFont2 },
               ]).map(({ role, label: lbl, value }) => (
                 <div key={role} style={{ marginBottom: 10 }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
@@ -1347,7 +1345,6 @@ ${content.split('\n\n').map(para => {
                       uiFont={uiFont}
                       bodyFont={bodyFont}
                       headingFont={headingFont}
-                      monoFont={monoFont2}
                       uiFontRole={uiFont2}
                       onApplyToSelection={(name) => {
                         window.dispatchEvent(new CustomEvent('kgv-apply-font-selection', { detail: name }))

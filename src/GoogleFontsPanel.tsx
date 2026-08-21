@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Key, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { fetchGoogleFonts, GoogleFontItem } from './googleFontsApi';
 import type { ThemeColors } from './types';
 import type { Theme } from './theme';
@@ -95,11 +96,10 @@ interface GoogleFontsPanelProps {
   onApplyToUi?: (family: string) => void;
   onApplyToDoc?: (family: string) => void;
   editor?: TiptapEditorType | null;
-  onAssignRole?: (role: 'body' | 'heading' | 'ui' | 'mono', fontName: string) => void;
+  onAssignRole?: (role: 'body' | 'heading' | 'ui', fontName: string) => void;
   bodyFont?: string;
   headingFont?: string;
   uiFontRole?: string;
-  monoFont?: string;
 }
 
 export default function GoogleFontsPanel(props: GoogleFontsPanelProps & { hideRoles?: boolean }) {
@@ -116,7 +116,6 @@ export default function GoogleFontsPanel(props: GoogleFontsPanelProps & { hideRo
     bodyFont = 'Merriweather',
     headingFont = 'Playfair Display',
     uiFontRole = 'Inter',
-    monoFont = 'JetBrains Mono',
     hideRoles,
   } = props;
 
@@ -202,7 +201,7 @@ export default function GoogleFontsPanel(props: GoogleFontsPanelProps & { hideRo
     if (onSelect) onSelect(name);
   };
 
-  const handleAssignRole = (role: 'body' | 'heading' | 'ui' | 'mono', name: string) => {
+  const handleAssignRole = (role: 'body' | 'heading' | 'ui', name: string) => {
     handleLoad(name);
     if (onAssignRole) {
       onAssignRole(role, name);
@@ -318,7 +317,7 @@ export default function GoogleFontsPanel(props: GoogleFontsPanelProps & { hideRo
       >
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
-            <span style={{ fontSize: '0.9rem' }}>🔑</span>
+            <Key size={15} color={activeKey ? (c.isDark ? '#93c5fd' : '#2563eb') : c.textMuted} style={{ flexShrink: 0 }} />
             <div style={{ minWidth: 0 }}>
               <div style={{ fontSize: '0.78rem', fontWeight: 700, color: c.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 Google Fonts API
@@ -389,11 +388,13 @@ export default function GoogleFontsPanel(props: GoogleFontsPanelProps & { hideRo
                   color: c.textFaint,
                   cursor: 'pointer',
                   padding: 4,
-                  fontSize: '0.75rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                 }}
                 title={showKeyPassword ? 'Ẩn' : 'Hiện'}
               >
-                {showKeyPassword ? '🙈' : '👁️'}
+                {showKeyPassword ? <EyeOff size={14} /> : <Eye size={14} />}
               </button>
             </div>
 
@@ -448,8 +449,9 @@ export default function GoogleFontsPanel(props: GoogleFontsPanelProps & { hideRo
             </div>
 
             {apiError && (
-              <div style={{ fontSize: '0.72rem', color: '#ef4444', background: c.isDark ? 'rgba(239,68,68,0.1)' : '#fee2e2', padding: '6px 8px', borderRadius: 4, lineHeight: 1.3 }}>
-                ⚠️ {apiError}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.72rem', color: '#ef4444', background: c.isDark ? 'rgba(239,68,68,0.1)' : '#fee2e2', padding: '6px 8px', borderRadius: 4, lineHeight: 1.3 }}>
+                <AlertCircle size={13} style={{ flexShrink: 0 }} />
+                <span>{apiError}</span>
               </div>
             )}
 
@@ -478,7 +480,6 @@ export default function GoogleFontsPanel(props: GoogleFontsPanelProps & { hideRo
             { role: 'body' as const, label: t(lang, 'bodyFontRole'), current: bodyFont },
             { role: 'heading' as const, label: t(lang, 'headingFontRole'), current: headingFont },
             { role: 'ui' as const, label: t(lang, 'uiFontRole'), current: uiFontRole },
-            { role: 'mono' as const, label: t(lang, 'monoFontRole'), current: monoFont },
           ].map(({ role, label, current }) => (
             <div key={role} style={{ background: c.isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', padding: 10, borderRadius: 8, border: `1px solid ${c.border}` }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>

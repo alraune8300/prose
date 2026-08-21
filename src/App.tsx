@@ -2150,13 +2150,11 @@ export default function App() {
           onAssignRole={(role, fontName) => {
             if (role === 'body') handleSelectDocFont(fontName);
             else if (role === 'heading') handleSelectHeadingFont(fontName);
-            else if (role === 'mono') handleSelectMonoFont(fontName);
             else if (role === 'ui') handleSelectUiFont(fontName);
           }}
           bodyFont={docFont}
           headingFont={headingFont}
           uiFontRole={uiFont}
-          monoFont={monoFont}
         />
       )}
 
