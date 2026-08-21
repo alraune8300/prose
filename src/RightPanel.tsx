@@ -205,9 +205,6 @@ function RightPanel(props: Record<string, unknown>) {
   const title: string = (props.title as string) || (activeDoc?.title as string) || 'Untitled'
   const availableFontNames: string[] = (props.availableFontNames as string[]) || ['Merriweather', 'Lora', 'Playfair Display', 'EB Garamond', 'Libre Baskerville', 'Source Sans 3', 'Inter', 'DM Sans', 'JetBrains Mono']
 
-  const wordCount: number = (props.wordCount as number) ?? 0
-  const charCount: number = (props.charCount as number) ?? 0
-
   const [timerSet, setTimerSet] = useState(25)
   const [timerLeft, setTimerLeft] = useState(25 * 60)
   const [timerOn, setTimerOn] = useState(false)
@@ -276,8 +273,6 @@ function RightPanel(props: Record<string, unknown>) {
   const timerProgress = timerSet > 0 ? (timerSet * 60 - timerLeft) / (timerSet * 60) : 0
   const R = 52
   const CIRC = 2 * Math.PI * R
-
-  const readMin = Math.ceil(wordCount / 200)
 
   const handleCopy = () => {
     navigator.clipboard.writeText(content)
@@ -667,7 +662,7 @@ ${content.split('\n\n').map(para => {
             </Accordion>
 
             
-            <Accordion title="Smart formatting" uiFont={uiFont} c={c}>
+            <Accordion title={t(lang, 'smartFormatting')} uiFont={uiFont} c={c}>
               <div style={{ display: 'flex', flexDirection: 'column' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: `1px solid ${c.borderFaint}` }}>
                   <span style={{ fontFamily: uiFont, fontSize: '0.85rem', color: c.text }}>Quotes</span>
@@ -1322,70 +1317,33 @@ ${content.split('\n\n').map(para => {
               ))}
             </div>
 
-            <div style={{display: 'none'}}>
-              <SectionLabel label={t(lang, 'browseGoogleFonts')} uiFont={uiFont} c={c} />
-              <button
-                onClick={() => setShowGoogleFonts(v => !v)}
-                style={{
-                  width: '100%', padding: '7px 10px', borderRadius: 6, marginBottom: 8,
-                  border: `1px solid ${showGoogleFonts ? c.accent : c.border}`,
-                  background: showGoogleFonts ? c.accentLight : 'transparent',
-                  color: showGoogleFonts ? c.accent : c.textMuted,
-                  fontFamily: uiFont, fontSize: '0.78rem', cursor: 'pointer',
-                  transition: 'all 0.12s',
-                }}
-              >
-                {t(lang, 'browseGoogleFonts')} {showGoogleFonts ? '▲' : '▼'}
-              </button>
-              {showGoogleFonts && (
-                <div style={{ marginBottom: 12 }}>
-                  <GoogleFontsPanel apiKey={props.apiKey as string} onSaveApiKey={props.onSaveApiKey as any}
-                    c={c}
-                    uiFont={uiFont}
-                    bodyFont={bodyFont}
-                    headingFont={headingFont}
-                    monoFont={monoFont2}
-                    uiFontRole={uiFont2}
-                    onApplyToSelection={(name) => {
-                      window.dispatchEvent(new CustomEvent('kgv-apply-font-selection', { detail: name }))
-                    }}
-                    onApplyToDoc={(name) => {
-                      onFontAssign('body', name)
-                    }}
-                    onApplyToUi={(name) => {
-                      onFontAssign('ui', name)
-                    }}
-                    onAssignRole={onFontAssign}
-                  />
-                </div>
-              )}
-            </div>
-
             <div>
-              <SectionLabel label="Font Manager" uiFont={uiFont} c={c} />
+              <SectionLabel label={t(lang, 'googleFontsEngine')} uiFont={uiFont} c={c} />
               <div style={{ marginBottom: 16 }}>
                 <button
                   onClick={() => setShowGoogleFonts(v => !v)}
                   style={{
                     width: '100%', padding: '10px 14px', borderRadius: 8,
-                    border: `1px solid ${c.border}`, background: c.surface,
-                    color: c.text, fontFamily: uiFont, fontSize: '0.85rem', fontWeight: 600,
+                    border: `1px solid ${showGoogleFonts ? c.accent : c.border}`,
+                    background: showGoogleFonts ? (c.isDark ? 'rgba(37,99,235,0.1)' : '#eff6ff') : c.surface,
+                    color: showGoogleFonts ? c.accent : c.text, fontFamily: uiFont, fontSize: '0.85rem', fontWeight: 600,
                     cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    boxShadow: '0 1px 2px rgba(0,0,0,0.05)', transition: 'all 0.2s'
+                    boxShadow: '0 1px 2px rgba(0,0,0,0.05)', transition: 'all 0.15s'
                   }}
-                  onMouseEnter={e => e.currentTarget.style.borderColor = c.accent}
-                  onMouseLeave={e => e.currentTarget.style.borderColor = c.border}
+                  onMouseEnter={e => { if (!showGoogleFonts) e.currentTarget.style.borderColor = c.accent }}
+                  onMouseLeave={e => { if (!showGoogleFonts) e.currentTarget.style.borderColor = c.border }}
                 >
                   <span style={{display:'flex', alignItems:'center', gap: 8}}>
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg>
-                    Browse Google Fonts
+                    {t(lang, 'browseGoogleFonts')}
                   </span>
                   <span>{showGoogleFonts ? '▲' : '▼'}</span>
                 </button>
                 {showGoogleFonts && (
-                  <div style={{ marginTop: 8, border: `1px solid ${c.border}`, borderRadius: 8, overflow: 'hidden' }}>
+                  <div style={{ marginTop: 8, border: `1px solid ${c.border}`, borderRadius: 8, overflow: 'hidden', padding: 8, background: c.surface }}>
                     <GoogleFontsPanel apiKey={props.apiKey as string} onSaveApiKey={props.onSaveApiKey as any}
                       c={c}
+                      lang={lang}
                       uiFont={uiFont}
                       bodyFont={bodyFont}
                       headingFont={headingFont}

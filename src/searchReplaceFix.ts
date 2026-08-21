@@ -23,7 +23,7 @@ export function executeSearchReplace(editor: import("@tiptap/react").Editor, det
            });
            if (!all) break;
          }
-      } catch(_e) { /* ignore */ }
+      } catch { /* ignore */ }
     }
   });
 
@@ -73,7 +73,7 @@ export function executeSearchNav(editor: import("@tiptap/react").Editor, detail:
              to: pos + match.index + match[0].length
            });
          }
-      } catch(_e) { /* ignore */ }
+      } catch { /* ignore */ }
     }
   });
 

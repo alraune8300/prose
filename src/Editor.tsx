@@ -1,6 +1,5 @@
 import React, { useEffect, useRef } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
-import { BubbleMenu } from '@tiptap/react/menus';
 import StarterKit from '@tiptap/starter-kit';
 import TextAlign from '@tiptap/extension-text-align';
 import FontFamily from '@tiptap/extension-font-family';
@@ -106,7 +105,7 @@ function Editor({
       if (spellState?.enabled && spellState?.checker) {
          const { from, to } = editor.state.selection;
          const decos = spellState.decorations.find(from, to);
-         const errDeco = decos.find((d: any) => d.spec.isSpellError);
+         const errDeco = decos.find((d: { spec: { isSpellError?: boolean; word?: string; from?: number; to?: number } }) => d.spec.isSpellError);
          if (errDeco) {
             window.dispatchEvent(new CustomEvent('kgv-spellcheck-error', {
               detail: {

@@ -29,7 +29,7 @@ export function getSpellcheckPlugin() {
            return oldState;
         }
 
-        let decos: Decoration[] = [];
+        const decos: Decoration[] = [];
         
         if (enabled && checker) {
           tr.doc.descendants((node, pos) => {

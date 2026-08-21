@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { fetchGoogleFonts, GoogleFontItem } from './googleFontsApi';
 import type { ThemeColors } from './types';
 import type { Theme } from './theme';
@@ -102,82 +102,11 @@ interface GoogleFontsPanelProps {
   monoFont?: string;
 }
 
-
-function FontItem({ name, isSelected, handleApplyToSelection, handleLoad, toggleFav, isFav, c, preview }: any) {
-  const [isVisible, setIsVisible] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-  
-  useEffect(() => {
-    const observer = new IntersectionObserver(([entry]) => {
-      if (entry.isIntersecting) {
-        setIsVisible(true);
-        handleLoad(name);
-        observer.disconnect();
-      }
-    });
-    if (ref.current) observer.observe(ref.current);
-    return () => observer.disconnect();
-  }, [name]);
-
-  return (
-    <div
-      ref={ref}
-      onClick={() => handleApplyToSelection(name)}
-      onMouseEnter={() => handleLoad(name)}
-      style={{
-        padding: '8px 10px',
-        cursor: 'pointer',
-        background: isSelected ? c.accentLight : 'transparent',
-        borderRadius: 6,
-        borderBottom: `1px solid ${c.borderFaint}`,
-        transition: 'background 0.1s',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-      }}
-      onMouseOver={(e) => {
-        if (!isSelected) (e.currentTarget as HTMLDivElement).style.background = c.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)';
-      }}
-      onMouseOut={(e) => {
-        if (!isSelected) (e.currentTarget as HTMLDivElement).style.background = 'transparent';
-      }}
-    >
-      <div style={{ flex: 1, minWidth: 0, paddingRight: 10 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
-          <span style={{ fontSize: '0.85rem', fontWeight: 600, color: c.text }}>{name}</span>
-          {isSelected && <span style={{ fontSize: '0.65rem', background: c.accent, color: '#fff', padding: '1px 4px', borderRadius: 4 }}>Applied</span>}
-        </div>
-        <div style={{
-          fontFamily: isVisible ? `'${name}', sans-serif` : 'sans-serif',
-          fontSize: '1.2rem',
-          color: c.text,
-          whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-        }}>
-          {preview || name}
-        </div>
-      </div>
-      <button
-        onClick={(e) => toggleFav(name, e)}
-        style={{
-          background: 'none', border: 'none', cursor: 'pointer',
-          padding: 4, color: isFav ? '#f59e0b' : c.textFaint,
-          display: 'flex', alignItems: 'center', justifyContent: 'center'
-        }}
-        title={isFav ? "Remove from favorites" : "Add to favorites"}
-      >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill={isFav ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-        </svg>
-      </button>
-    </div>
-  );
-}
-
 export default function GoogleFontsPanel(props: GoogleFontsPanelProps & { hideRoles?: boolean }) {
   const {
     onSelect,
     uiFont = 'Inter',
-    lang = 'en',
+    lang = 'vi',
     onClose,
     onApplyToSelection,
     onApplyToUi,
@@ -211,24 +140,37 @@ export default function GoogleFontsPanel(props: GoogleFontsPanelProps & { hideRo
   const [loaded, setLoaded] = useState<Set<string>>(new Set());
   const [selected, setSelected] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'catalog' | 'roles'>('catalog');
+  const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>('ALL');
   const [apiFonts, setApiFonts] = useState<GoogleFontItem[]>([]);
   const [isFetching, setIsFetching] = useState(false);
   const [apiError, setApiError] = useState('');
-  const [localApiKey, setLocalApiKey] = useState('');
-  
+  const [localApiKey, setLocalApiKey] = useState(() => props.apiKey || localStorage.getItem('kgv-gfonts-api-key') || '');
+  const [showApiKeySettings, setShowApiKeySettings] = useState(() => !props.apiKey && !localStorage.getItem('kgv-gfonts-api-key'));
+  const [showKeyPassword, setShowKeyPassword] = useState(false);
+
+  const activeKey = props.apiKey || localApiKey;
+
   useEffect(() => {
-    if (props.apiKey) {
+    if (activeKey) {
       setIsFetching(true);
       setApiError('');
-      fetchGoogleFonts(props.apiKey).then(fonts => {
-        if (fonts && fonts.length > 0) setApiFonts(fonts);
+      fetchGoogleFonts(activeKey).then(fonts => {
+        if (fonts && fonts.length > 0) {
+          setApiFonts(fonts);
+        }
       }).catch(err => {
-        setApiError(err.message || 'Failed to fetch fonts');
+        setApiError(err.message || 'Không thể tải danh sách phông chữ Google Fonts.');
       }).finally(() => setIsFetching(false));
     }
-  }, [props.apiKey]);
-  
-  const [favorites, setFavorites] = useState<Set<string>>(() => new Set(JSON.parse(localStorage.getItem('kgv-fav-fonts') || '[]')));
+  }, [activeKey]);
+
+  const [favorites, setFavorites] = useState<Set<string>>(() => {
+    try {
+      return new Set(JSON.parse(localStorage.getItem('kgv-fav-fonts') || '[]'));
+    } catch {
+      return new Set();
+    }
+  });
 
   const toggleFav = (name: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -270,6 +212,35 @@ export default function GoogleFontsPanel(props: GoogleFontsPanelProps & { hideRo
     if (role === 'body' && onApplyToDoc) onApplyToDoc(name);
   };
 
+  const handleSaveKey = () => {
+    const trimmed = localApiKey.trim();
+    if (trimmed) {
+      localStorage.setItem('kgv-gfonts-api-key', trimmed);
+      if (props.onSaveApiKey) {
+        props.onSaveApiKey(trimmed);
+      }
+      setShowApiKeySettings(false);
+      setIsFetching(true);
+      setApiError('');
+      fetchGoogleFonts(trimmed).then(fonts => {
+        if (fonts && fonts.length > 0) setApiFonts(fonts);
+      }).catch(err => {
+        setApiError(err.message || 'Lỗi khi kích hoạt API Key');
+      }).finally(() => setIsFetching(false));
+    }
+  };
+
+  const handleClearKey = () => {
+    localStorage.removeItem('kgv-gfonts-api-key');
+    setLocalApiKey('');
+    setApiFonts([]);
+    setApiError('');
+    if (props.onSaveApiKey) {
+      props.onSaveApiKey('');
+    }
+    setShowApiKeySettings(true);
+  };
+
   let displayCategories = FONT_CATEGORIES;
   if (apiFonts.length > 0) {
     const cats: Record<string, string[]> = {};
@@ -280,56 +251,229 @@ export default function GoogleFontsPanel(props: GoogleFontsPanelProps & { hideRo
     });
     displayCategories = Object.keys(cats).map(k => ({ category: k, fonts: cats[k] }));
   }
-  if (favorites.size > 0 && search === '') {
-     displayCategories = [
-       { category: 'FAVORITES', fonts: Array.from(favorites) },
-       ...FONT_CATEGORIES
-     ];
+
+  // Prepend favorites if any
+  if (favorites.size > 0) {
+    displayCategories = [
+      { category: 'FAVORITES', fonts: Array.from(favorites) },
+      ...displayCategories
+    ];
   }
 
-  const filteredCategories = displayCategories.map(cat => ({
-    category: cat.category,
-    fonts: cat.fonts.filter(f => f.toLowerCase().includes(search.toLowerCase()))
-  })).filter(cat => cat.fonts.length > 0);
+  // Filter categories by category filter and search
+  const filteredCategories = displayCategories
+    .filter(cat => selectedCategoryFilter === 'ALL' || cat.category === selectedCategoryFilter)
+    .map(cat => ({
+      category: cat.category,
+      fonts: cat.fonts.filter(f => f.toLowerCase().includes(search.toLowerCase()))
+    }))
+    .filter(cat => cat.fonts.length > 0);
+
+  const totalLoadedCount = apiFonts.length > 0 ? apiFonts.length : FONT_CATEGORIES.reduce((acc, c) => acc + c.fonts.length, 0);
 
   const panelContent = (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-      {/* Top Navigation Tabs */}
-      <div style={{ display: 'flex', gap: 6, padding: 3, background: c.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)', borderRadius: 8 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%', boxSizing: 'border-box' }}>
+      
+      {/* 1. Top Navigation Tabs */}
+      <div style={{ display: 'flex', gap: 4, padding: 3, background: c.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)', borderRadius: 8 }}>
         <button
           type="button"
           onClick={() => setActiveTab('catalog')}
           style={{
-            flex: 1, padding: '6px 8px', borderRadius: 6, border: 'none',
+            flex: 1, padding: '7px 8px', borderRadius: 6, border: 'none',
             background: activeTab === 'catalog' ? c.accent : 'transparent',
             color: activeTab === 'catalog' ? (c.isDark ? c.bg : '#ffffff') : c.textMuted,
-            fontFamily: uiFont, fontSize: '0.75rem', fontWeight: 600,
+            fontFamily: uiFont, fontSize: '0.78rem', fontWeight: 600,
             cursor: 'pointer', transition: 'all 0.15s',
           }}
         >
           {t(lang, 'fontCatalog')}
         </button>
-        {!hideRoles && <button
-          type="button"
-          onClick={() => setActiveTab('roles')}
-          style={{
-            flex: 1, padding: '6px 8px', borderRadius: 6, border: 'none',
-            background: activeTab === 'roles' ? c.accent : 'transparent',
-            color: activeTab === 'roles' ? (c.isDark ? c.bg : '#ffffff') : c.textMuted,
-            fontFamily: uiFont, fontSize: '0.75rem', fontWeight: 600,
-            cursor: 'pointer', transition: 'all 0.15s',
-          }}
-        >
-          {t(lang, 'fontRolesAndVars')}
-        </button>}
+        {!hideRoles && (
+          <button
+            type="button"
+            onClick={() => setActiveTab('roles')}
+            style={{
+              flex: 1, padding: '7px 8px', borderRadius: 6, border: 'none',
+              background: activeTab === 'roles' ? c.accent : 'transparent',
+              color: activeTab === 'roles' ? (c.isDark ? c.bg : '#ffffff') : c.textMuted,
+              fontFamily: uiFont, fontSize: '0.78rem', fontWeight: 600,
+              cursor: 'pointer', transition: 'all 0.15s',
+            }}
+          >
+            {t(lang, 'fontRolesAndVars')}
+          </button>
+        )}
+      </div>
+
+      {/* 2. API KEY MANAGEMENT CARD (Clean, responsive, full-width with easy-to-click buttons) */}
+      <div
+        style={{
+          border: `1px solid ${activeKey ? (c.isDark ? 'rgba(37,99,235,0.3)' : '#bfdbfe') : c.border}`,
+          background: activeKey ? (c.isDark ? 'rgba(37,99,235,0.08)' : '#eff6ff') : (c.isDark ? 'rgba(255,255,255,0.03)' : '#fafafa'),
+          borderRadius: 8,
+          padding: '10px 12px',
+          boxSizing: 'border-box',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+            <span style={{ fontSize: '0.9rem' }}>🔑</span>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontSize: '0.78rem', fontWeight: 700, color: c.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                Google Fonts API
+              </div>
+              <div style={{ fontSize: '0.68rem', color: activeKey ? (c.isDark ? '#93c5fd' : '#2563eb') : c.textMuted }}>
+                {activeKey ? (isFetching ? t(lang, 'loadingLibrary') : t(lang, 'connectedFontsCount').replace('{count}', String(totalLoadedCount))) : t(lang, 'basicMode')}
+              </div>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setShowApiKeySettings(v => !v)}
+            style={{
+              padding: '4px 8px',
+              borderRadius: 6,
+              border: `1px solid ${c.border}`,
+              background: c.surface,
+              color: c.textMuted,
+              fontFamily: uiFont,
+              fontSize: '0.72rem',
+              fontWeight: 600,
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+              flexShrink: 0,
+            }}
+          >
+            {showApiKeySettings ? t(lang, 'closeConfig') : (activeKey ? t(lang, 'editKey') : t(lang, 'activateApi'))}
+          </button>
+        </div>
+
+        {/* Expandable API Key Config Box */}
+        {showApiKeySettings && (
+          <div style={{ marginTop: 10, paddingTop: 8, borderTop: `1px solid ${c.borderFaint}`, display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div style={{ fontSize: '0.72rem', color: c.textMuted, lineHeight: 1.4 }}>
+              {t(lang, 'apiKeyHelp')}
+            </div>
+
+            <div style={{ position: 'relative', width: '100%' }}>
+              <input
+                type={showKeyPassword ? 'text' : 'password'}
+                placeholder={t(lang, 'apiKeyPlaceholder')}
+                value={localApiKey}
+                onChange={e => setLocalApiKey(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '8px 32px 8px 10px',
+                  borderRadius: 6,
+                  border: `1px solid ${c.border}`,
+                  background: c.surface,
+                  color: c.text,
+                  fontFamily: uiFont,
+                  fontSize: '0.8rem',
+                  outline: 'none',
+                  boxSizing: 'border-box',
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowKeyPassword(v => !v)}
+                style={{
+                  position: 'absolute',
+                  right: 6,
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'none',
+                  border: 'none',
+                  color: c.textFaint,
+                  cursor: 'pointer',
+                  padding: 4,
+                  fontSize: '0.75rem',
+                }}
+                title={showKeyPassword ? 'Ẩn' : 'Hiện'}
+              >
+                {showKeyPassword ? '🙈' : '👁️'}
+              </button>
+            </div>
+
+            {/* Action Buttons Row */}
+            <div style={{ display: 'flex', gap: 6, width: '100%' }}>
+              <button
+                type="button"
+                onClick={handleSaveKey}
+                disabled={!localApiKey.trim() || isFetching}
+                style={{
+                  flex: 1,
+                  padding: '8px 12px',
+                  borderRadius: 6,
+                  border: 'none',
+                  background: !localApiKey.trim() ? (c.isDark ? '#374151' : '#d1d5db') : c.accent,
+                  color: !localApiKey.trim() ? (c.isDark ? '#9ca3af' : '#6b7280') : '#ffffff',
+                  cursor: !localApiKey.trim() ? 'not-allowed' : 'pointer',
+                  fontFamily: uiFont,
+                  fontSize: '0.78rem',
+                  fontWeight: 700,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 6,
+                  transition: 'background 0.15s',
+                }}
+              >
+                {isFetching ? t(lang, 'activating') : t(lang, 'saveAndActivate')}
+              </button>
+
+              {activeKey && (
+                <button
+                  type="button"
+                  onClick={handleClearKey}
+                  style={{
+                    padding: '8px 10px',
+                    borderRadius: 6,
+                    border: `1px solid ${c.border}`,
+                    background: c.surface,
+                    color: '#ef4444',
+                    cursor: 'pointer',
+                    fontFamily: uiFont,
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                    whiteSpace: 'nowrap',
+                  }}
+                  title={t(lang, 'clearKey')}
+                >
+                  {t(lang, 'clearKey')}
+                </button>
+              )}
+            </div>
+
+            {apiError && (
+              <div style={{ fontSize: '0.72rem', color: '#ef4444', background: c.isDark ? 'rgba(239,68,68,0.1)' : '#fee2e2', padding: '6px 8px', borderRadius: 4, lineHeight: 1.3 }}>
+                ⚠️ {apiError}
+              </div>
+            )}
+
+            <div style={{ fontSize: '0.68rem', color: c.textFaint, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span>{t(lang, 'freeFromGoogle')}</span>
+              <a
+                href="https://developers.google.com/fonts/docs/developer_api"
+                target="_blank"
+                rel="noreferrer"
+                style={{ color: c.accent, textDecoration: 'underline' }}
+              >
+                {t(lang, 'getFreeKey')}
+              </a>
+            </div>
+          </div>
+        )}
       </div>
 
       {activeTab === 'roles' ? (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: '4px 0' }}>
-          <div style={{ fontSize: '0.78rem', color: c.textMuted, marginBottom: 4 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '2px 0' }}>
+          <div style={{ fontSize: '0.75rem', color: c.textMuted, lineHeight: 1.4 }}>
             {t(lang, 'fontRolesDesc')}
           </div>
-          
+
           {[
             { role: 'body' as const, label: t(lang, 'bodyFontRole'), current: bodyFont },
             { role: 'heading' as const, label: t(lang, 'headingFontRole'), current: headingFont },
@@ -338,8 +482,8 @@ export default function GoogleFontsPanel(props: GoogleFontsPanelProps & { hideRo
           ].map(({ role, label, current }) => (
             <div key={role} style={{ background: c.isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', padding: 10, borderRadius: 8, border: `1px solid ${c.border}` }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                <span style={{ fontSize: '0.75rem', fontWeight: 700, color: c.text, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</span>
-                <span style={{ fontSize: '0.75rem', fontFamily: `'${current}', serif`, color: c.accent }}>{current}</span>
+                <span style={{ fontSize: '0.72rem', fontWeight: 700, color: c.text, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</span>
+                <span style={{ fontSize: '0.72rem', fontFamily: `'${current}', serif`, color: c.accent, fontWeight: 600 }}>{current}</span>
               </div>
               <CustomSelect
                 value={current}
@@ -369,113 +513,114 @@ export default function GoogleFontsPanel(props: GoogleFontsPanelProps & { hideRo
         </div>
       ) : (
         <>
-          {!props.apiKey && (
-            <div style={{ display: 'flex', gap: 6, marginBottom: 8, flexDirection: 'column' }}>
-              <div style={{ display: 'flex', gap: 6 }}>
-                <input
-                  type="password"
-                  placeholder="Enter Google Fonts API Key for full library..."
-                  value={localApiKey}
-                  onChange={e => setLocalApiKey(e.target.value)}
-                  style={{
-                    flex: 1, padding: '8px 12px', borderRadius: 6,
-                    border: `1px solid ${c.border}`, background: c.surface,
-                    color: c.text, fontFamily: uiFont, fontSize: '0.85rem', outline: 'none'
-                  }}
-                />
+          {/* 3. Search & Preview Controls */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <div style={{ position: 'relative', width: '100%' }}>
+              <input
+                type="text"
+                placeholder={t(lang, 'searchFontsPlaceholder')}
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                style={{
+                  width: '100%', padding: '7px 28px 7px 10px',
+                  fontFamily: uiFont, fontSize: '0.78rem',
+                  border: `1px solid ${c.border}`,
+                  borderRadius: 6, background: c.surface,
+                  color: c.text, outline: 'none',
+                  boxSizing: 'border-box',
+                }}
+              />
+              {search && (
                 <button
-                  onClick={() => {
-                    if (localApiKey) {
-                      localStorage.setItem('kgv-gfonts-api-key', localApiKey);
-                      if (props.onSaveApiKey) {
-                        props.onSaveApiKey(localApiKey);
-                      } else {
-                        window.location.reload();
-                      }
-                    }
-                  }}
+                  type="button"
+                  onClick={() => setSearch('')}
                   style={{
-                    padding: '8px 12px', borderRadius: 6, border: 'none',
-                    background: c.accent, color: '#fff', cursor: 'pointer',
-                    fontFamily: uiFont, fontSize: '0.85rem', fontWeight: 600
+                    position: 'absolute', right: 6, top: '50%', transform: 'translateY(-50%)',
+                    background: 'none', border: 'none', color: c.textFaint, cursor: 'pointer', padding: 2
                   }}
                 >
-                  Apply
+                  ✕
                 </button>
-              </div>
-              <div style={{ fontSize: '0.7rem', color: c.textFaint }}>
-                Without an API key, you only see ~60 default fonts.
-              </div>
+              )}
             </div>
-          )}
-          {isFetching && (
-            <div style={{ fontSize: '0.75rem', color: c.accent, marginBottom: 8, textAlign: 'center' }}>
-              Fetching full font library...
+
+            <input
+              type="text"
+              placeholder={t(lang, 'previewTextPlaceholder')}
+              value={preview}
+              onChange={(e) => setPreview(e.target.value)}
+              style={{
+                width: '100%', padding: '6px 10px',
+                fontFamily: uiFont, fontSize: '0.74rem',
+                border: `1px solid ${c.borderFaint}`,
+                borderRadius: 6, background: 'transparent',
+                color: c.textMuted, outline: 'none',
+                boxSizing: 'border-box',
+              }}
+            />
+
+            {/* Quick Category Chips */}
+            <div style={{ display: 'flex', gap: 4, overflowX: 'auto', paddingBottom: 2, scrollbarWidth: 'none' }}>
+              {['ALL', 'SANS-SERIF', 'SERIF', 'MONOSPACE', ...(favorites.size > 0 ? ['FAVORITES'] : [])].map(cat => (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => setSelectedCategoryFilter(cat)}
+                  style={{
+                    padding: '3px 8px',
+                    borderRadius: 12,
+                    border: `1px solid ${selectedCategoryFilter === cat ? c.accent : c.borderFaint}`,
+                    background: selectedCategoryFilter === cat ? c.accentLight : 'transparent',
+                    color: selectedCategoryFilter === cat ? c.accent : c.textMuted,
+                    fontSize: '0.68rem',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap',
+                    flexShrink: 0,
+                  }}
+                >
+                  {cat === 'FAVORITES' ? `★ ${t(lang, 'favorites')}` : cat}
+                </button>
+              ))}
             </div>
-          )}
-          {apiError && (
-            <div style={{ fontSize: '0.75rem', color: 'rgb(239, 68, 68)', marginBottom: 8, textAlign: 'center' }}>
-              {apiError}
-            </div>
-          )}
-          {!isFetching && !apiError && props.apiKey && apiFonts.length > 0 && (
-            <div style={{ fontSize: '0.7rem', color: c.accent, marginBottom: 8, textAlign: 'center' }}>
-              ✓ Connected ({apiFonts.length} fonts loaded)
-            </div>
-          )}
-          <input
-            type="text"
-            placeholder={t(lang, 'searchFontsPlaceholder')}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
+          </div>
+
+          {/* 4. Font List */}
+          <div
             style={{
-              width: '100%', padding: '6px 10px',
-              fontFamily: uiFont, fontSize: '0.78rem',
-              border: `1px solid ${c.border}`,
-              borderRadius: 6, background: 'transparent',
-              color: c.text, outline: 'none',
-              boxSizing: 'border-box',
-            }}
-          />
-          <input
-            type="text"
-            placeholder={t(lang, 'previewTextPlaceholder')}
-            value={preview}
-            onChange={(e) => setPreview(e.target.value)}
-            style={{
-              width: '100%', padding: '5px 10px',
-              fontFamily: uiFont, fontSize: '0.75rem',
+              maxHeight: 340,
+              overflowY: 'auto',
               border: `1px solid ${c.borderFaint}`,
-              borderRadius: 6, background: 'transparent',
-              color: c.textMuted, outline: 'none',
+              borderRadius: 8,
+              padding: 4,
               boxSizing: 'border-box',
             }}
-          />
-          <div style={{
-            maxHeight: 340, overflowY: 'auto',
-            border: `1px solid ${c.borderFaint}`,
-            borderRadius: 8, padding: 4,
-          }}>
+          >
             {filteredCategories.map(cat => (
-              <div key={cat.category} style={{ marginBottom: 12 }}>
+              <div key={cat.category} style={{ marginBottom: 10 }}>
                 <div style={{
                   fontFamily: uiFont, fontSize: '0.68rem', fontWeight: 700,
-                  color: c.accent, padding: '6px 8px', letterSpacing: '0.08em',
+                  color: c.accent, padding: '5px 8px', letterSpacing: '0.06em',
                   background: c.isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)',
-                  borderRadius: 4, marginBottom: 4
+                  borderRadius: 4, marginBottom: 4,
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                 }}>
-                  [{cat.category}]
+                  <span>[{cat.category === 'FAVORITES' ? t(lang, 'favorites').toUpperCase() : cat.category}]</span>
+                  <span style={{ fontSize: '0.65rem', color: c.textFaint, fontWeight: 'normal' }}>{cat.fonts.length}</span>
                 </div>
+
                 {cat.fonts.map(name => {
                   const isLoaded = loaded.has(name);
                   const isSelected = selected === name;
+                  const isFav = favorites.has(name);
+
                   return (
                     <div
                       key={name}
                       onClick={() => handleApplyToSelection(name)}
                       onMouseEnter={() => handleLoad(name)}
                       style={{
-                        padding: '8px 10px',
+                        padding: '6px 8px',
                         cursor: 'pointer',
                         background: isSelected ? c.accentLight : 'transparent',
                         borderRadius: 6,
@@ -484,6 +629,8 @@ export default function GoogleFontsPanel(props: GoogleFontsPanelProps & { hideRo
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'space-between',
+                        gap: 6,
+                        boxSizing: 'border-box',
                       }}
                       onMouseOver={(e) => {
                         if (!isSelected) (e.currentTarget as HTMLDivElement).style.background = c.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)';
@@ -492,12 +639,12 @@ export default function GoogleFontsPanel(props: GoogleFontsPanelProps & { hideRo
                         if (!isSelected) (e.currentTarget as HTMLDivElement).style.background = 'transparent';
                       }}
                     >
-                      <div style={{ flex: 1, overflow: 'hidden', paddingRight: 8 }}>
+                      <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
                         <div style={{
                           fontFamily: isLoaded ? `'${name}', serif` : uiFont,
-                          fontSize: '0.9rem',
+                          fontSize: '0.88rem',
                           color: isSelected ? c.accent : c.text,
-                          lineHeight: 1.4,
+                          lineHeight: 1.3,
                           whiteSpace: 'nowrap',
                           textOverflow: 'ellipsis',
                           overflow: 'hidden',
@@ -505,45 +652,47 @@ export default function GoogleFontsPanel(props: GoogleFontsPanelProps & { hideRo
                           {preview || name}
                         </div>
                         <div style={{
-                          fontFamily: uiFont, fontSize: '0.65rem',
+                          fontFamily: uiFont, fontSize: '0.66rem',
                           color: isSelected ? c.accentMid : c.textFaint,
                           marginTop: 1,
+                          display: 'flex', alignItems: 'center', gap: 4,
                         }}>
-                          {name}
+                          <span>{name}</span>
+                          {isSelected && <span style={{ fontSize: '0.6rem', background: c.accent, color: '#fff', padding: '0 4px', borderRadius: 3 }}>{t(lang, 'selectedFontBadge')}</span>}
                         </div>
                       </div>
 
-                      <div style={{ display: 'flex', gap: 4, flexShrink: 0, alignItems: 'center' }}>
+                      <div style={{ display: 'flex', gap: 3, flexShrink: 0, alignItems: 'center' }}>
                         <button
                           type="button"
                           onClick={(e) => toggleFav(name, e)}
-                          title={favorites.has(name) ? "Remove favorite" : "Add to favorites"}
+                          title={isFav ? t(lang, 'removeFromFavorites') : t(lang, 'addToFavorites')}
                           style={{
-                            padding: '3px 6px', borderRadius: 5,
-                            border: `1px solid ${favorites.has(name) ? c.accent : c.border}`,
-                            background: favorites.has(name) ? c.accentLight : 'transparent',
-                            color: favorites.has(name) ? c.accent : c.textMuted,
+                            padding: '3px 6px', borderRadius: 4,
+                            border: `1px solid ${isFav ? '#f59e0b' : c.border}`,
+                            background: isFav ? (c.isDark ? 'rgba(245,158,11,0.2)' : '#fef3c7') : 'transparent',
+                            color: isFav ? '#f59e0b' : c.textFaint,
                             fontSize: '0.75rem', cursor: 'pointer',
                           }}
                         >
-                          {favorites.has(name) ? '★' : '☆'}
+                          {isFav ? '★' : '☆'}
                         </button>
                         <button
                           type="button"
                           onClick={(e) => handleApplyToSelection(name, e)}
-                          title="Apply font to selected text boundary"
+                          title={t(lang, 'applyFontToSelection')}
                           style={{
-                            padding: '3px 8px', borderRadius: 5,
-                            border: `1px solid ${c.border}`,
-                            background: 'transparent',
-                            color: c.accent, fontFamily: uiFont,
+                            padding: '3px 7px', borderRadius: 4,
+                            border: `1px solid ${isSelected ? c.accent : c.border}`,
+                            background: isSelected ? c.accent : 'transparent',
+                            color: isSelected ? (c.isDark ? c.bg : '#ffffff') : c.accent,
+                            fontFamily: uiFont,
                             fontSize: '0.68rem', fontWeight: 600,
                             cursor: 'pointer',
+                            whiteSpace: 'nowrap',
                           }}
-                          onMouseEnter={(e) => { e.currentTarget.style.background = c.accent; e.currentTarget.style.color = c.isDark ? c.bg : '#ffffff'; }}
-                          onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = c.accent; }}
                         >
-                          ✦ {t(lang, 'selectFont')}
+                          {t(lang, 'applyFont')}
                         </button>
                       </div>
                     </div>
@@ -551,9 +700,10 @@ export default function GoogleFontsPanel(props: GoogleFontsPanelProps & { hideRo
                 })}
               </div>
             ))}
+
             {filteredCategories.length === 0 && (
-              <div style={{ padding: '16px 10px', fontFamily: uiFont, fontSize: '0.78rem', color: c.textFaint, textAlign: 'center' }}>
-                No fonts found matching "{search}"
+              <div style={{ padding: '20px 10px', fontFamily: uiFont, fontSize: '0.78rem', color: c.textFaint, textAlign: 'center' }}>
+                {t(lang, 'noMatchingFonts')} "{search}"
               </div>
             )}
           </div>
@@ -589,3 +739,4 @@ export default function GoogleFontsPanel(props: GoogleFontsPanelProps & { hideRo
 
   return panelContent;
 }
+

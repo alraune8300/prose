@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { PanelRightClose, Info } from 'lucide-react';
-import { Lang, LANG_LABELS, LANG_FLAGS } from './i18n';
+import { Lang, LANG_LABELS, LANG_FLAGS, t } from './i18n';
 import nspell from 'nspell';
 
 interface SpellcheckPanelProps {
@@ -12,7 +12,7 @@ interface SpellcheckPanelProps {
   onClose: () => void;
 }
 
-const loadedCheckers: Record<string, any> = {};
+const loadedCheckers: Record<string, ReturnType<typeof nspell>> = {};
 
 export default function SpellcheckPanel({ c, uiFont, headingFont, lang, onClose }: SpellcheckPanelProps) {
   const [enabled, setEnabled] = useState(false);
@@ -84,12 +84,12 @@ export default function SpellcheckPanel({ c, uiFont, headingFont, lang, onClose 
         </button>
       </div>
       <h2 style={{ fontFamily: `'${headingFont}', serif`, fontSize: '2rem', fontWeight: 500, color: c.text, margin: 0, letterSpacing: '-0.02em' }}>
-        Spell check
+        {t(lang, 'spellCheck')}
       </h2>
       
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <span style={{ fontFamily: uiFont, fontSize: '1rem', color: c.text }}>Check spelling</span>
+          <span style={{ fontFamily: uiFont, fontSize: '1rem', color: c.text }}>{t(lang, 'checkSpelling')}</span>
           <Info size={14} color={c.textMuted} />
         </div>
         <div style={{
@@ -109,7 +109,7 @@ export default function SpellcheckPanel({ c, uiFont, headingFont, lang, onClose 
       
       {enabled && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <label style={{ fontFamily: uiFont, fontSize: '0.85rem', color: c.textMuted }}>Language</label>
+          <label style={{ fontFamily: uiFont, fontSize: '0.85rem', color: c.textMuted }}>{t(lang, 'spellLanguage')}</label>
           <div style={{ position: 'relative' }}>
             <select 
               value={spellLang} 
@@ -133,15 +133,15 @@ export default function SpellcheckPanel({ c, uiFont, headingFont, lang, onClose 
       
       {loading && (
         <span style={{ fontFamily: uiFont, fontSize: '0.85rem', color: c.textMuted }}>
-          Loading dictionary...
+          {t(lang, 'loadingDictionary')}
         </span>
       )}
       
       {error && (
         <span style={{ fontFamily: uiFont, fontSize: '0.85rem', color: '#ef4444' }}>
           {(spellLang === 'ja' || spellLang === 'zh') 
-            ? 'Spellcheck is not supported for this language.' 
-            : 'Dictionary not available.'}
+            ? t(lang, 'spellcheckNotSupported') 
+            : t(lang, 'dictNotAvailable')}
         </span>
       )}
 
@@ -150,7 +150,7 @@ export default function SpellcheckPanel({ c, uiFont, headingFont, lang, onClose 
         <div style={{ marginTop: 16, background: c.isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', padding: 16, borderRadius: 12, border: `1px solid ${c.borderFaint}` }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
             <div>
-              <span style={{ fontFamily: uiFont, fontSize: '0.8rem', color: c.textMuted }}>Misspelled word:</span>
+              <span style={{ fontFamily: uiFont, fontSize: '0.8rem', color: c.textMuted }}>{t(lang, 'misspelledWord')}</span>
               <div style={{ fontFamily: `'${headingFont}', serif`, fontSize: '1.2rem', color: '#ef4444', textDecoration: 'underline wavy red', textUnderlineOffset: 3, marginTop: 4 }}>
                 {activeError.word}
               </div>
@@ -159,10 +159,10 @@ export default function SpellcheckPanel({ c, uiFont, headingFont, lang, onClose 
               onClick={() => setActiveError(null)}
               style={{ background: 'transparent', border: `1px solid ${c.borderFaint}`, borderRadius: 6, padding: '4px 10px', color: c.text, fontFamily: uiFont, fontSize: '0.75rem', cursor: 'pointer' }}
             >
-              Ignore
+              {t(lang, 'ignore')}
             </button>
           </div>
-          <span style={{ fontFamily: uiFont, fontSize: '0.8rem', color: c.textMuted, display: 'block', marginBottom: 8 }}>Suggestions:</span>
+          <span style={{ fontFamily: uiFont, fontSize: '0.8rem', color: c.textMuted, display: 'block', marginBottom: 8 }}>{t(lang, 'suggestions')}:</span>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             {activeError.suggestions.length > 0 ? activeError.suggestions.map((s, i) => (
               <button
@@ -183,7 +183,7 @@ export default function SpellcheckPanel({ c, uiFont, headingFont, lang, onClose 
               </button>
             )) : (
               <div style={{ padding: '8px 12px', fontSize: '0.85rem', color: c.textFaint, fontStyle: 'italic', fontFamily: uiFont }}>
-                No suggestions found in dictionary
+                {t(lang, 'noSuggestions')}
               </div>
             )}
           </div>

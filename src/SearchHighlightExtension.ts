@@ -61,7 +61,7 @@ export function getSearchHighlightPlugin() {
                 }
               }
             });
-          } catch(_e) { /* ignore */ }
+          } catch { /* ignore */ }
         }
         
         if (changed || tr.docChanged) {

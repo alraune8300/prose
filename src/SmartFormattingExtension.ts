@@ -14,7 +14,7 @@ export const SmartFormatting = Extension.create({
     return [
       // Smart Quotes
       new InputRule({
-        find: /(?:^|[\s{\[\(<'"\u2018\u201C])(")$/,
+        find: /(?:^|[\s{(<'"\u2018\u201C[])(")$/,
         handler: ({ state, range, match }) => {
           if (!window.__formatState?.smartQuotes) return null;
           const { tr } = state;
@@ -29,7 +29,7 @@ export const SmartFormatting = Extension.create({
         },
       }),
       new InputRule({
-        find: /(?:^|[\s{\[\(<'"\u2018\u201C])(')$/,
+        find: /(?:^|[\s{(<'"\u2018\u201C[])(')$/,
         handler: ({ state, range, match }) => {
           if (!window.__formatState?.smartQuotes) return null;
           const { tr } = state;

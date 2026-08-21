@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, RotateCw, X } from 'lucide-react';
+import { Search, RotateCw, X, ArrowLeft, PanelRightClose } from 'lucide-react';
 import { Lang, t } from './i18n';
 
 interface SearchPanelProps {
@@ -10,8 +10,6 @@ interface SearchPanelProps {
   lang: Lang;
 }
 
-import { ArrowLeft, PanelRightClose } from 'lucide-react';
-
 export default function SearchPanel({ c, uiFont, lang, headingFont, onClose }: SearchPanelProps) {
   const [findText, setFindText] = useState('');
   const [replaceText, setReplaceText] = useState('');
@@ -19,7 +17,6 @@ export default function SearchPanel({ c, uiFont, lang, headingFont, onClose }: S
   const [wholeWord, setWholeWord] = useState(false);
   const [regex, setRegex] = useState(false);
   const [resultsCount, setResultsCount] = useState(0);
-
 
   useEffect(() => {
     window.dispatchEvent(new CustomEvent('kgv-search-query', { detail: { find: findText, matchCase, wholeWord, regex } }));
@@ -44,7 +41,6 @@ export default function SearchPanel({ c, uiFont, lang, headingFont, onClose }: S
   );
 
   return (
-    
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <button onClick={onClose} style={{ background: 'none', border: 'none', color: c.accent, cursor: 'pointer', padding: 0 }}>
@@ -54,15 +50,17 @@ export default function SearchPanel({ c, uiFont, lang, headingFont, onClose }: S
           <PanelRightClose size={20} />
         </button>
       </div>
-      <h2 style={{ fontFamily: uiFont, fontSize: '1.5rem', fontWeight: 600, color: c.text, margin: 0, letterSpacing: '-0.02em' }}>
-        Find and replace
+      <h2 style={{ fontFamily: headingFont || uiFont, fontSize: '1.5rem', fontWeight: 600, color: c.text, margin: 0, letterSpacing: '-0.02em' }}>
+        {t(lang, 'findAndReplace')}
       </h2>
 
       <div style={{ padding: '0 4px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
           <Search size={16} color={c.textFaint} />
-          <span style={{ fontFamily: uiFont, fontSize: '0.9rem', color: c.text }}>Find</span>
-          <span style={{ fontFamily: uiFont, fontSize: '0.75rem', color: c.textFaint, marginLeft: 'auto' }}>{findText ? (resultsCount > 0 ? `${resultsCount} result${resultsCount > 1 ? 's' : ''}` : 'No results') : ''}</span>
+          <span style={{ fontFamily: uiFont, fontSize: '0.9rem', color: c.text }}>{t(lang, 'find')}</span>
+          <span style={{ fontFamily: uiFont, fontSize: '0.75rem', color: c.textFaint, marginLeft: 'auto' }}>
+            {findText ? (resultsCount > 0 ? (resultsCount === 1 ? t(lang, 'resultCount').replace('{count}', '1') : t(lang, 'resultsCount').replace('{count}', String(resultsCount))) : t(lang, 'noResults')) : ''}
+          </span>
         </div>
         <div style={{ position: 'relative' }}>
           <input
@@ -87,14 +85,14 @@ export default function SearchPanel({ c, uiFont, lang, headingFont, onClose }: S
                 <button
                   onClick={() => window.dispatchEvent(new CustomEvent('kgv-search-nav', { detail: { direction: 'prev', find: findText, matchCase, wholeWord, regex } }))}
                   style={{ background: 'none', border: 'none', color: c.textMuted, cursor: 'pointer', padding: 2, display: 'flex' }}
-                  title="Previous match"
+                  title={t(lang, 'previousMatch')}
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
                 </button>
                 <button
                   onClick={() => window.dispatchEvent(new CustomEvent('kgv-search-nav', { detail: { direction: 'next', find: findText, matchCase, wholeWord, regex } }))}
                   style={{ background: 'none', border: 'none', color: c.textMuted, cursor: 'pointer', padding: 2, display: 'flex' }}
-                  title="Next match"
+                  title={t(lang, 'nextMatch')}
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
                 </button>
@@ -118,7 +116,7 @@ export default function SearchPanel({ c, uiFont, lang, headingFont, onClose }: S
       <div style={{ padding: '0 4px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
           <RotateCw size={16} color={c.textFaint} />
-          <span style={{ fontFamily: uiFont, fontSize: '0.9rem', color: c.text }}>Replace</span>
+          <span style={{ fontFamily: uiFont, fontSize: '0.9rem', color: c.text }}>{t(lang, 'replace')}</span>
         </div>
         <input
           type="text"
@@ -150,7 +148,7 @@ export default function SearchPanel({ c, uiFont, lang, headingFont, onClose }: S
             cursor: 'pointer', fontWeight: 500,
           }}
         >
-          Replace
+          {t(lang, 'replace')}
         </button>
         <button
           onClick={() => {
@@ -163,15 +161,15 @@ export default function SearchPanel({ c, uiFont, lang, headingFont, onClose }: S
             cursor: 'pointer', fontWeight: 500,
           }}
         >
-          Replace all
+          {t(lang, 'replaceAll')}
         </button>
       </div>
 
       <div style={{ marginTop: 12 }}>
-        <SectionLabel label="Options" />
+        <SectionLabel label={t(lang, 'searchOptions')} />
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginTop: 16 }}>
           <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}>
-            <span style={{ fontFamily: uiFont, fontSize: '0.9rem', color: c.textMuted }}>Match case</span>
+            <span style={{ fontFamily: uiFont, fontSize: '0.9rem', color: c.textMuted }}>{t(lang, 'matchCase')}</span>
             <div style={{
               width: 44, height: 24, borderRadius: 12,
               background: matchCase ? c.accent : 'transparent',
@@ -188,7 +186,7 @@ export default function SearchPanel({ c, uiFont, lang, headingFont, onClose }: S
             <input type="checkbox" checked={matchCase} onChange={e => setMatchCase(e.target.checked)} style={{ display: 'none' }} />
           </label>
           <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}>
-            <span style={{ fontFamily: uiFont, fontSize: '0.9rem', color: c.textMuted }}>Whole words only</span>
+            <span style={{ fontFamily: uiFont, fontSize: '0.9rem', color: c.textMuted }}>{t(lang, 'wholeWordsOnly')}</span>
             <div style={{
               width: 44, height: 24, borderRadius: 12,
               background: wholeWord ? c.accent : 'transparent',
@@ -205,7 +203,7 @@ export default function SearchPanel({ c, uiFont, lang, headingFont, onClose }: S
             <input type="checkbox" checked={wholeWord} onChange={e => setWholeWord(e.target.checked)} style={{ display: 'none' }} />
           </label>
           <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}>
-            <span style={{ fontFamily: uiFont, fontSize: '0.9rem', color: c.textMuted }}>Use regular expressions</span>
+            <span style={{ fontFamily: uiFont, fontSize: '0.9rem', color: c.textMuted }}>{t(lang, 'useRegex')}</span>
             <div style={{
               width: 44, height: 24, borderRadius: 12,
               background: regex ? c.accent : 'transparent',
