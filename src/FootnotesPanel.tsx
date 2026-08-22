@@ -27,13 +27,34 @@ export function extractFootnotesFromContent(content: string): ParsedFootnote[] {
     defMap.set(key, val);
   }
 
-  // 2. Find all inline footnote references e.g., `[^1]`, `[^2]`, `<sup class="kgv-footnote-marker" data-footnote-id="1">`
-  const inlineRegex = /\[\^([^\]:]+)\](?!:)/g;
+  // 2. Find all inline footnote references e.g., `[^1]`, `[^2]`, or HTML sup tags `<sup ... data-footnote-id="1">[^1]</sup>`
   const foundKeys = new Set<string>();
   const list: ParsedFootnote[] = [];
-  let match;
   let autoNum = 1;
 
+  // Match HTML sup footnote markers
+  const supRegex = /data-footnote-id="([^"]+)"[^>]*>([^<]+)<\/sup>/g;
+  let supMatch;
+  while ((supMatch = supRegex.exec(content)) !== null) {
+    const key = supMatch[1].trim();
+    if (!foundKeys.has(key)) {
+      foundKeys.add(key);
+      const contentVal = defMap.get(key) || '';
+      const num = parseInt(key, 10);
+      list.push({
+        id: key,
+        number: !isNaN(num) ? num : autoNum,
+        label: key,
+        content: contentVal,
+        sourcePos: supMatch.index,
+      });
+      autoNum++;
+    }
+  }
+
+  // Match markdown style [^1]
+  const inlineRegex = /\[\^([^\]:]+)\](?!:)/g;
+  let match;
   while ((match = inlineRegex.exec(content)) !== null) {
     const key = match[1].trim();
     if (!foundKeys.has(key)) {

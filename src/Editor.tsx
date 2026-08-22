@@ -393,7 +393,7 @@ function Editor({
       if (!editor) return;
       const { id } = (e as CustomEvent).detail || {};
       const fnNum = id || '1';
-      editor.chain().focus().insertContent(`[^${fnNum}] `).run();
+      editor.chain().focus().insertContent(`<sup class="kgv-footnote-marker" data-footnote-id="${fnNum}">[^${fnNum}]</sup>&nbsp;`).run();
     }
 
     function handleInsertQuote(e: Event) {
