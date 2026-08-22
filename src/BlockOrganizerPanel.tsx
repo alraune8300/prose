@@ -101,6 +101,57 @@ const BlockMiniEditor = ({
   );
 };
 
+function convertNodeJSON(nodeJson: JSONContent, targetType: string): JSONContent {
+  const json = JSON.parse(JSON.stringify(nodeJson));
+
+  let inlineContent = json.content || [];
+  if (json.type === 'blockquote' && Array.isArray(json.content) && json.content[0]?.content) {
+    inlineContent = json.content[0].content;
+  } else if ((json.type === 'bulletList' || json.type === 'orderedList') && Array.isArray(json.content)) {
+    const firstItem = json.content[0];
+    if (firstItem && firstItem.content && firstItem.content[0]?.content) {
+      inlineContent = firstItem.content[0].content;
+    }
+  }
+
+  if (targetType === 'paragraph') {
+    return {
+      type: 'paragraph',
+      content: inlineContent,
+    };
+  } else if (targetType === 'heading1') {
+    return {
+      type: 'heading',
+      attrs: { level: 1 },
+      content: inlineContent,
+    };
+  } else if (targetType === 'heading2') {
+    return {
+      type: 'heading',
+      attrs: { level: 2 },
+      content: inlineContent,
+    };
+  } else if (targetType === 'heading3') {
+    return {
+      type: 'heading',
+      attrs: { level: 3 },
+      content: inlineContent,
+    };
+  } else if (targetType === 'blockquote') {
+    return {
+      type: 'blockquote',
+      content: [
+        {
+          type: 'paragraph',
+          content: inlineContent,
+        },
+      ],
+    };
+  }
+
+  return json;
+}
+
 export default function BlockOrganizerPanel({
   editor,
   onClose,
@@ -131,7 +182,7 @@ export default function BlockOrganizerPanel({
       }
       if (!text.trim()) text = '[Empty]';
 
-      const blockId = `block-${i}-${offset}`;
+      const blockId = `block-${i}`;
       newBlocks.push({
         id: blockId,
         index: i,
@@ -147,10 +198,11 @@ export default function BlockOrganizerPanel({
     setBlocks(newBlocks);
   }, [editor]);
 
-  const flushToMainEditor = useCallback(() => {
+  const flushToMainEditor = useCallback((targetBlocks?: BlockItem[]) => {
     if (!editor || editor.isDestroyed) return;
+    const list = targetBlocks || blocks;
     const fullDocContent: JSONContent[] = [];
-    for (const b of blocks) {
+    for (const b of list) {
       const content = blockContentMapRef.current[b.id];
       if (content && Array.isArray(content) && content.length > 0) {
         fullDocContent.push(...content);
@@ -158,13 +210,15 @@ export default function BlockOrganizerPanel({
         fullDocContent.push(b.node.toJSON());
       }
     }
+    isSyncingRef.current = true;
     if (fullDocContent.length > 0) {
-      isSyncingRef.current = true;
       editor.commands.setContent({ type: 'doc', content: fullDocContent });
-      setTimeout(() => {
-        isSyncingRef.current = false;
-      }, 80);
+    } else {
+      editor.commands.setContent({ type: 'doc', content: [{ type: 'paragraph' }] });
     }
+    setTimeout(() => {
+      isSyncingRef.current = false;
+    }, 80);
   }, [blocks, editor]);
 
   const handleBlockContentChange = useCallback((blockId: string, json: JSONContent) => {
@@ -217,56 +271,84 @@ export default function BlockOrganizerPanel({
     const endIndex = result.destination.index;
     if (startIndex === endIndex) return;
 
-    flushToMainEditor();
+    if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
 
-    const state = editor.state;
-    const tr = state.tr;
-    const nodes: { node: ProsemirrorNode; offset: number; size: number }[] = [];
-    state.doc.forEach((node, offset) => {
-      nodes.push({ node, offset, size: node.nodeSize });
-    });
+    const newBlocks = Array.from(blocks);
+    const [movedBlock] = newBlocks.splice(startIndex, 1);
+    newBlocks.splice(endIndex, 0, movedBlock);
 
-    if (startIndex < 0 || startIndex >= nodes.length || endIndex < 0 || endIndex >= nodes.length) return;
-    const fromNode = nodes[startIndex];
-    const insertPos = startIndex < endIndex ? nodes[endIndex].offset + nodes[endIndex].size : nodes[endIndex].offset;
-    const adjustedInsertPos = insertPos > fromNode.offset ? insertPos - fromNode.size : insertPos;
-
-    tr.delete(fromNode.offset, fromNode.offset + fromNode.size);
-    tr.insert(adjustedInsertPos, fromNode.node);
-    editor.view.dispatch(tr);
+    setBlocks(newBlocks);
+    flushToMainEditor(newBlocks);
   };
 
   const handleDuplicate = (block: BlockItem) => {
     if (!editor) return;
-    flushToMainEditor();
-    const tr = editor.state.tr;
-    tr.insert(block.offset + block.size, block.node);
-    editor.view.dispatch(tr);
+    if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
+
+    const sourceContent = blockContentMapRef.current[block.id] || [block.node.toJSON()];
+    const newBlockId = `block-dup-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
+    const clonedContent = JSON.parse(JSON.stringify(sourceContent));
+
+    blockContentMapRef.current[newBlockId] = clonedContent;
+
+    const blockIndex = blocks.findIndex(b => b.id === block.id);
+    const dupNode = editor.schema.nodeFromJSON(clonedContent[0]);
+
+    const newBlock: BlockItem = {
+      id: newBlockId,
+      index: blockIndex + 1,
+      type: block.type,
+      text: block.text,
+      offset: 0,
+      size: dupNode.nodeSize,
+      node: dupNode,
+    };
+
+    const newBlocks = [...blocks];
+    newBlocks.splice(blockIndex + 1, 0, newBlock);
+
+    setBlocks(newBlocks);
+    flushToMainEditor(newBlocks);
     setActiveMenu(null);
   };
 
   const handleDelete = (block: BlockItem) => {
     if (!editor) return;
-    flushToMainEditor();
-    const tr = editor.state.tr;
-    tr.delete(block.offset, block.offset + block.size);
-    editor.view.dispatch(tr);
+    if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
+
+    delete blockContentMapRef.current[block.id];
+
+    const newBlocks = blocks.filter(b => b.id !== block.id);
+    setBlocks(newBlocks);
+    flushToMainEditor(newBlocks);
     setActiveMenu(null);
   };
 
-  const handleTurnInto = (block: BlockItem, type: string) => {
+  const handleTurnInto = (block: BlockItem, targetType: string) => {
     if (!editor) return;
-    flushToMainEditor();
-    const pos = block.offset + 1;
-    const chain = editor.chain().setTextSelection(pos);
+    if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
 
-    switch (type) {
-      case 'paragraph': chain.setParagraph().run(); break;
-      case 'heading1': chain.toggleHeading({ level: 1 }).run(); break;
-      case 'heading2': chain.toggleHeading({ level: 2 }).run(); break;
-      case 'heading3': chain.toggleHeading({ level: 3 }).run(); break;
-      case 'blockquote': chain.toggleBlockquote().run(); break;
-    }
+    const sourceContent = blockContentMapRef.current[block.id] || [block.node.toJSON()];
+    const firstNodeJson = sourceContent[0] || block.node.toJSON();
+
+    const transformedJson = convertNodeJSON(firstNodeJson, targetType);
+    blockContentMapRef.current[block.id] = [transformedJson];
+
+    const newPmNode = editor.schema.nodeFromJSON(transformedJson);
+
+    const updatedBlocks = blocks.map(b => {
+      if (b.id === block.id) {
+        return {
+          ...b,
+          type: targetType,
+          node: newPmNode,
+        };
+      }
+      return b;
+    });
+
+    setBlocks(updatedBlocks);
+    flushToMainEditor(updatedBlocks);
     setActiveMenu(null);
   };
 
@@ -505,6 +587,7 @@ export default function BlockOrganizerPanel({
                         {/* Block Content */}
                         <div style={{ width: '100%', minWidth: '160px' }}>
                           <BlockMiniEditor
+                            key={`${block.id}-${block.type}`}
                             block={block}
                             theme={theme}
                             docFont={docFont}
