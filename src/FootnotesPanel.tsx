@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Bookmark, Plus, Trash2, ArrowUpRight, Copy, Check, Search, Hash, ExternalLink } from 'lucide-react';
 import type { ThemeColors } from './types';
 import type { Lang } from './i18n';
+import { t } from './i18n';
 
 export interface ParsedFootnote {
   id: string; // e.g. "1", "2", "ref"
@@ -159,7 +160,7 @@ export default function FootnotesPanel({
         <div className="flex items-center gap-2">
           <Bookmark size={16} style={{ color: theme.accent }} />
           <span className="font-semibold text-sm" style={{ color: theme.text }}>
-            {lang === 'vi' ? 'Quản lý Chú thích' : 'Contextual Footnotes'}
+            {t(lang, 'contextualFootnotes')}
           </span>
           <span 
             className="text-[10px] px-1.5 py-0.5 rounded-full font-mono font-semibold" 
@@ -173,7 +174,7 @@ export default function FootnotesPanel({
           onClick={onInsertNewFootnote}
           className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg transition-all hover:opacity-90 active:scale-95 text-white shadow-xs font-medium"
           style={{ backgroundColor: theme.accent }}
-          title={lang === 'vi' ? 'Thêm chú thích mới [^n]' : 'Insert new footnote [^n]'}
+          title={t(lang, 'insertNewFootnote')}
         >
           <Plus size={13} />
           <span>{lang === 'vi' ? 'Thêm' : 'Add'}</span>
@@ -182,17 +183,17 @@ export default function FootnotesPanel({
 
       {/* Search Input when footnotes exist */}
       {footnotes.length > 2 && (
-        <div className="p-3 border-b shrink-0" style={{ borderColor: theme.border, backgroundColor: theme.background }}>
+        <div className="p-3 border-b shrink-0" style={{ borderColor: theme.border, backgroundColor: theme.surface }}>
           <div className="relative">
             <Search size={13} className="absolute left-2.5 top-2.5 opacity-50" style={{ color: theme.textMuted }} />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={lang === 'vi' ? 'Tìm trong chú thích...' : 'Search footnotes...'}
+              placeholder={t(lang, 'searchFootnotes')}
               className="w-full text-xs pl-7 pr-3 py-1.5 rounded-lg border outline-none transition-all"
               style={{
-                backgroundColor: theme.surface,
+                backgroundColor: theme.isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)',
                 borderColor: theme.border,
                 color: theme.text,
               }}
@@ -202,7 +203,7 @@ export default function FootnotesPanel({
       )}
 
       {/* List of Footnote Cards */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-2.5 kgv-scroll select-text">
+      <div className="flex-1 overflow-y-auto p-3 space-y-2.5 kgv-scroll select-text" style={{ backgroundColor: theme.background }}>
         {filteredFootnotes.length === 0 ? (
           <div 
             className="flex flex-col items-center justify-center text-center p-6 rounded-2xl border border-dashed my-4" 
@@ -210,7 +211,7 @@ export default function FootnotesPanel({
           >
             <Hash size={24} className="mb-2 opacity-40" style={{ color: theme.accent }} />
             <p className="text-xs font-medium mb-1" style={{ color: theme.text }}>
-              {searchQuery ? (lang === 'vi' ? 'Không tìm thấy kết quả' : 'No results found') : (lang === 'vi' ? 'Chưa có chú thích' : 'No footnotes yet')}
+              {searchQuery ? (lang === 'vi' ? 'Không tìm thấy kết quả' : 'No results found') : t(lang, 'noFootnotesYet')}
             </p>
             <p className="text-[11px] opacity-60 leading-relaxed mb-3" style={{ color: theme.textMuted }}>
               {lang === 'vi'
@@ -223,7 +224,7 @@ export default function FootnotesPanel({
               style={{ borderColor: theme.accent, color: theme.accent, backgroundColor: theme.surface }}
             >
               <Plus size={13} />
-              <span>{lang === 'vi' ? 'Thêm chú thích đầu tiên' : 'Add First Footnote'}</span>
+              <span>{t(lang, 'addFirstFootnote')}</span>
             </button>
           </div>
         ) : (
@@ -255,7 +256,7 @@ export default function FootnotesPanel({
                       [^{fn.label}]
                     </span>
                     <span className="text-[11px] truncate opacity-70 font-sans" style={{ color: theme.textMuted }}>
-                      {lang === 'vi' ? `Chú thích #${fn.number}` : `Footnote #${fn.number}`}
+                      {t(lang, 'footnoteNumber')} #{fn.number}
                     </span>
                   </div>
 
@@ -266,7 +267,7 @@ export default function FootnotesPanel({
                       onClick={() => onScrollToEditorMarker(fn.id)}
                       className="p-1 rounded hover:bg-black/5 dark:hover:bg-white/10 transition-colors flex items-center gap-1 text-[11px] font-medium"
                       style={{ color: theme.accent }}
-                      title={lang === 'vi' ? 'Nhảy đến vị trí trong bài viết' : 'Jump to text'}
+                      title={t(lang, 'jumpToText')}
                     >
                       <ArrowUpRight size={13} />
                       <span className="hidden sm:inline text-[10px]">Jump</span>
@@ -277,7 +278,7 @@ export default function FootnotesPanel({
                       onClick={() => handleCopyCitation(fn)}
                       className="p-1 rounded hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
                       style={{ color: theme.textMuted }}
-                      title={lang === 'vi' ? 'Sao chép cú pháp chú thích' : 'Copy citation text'}
+                      title={t(lang, 'copyCitationText')}
                     >
                       {copiedId === fn.id ? <Check size={13} className="text-emerald-500" /> : <Copy size={13} />}
                     </button>
@@ -286,27 +287,27 @@ export default function FootnotesPanel({
                     <button
                       onClick={() => onDeleteFootnote(fn.id)}
                       className="p-1 rounded hover:bg-rose-500/10 text-rose-500 transition-colors"
-                      title={lang === 'vi' ? 'Xóa chú thích' : 'Delete footnote'}
+                      title={t(lang, 'deleteFootnote')}
                     >
                       <Trash2 size={13} />
                     </button>
                   </div>
                 </div>
 
-                {/* Footnote Content Input Area (Typography: text-xs, italic, text-zinc-400 / muted) */}
+                {/* Footnote Content Input Area (Typography: text-xs, italic) */}
                 <textarea
                   value={fn.content}
                   onChange={(e) => onUpdateFootnoteContent(fn.id, e.target.value)}
-                  placeholder={lang === 'vi' ? 'Nhập nội dung giải nghĩa chú thích (hỗ trợ chèn link nguồn)...' : 'Enter footnote citation or note (supports links)...'}
+                  placeholder={t(lang, 'footnotePlaceholder')}
                   rows={2}
                   className="w-full text-xs p-2 rounded-lg border resize-none focus:outline-none focus:ring-1 transition-all italic"
                   style={{
-                    backgroundColor: theme.background,
+                    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)',
                     borderColor: theme.border,
-                    color: theme.isDark ? '#a1a1aa' : '#71717a', // text-zinc-400 equivalent
+                    color: theme.text,
                     fontFamily: `'${docFont}', sans-serif`,
                     lineHeight: '1.5',
-                    fontSize: '0.75rem', // 6pt / 0.75rem (text-xs)
+                    fontSize: '0.75rem',
                   }}
                 />
 
@@ -314,7 +315,7 @@ export default function FootnotesPanel({
                 {fn.content && (fn.content.includes('http://') || fn.content.includes('https://')) && (
                   <div className="mt-1.5 flex items-center gap-1 text-[10px]" style={{ color: theme.accent }}>
                     <ExternalLink size={10} />
-                    <span className="truncate opacity-80 font-mono">Contains active reference links</span>
+                    <span className="truncate opacity-80 font-mono">{t(lang, 'containsActiveLinks')}</span>
                   </div>
                 )}
               </div>
@@ -324,10 +325,8 @@ export default function FootnotesPanel({
       </div>
 
       {/* Bottom Info Tip */}
-      <div className="p-3 border-t text-[10px] opacity-70 text-center shrink-0" style={{ borderColor: theme.border, backgroundColor: theme.background, color: theme.textMuted }}>
-        {lang === 'vi' 
-          ? 'Mẹo: Gõ [^tên] trực tiếp trong bài viết hoặc nhấp vào số [1] để chỉnh sửa'
-          : 'Tip: Type [^name] in editor or click [1] marker to focus note'}
+      <div className="p-3 border-t text-[10px] opacity-70 text-center shrink-0" style={{ borderColor: theme.border, backgroundColor: theme.surface, color: theme.textMuted }}>
+        {t(lang, 'footnoteTip')}
       </div>
     </div>
   );

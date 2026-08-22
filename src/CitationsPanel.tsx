@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { BookOpen, Plus, Trash2, Copy, Check, Download, Upload, Search, FileText, ExternalLink } from 'lucide-react';
 import type { ThemeColors } from './types';
 import type { Lang } from './i18n';
+import { t } from './i18n';
 import { CitationSource, CitationStyle, parseBibtex, exportToBibtex, formatBibliographyEntry } from './citationsEngine';
 import { CustomSelect } from './CustomSelect';
 
@@ -319,7 +320,7 @@ export default function CitationsPanel({
                     value={formAuthor}
                     onChange={(e) => setFormAuthor(e.target.value)}
                     className="w-full px-3 py-1.5 rounded-lg border text-xs outline-none"
-                    style={{ borderColor: theme.border, backgroundColor: theme.background, color: theme.text }}
+                    style={{ borderColor: theme.border, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)', color: theme.text }}
                     placeholder="Smith, A. & Johnson, B."
                   />
                 </div>
