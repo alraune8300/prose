@@ -19,16 +19,32 @@ export interface AppSettings {
   updatedAt?: string;
 }
 
+export interface ReferenceDocumentState {
+  id: string; // 'last_used'
+  title: string;
+  type: 'text' | 'pdf' | 'docx' | 'markdown' | 'image' | 'code';
+  content: string;
+  displayMode: 'live' | 'extract' | 'edit';
+  docxHtml?: string | null;
+  fileBlob?: Blob | null;
+  fileName?: string;
+  mimeType?: string;
+  fileMeta?: { size?: number; pageCount?: number };
+  fontSizeOffset?: number;
+  lastUpdated: string;
+}
+
 export class WritingAppDexieDB extends Dexie {
   projects!: Table<Project, string>;
   appSettings!: Table<AppSettings, string>;
   folders!: Table<Folder, string>;
   versions!: Table<VersionSnapshot, string>;
+  referenceDocument!: Table<ReferenceDocumentState, string>;
 
   constructor() {
     super('KgvWritingAppDexieDB');
     
-        this.version(1).stores({
+    this.version(1).stores({
       projects: 'id, title, lastModified',
       appSettings: 'id',
     });
@@ -42,6 +58,13 @@ export class WritingAppDexieDB extends Dexie {
       appSettings: 'id',
       folders: 'id, name, isDeleted',
       versions: 'id, pageId, timestamp'
+    });
+    this.version(4).stores({
+      projects: 'id, title, lastModified, folderId',
+      appSettings: 'id',
+      folders: 'id, name, isDeleted',
+      versions: 'id, pageId, timestamp',
+      referenceDocument: 'id'
     });
   }
 }
@@ -145,5 +168,34 @@ export async function deletePageVersionFromDB(id: string): Promise<void> {
     await db.versions.delete(id);
   } catch (err) {
     console.warn('Error deleting version from Dexie:', err);
+  }
+}
+
+export async function saveReferenceDocumentToDB(doc: Omit<ReferenceDocumentState, 'id' | 'lastUpdated'>): Promise<void> {
+  try {
+    await db.referenceDocument.put({
+      ...doc,
+      id: 'last_used',
+      lastUpdated: new Date().toISOString(),
+    });
+  } catch (err) {
+    console.warn('Error saving reference document to Dexie:', err);
+  }
+}
+
+export async function getReferenceDocumentFromDB(): Promise<ReferenceDocumentState | undefined> {
+  try {
+    return await db.referenceDocument.get('last_used');
+  } catch (err) {
+    console.warn('Error getting reference document from Dexie:', err);
+    return undefined;
+  }
+}
+
+export async function clearReferenceDocumentFromDB(): Promise<void> {
+  try {
+    await db.referenceDocument.delete('last_used');
+  } catch (err) {
+    console.warn('Error clearing reference document from Dexie:', err);
   }
 }

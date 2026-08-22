@@ -1790,11 +1790,11 @@ export default function App() {
                   color: isSplitView ? theme.accent : theme.text,
                   border: isSplitView ? `1px solid ${theme.accent}` : '1px solid transparent',
                 }}
-                title={lang === 'vi' ? 'Chia đôi màn hình: Khung tham chiếu & Đối chiếu' : 'Toggle Split Screen: Reference & Compare'}
+                title={t.toggleSplitView || 'Toggle Split Screen: Reference & Compare'}
               >
                 <Columns size={16} />
                 <span className="hidden md:inline font-medium text-xs">
-                  {lang === 'vi' ? 'Split View' : 'Split View'}
+                  {t.splitView || 'Split View'}
                 </span>
               </button>
             </div>

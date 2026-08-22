@@ -3,13 +3,18 @@ import {
   FileText, Upload, Copy, Check, Split, BookOpen, 
   Search, ZoomIn, ZoomOut, ArrowRight,
   ChevronRight, X, Clipboard, Edit3, Eye, FileCode,
-  RotateCcw, ExternalLink, FileUp, Sparkles
+  RotateCcw, ExternalLink, FileUp, Sparkles, Trash2
 } from 'lucide-react';
 import type { ThemeColors, Page, Project } from './types';
 import type { Lang } from './i18n';
 import { t } from './i18n';
 import { processReferenceFile } from './referenceExtractor';
 import { PdfCanvasViewer } from './PdfCanvasViewer';
+import { 
+  saveReferenceDocumentToDB, 
+  getReferenceDocumentFromDB, 
+  clearReferenceDocumentFromDB 
+} from './db';
 
 interface ReferenceComparePanelProps {
   theme: ThemeColors;
@@ -37,26 +42,30 @@ export default function ReferenceComparePanel({
   onClose,
 }: ReferenceComparePanelProps) {
   const [tab, setTab] = useState<'reference' | 'compare'>('reference');
-  const [displayMode, setDisplayMode] = useState<ViewDisplayMode>('extract');
+  const [displayMode, setDisplayMode] = useState<ViewDisplayMode>(() => {
+    return (localStorage.getItem('kgv_split_display_mode') as ViewDisplayMode) || 'extract';
+  });
   
   // Reference content state
   const [refContent, setRefContent] = useState<string>(() => {
     return localStorage.getItem('kgv_split_ref_content') || 
-`# Tài liệu Tham khảo (Reference Document)
+      t(lang, 'splitDefaultRefContent') || 
+`# Reference Document
 
-Bạn có thể:
-1. Dán văn bản từ clipboard (Ctrl+V hoặc bấm nút "Dán").
-2. Tải lên tệp PDF, DOCX, TXT, Markdown, Hình ảnh để vừa xem vừa viết bài.
-3. Chuyển đổi linh hoạt giữa "Xem trực tiếp (Live View)" và "Trích xuất văn bản (Extract Text)".
-4. Bôi đen bất kỳ đoạn văn nào và bấm "Trích dẫn vào bài" để chèn trực tiếp vào bản nháp.
-5. Chuyển sang tab "Đối chiếu & Diff" để so sánh điểm giống/khác nhau giữa hai văn bản.`;
+1. Paste text from clipboard (Ctrl+V or click "Paste Text").
+2. Upload PDF, DOCX, TXT, Markdown, Images to view and compare while writing.
+3. Switch seamlessly between "Live View" and "Extract Text".
+4. Select any text and click "Insert as Quote" to insert directly into your draft.
+5. Switch to "Compare & Diff" tab to analyze similarities and differences.`;
   });
 
   const [refTitle, setRefTitle] = useState<string>(() => {
-    return localStorage.getItem('kgv_split_ref_title') || 'Tài liệu tham khảo.md';
+    return localStorage.getItem('kgv_split_ref_title') || t(lang, 'splitDefaultRefTitle') || 'Reference Document.md';
   });
 
-  const [refType, setRefType] = useState<'text' | 'pdf' | 'docx' | 'markdown' | 'image' | 'code'>('markdown');
+  const [refType, setRefType] = useState<'text' | 'pdf' | 'docx' | 'markdown' | 'image' | 'code'>(() => {
+    return (localStorage.getItem('kgv_split_ref_type') as 'text' | 'pdf' | 'docx' | 'markdown' | 'image' | 'code') || 'markdown';
+  });
   const [refFile, setRefFile] = useState<File | null>(null);
   const [pdfBlobUrl, setPdfBlobUrl] = useState<string | null>(null);
   const [imageBlobUrl, setImageBlobUrl] = useState<string | null>(null);
@@ -66,7 +75,10 @@ Bạn có thể:
 
   // Search & Font Zoom
   const [searchQuery, setSearchQuery] = useState('');
-  const [fontSizeOffset, setFontSizeOffset] = useState(0);
+  const [fontSizeOffset, setFontSizeOffset] = useState(() => {
+    const saved = localStorage.getItem('kgv_split_font_offset');
+    return saved ? parseInt(saved, 10) : 0;
+  });
   const [imageZoom, setImageZoom] = useState(100);
   const [selectedText, setSelectedText] = useState('');
   const [copied, setCopied] = useState(false);
@@ -89,17 +101,88 @@ Bạn có thể:
     setTimeout(() => setToastMessage(null), 3000);
   }, []);
 
-  // Save text content to localStorage
+  // Restore persistent state from IndexedDB on component mount
+  useEffect(() => {
+    let isMounted = true;
+
+    async function restorePersistedRef() {
+      try {
+        const savedDoc = await getReferenceDocumentFromDB();
+        if (!isMounted || !savedDoc) return;
+
+        if (savedDoc.title) {
+          setRefTitle(savedDoc.title);
+          localStorage.setItem('kgv_split_ref_title', savedDoc.title);
+        }
+        if (savedDoc.type) {
+          setRefType(savedDoc.type);
+          localStorage.setItem('kgv_split_ref_type', savedDoc.type);
+        }
+        if (savedDoc.content !== undefined) {
+          setRefContent(savedDoc.content);
+          if (savedDoc.type !== 'pdf' && savedDoc.type !== 'image') {
+            localStorage.setItem('kgv_split_ref_content', savedDoc.content);
+          }
+        }
+        if (savedDoc.displayMode) {
+          setDisplayMode(savedDoc.displayMode);
+          localStorage.setItem('kgv_split_display_mode', savedDoc.displayMode);
+        }
+        if (savedDoc.fileMeta) {
+          setFileMeta(savedDoc.fileMeta);
+        }
+        if (savedDoc.fontSizeOffset !== undefined) {
+          setFontSizeOffset(savedDoc.fontSizeOffset);
+          localStorage.setItem('kgv_split_font_offset', String(savedDoc.fontSizeOffset));
+        }
+        if (savedDoc.docxHtml) {
+          setDocxHtml(savedDoc.docxHtml);
+        }
+
+        // Restore file object and preview blob URLs if fileBlob was preserved
+        if (savedDoc.fileBlob) {
+          const mime = savedDoc.mimeType || savedDoc.fileBlob.type || 'application/octet-stream';
+          const reconstitutedFile = new File(
+            [savedDoc.fileBlob], 
+            savedDoc.fileName || savedDoc.title || 'document', 
+            { type: mime }
+          );
+          setRefFile(reconstitutedFile);
+
+          if (savedDoc.type === 'pdf') {
+            const url = URL.createObjectURL(savedDoc.fileBlob);
+            setPdfBlobUrl(url);
+          } else if (savedDoc.type === 'image') {
+            const url = URL.createObjectURL(savedDoc.fileBlob);
+            setImageBlobUrl(url);
+          }
+        }
+      } catch (err) {
+        console.warn('Failed to restore reference document from DB:', err);
+      }
+    }
+
+    restorePersistedRef();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // Sync basic state to localStorage
   useEffect(() => {
     try {
       if (refType !== 'pdf' && refType !== 'image') {
         localStorage.setItem('kgv_split_ref_content', refContent);
       }
       localStorage.setItem('kgv_split_ref_title', refTitle);
+      localStorage.setItem('kgv_split_ref_type', refType);
+      localStorage.setItem('kgv_split_display_mode', displayMode);
+      localStorage.setItem('kgv_split_font_offset', String(fontSizeOffset));
     } catch (e) {
       console.warn('Storage limit for ref content', e);
     }
-  }, [refContent, refTitle, refType]);
+  }, [refContent, refTitle, refType, displayMode, fontSizeOffset]);
 
   // Clean up Blob URLs on unmount or change
   useEffect(() => {
@@ -127,28 +210,74 @@ Bạn có thể:
       setRefContent(result.rawText);
       setFileMeta({ size: result.fileSize, pageCount: result.pageCount });
 
+      let targetDisplayMode: ViewDisplayMode = 'extract';
+
       if (result.fileType === 'pdf') {
-        if (result.blobUrl) setPdfBlobUrl(result.blobUrl);
-        setDisplayMode('live');
+        if (result.blobUrl) {
+          setPdfBlobUrl(result.blobUrl);
+        }
+        targetDisplayMode = 'live';
       } else if (result.fileType === 'docx' && result.htmlContent) {
         setDocxHtml(result.htmlContent);
-        setDisplayMode('live');
+        targetDisplayMode = 'live';
       } else if (result.fileType === 'image' && result.blobUrl) {
         setImageBlobUrl(result.blobUrl);
-        setDisplayMode('live');
+        targetDisplayMode = 'live';
       } else if (result.fileType === 'markdown') {
-        setDisplayMode('live');
+        targetDisplayMode = 'live';
       } else {
-        setDisplayMode('extract');
+        targetDisplayMode = 'extract';
       }
 
-      showToast(lang === 'vi' ? `Đã tải tệp: ${file.name}` : `Loaded file: ${file.name}`);
+      setDisplayMode(targetDisplayMode);
+
+      // Persist to Dexie IndexedDB
+      await saveReferenceDocumentToDB({
+        title: result.title,
+        type: result.fileType,
+        content: result.rawText,
+        displayMode: targetDisplayMode,
+        docxHtml: result.htmlContent || null,
+        fileName: file.name,
+        mimeType: file.type,
+        fileBlob: file,
+        fileMeta: { size: result.fileSize, pageCount: result.pageCount },
+        fontSizeOffset,
+      });
+
+      showToast(`${t(lang, 'splitLoadedAndSaved') || 'Loaded & saved'}: ${file.name}`);
     } catch (err: unknown) {
-      const errMsg = err instanceof Error ? err.message : 'Lỗi tải tệp.';
+      const errMsg = err instanceof Error ? err.message : 'Error loading file.';
       showToast(errMsg);
     } finally {
       setIsProcessingFile(false);
     }
+  };
+
+  // Clear / Delete reference file completely until user loads a new one
+  const handleClearReferenceDoc = async () => {
+    try {
+      await clearReferenceDocumentFromDB();
+      localStorage.removeItem('kgv_split_ref_content');
+      localStorage.removeItem('kgv_split_ref_title');
+      localStorage.removeItem('kgv_split_ref_type');
+      localStorage.removeItem('kgv_split_display_mode');
+    } catch (err) {
+      console.warn('Error clearing reference document storage:', err);
+    }
+
+    if (pdfBlobUrl) URL.revokeObjectURL(pdfBlobUrl);
+    if (imageBlobUrl) URL.revokeObjectURL(imageBlobUrl);
+    setPdfBlobUrl(null);
+    setImageBlobUrl(null);
+    setDocxHtml(null);
+    setRefFile(null);
+    setFileMeta({});
+    setRefContent('');
+    setRefTitle(t(lang, 'splitDefaultRefTitle') || 'Reference Document.md');
+    setRefType('text');
+    setDisplayMode('edit');
+    showToast(t(lang, 'splitClearFileSuccess') || 'Reference document removed');
   };
 
   const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -166,11 +295,28 @@ Bạn có thể:
       if (navigator.clipboard && navigator.clipboard.readText) {
         const text = await navigator.clipboard.readText();
         if (text && text.trim().length > 0) {
+          const newTitle = t(lang, 'splitPastedDefaultTitle') || 'Pasted Text.txt';
           setRefContent(text);
           setRefType('text');
-          setRefTitle(lang === 'vi' ? 'Văn bản đã dán.txt' : 'Pasted Text.txt');
+          setRefTitle(newTitle);
           setDisplayMode('extract');
-          showToast(lang === 'vi' ? `Đã dán ${text.length} ký tự từ clipboard!` : `Pasted ${text.length} characters!`);
+          setRefFile(null);
+          setPdfBlobUrl(null);
+          setImageBlobUrl(null);
+          setDocxHtml(null);
+          setFileMeta({});
+
+          await saveReferenceDocumentToDB({
+            title: newTitle,
+            type: 'text',
+            content: text,
+            displayMode: 'extract',
+            fileBlob: null,
+            fileName: newTitle,
+            fontSizeOffset,
+          });
+
+          showToast(`${t(lang, 'splitPasteText') || 'Pasted'}: ${text.length} ${t(lang, 'characters')?.toLowerCase() || 'chars'}!`);
           return;
         }
       }
@@ -180,12 +326,12 @@ Bạn có thể:
 
     // Fallback: Open paste modal
     setPasteModalText('');
-    setPasteModalTitle(lang === 'vi' ? 'Văn bản tham khảo đã dán' : 'Pasted Reference Text');
+    setPasteModalTitle(t(lang, 'splitPasteModalTitle') || 'Paste Reference Text');
     setShowPasteModal(true);
   };
 
   // Handle Global/Panel Paste Event (Ctrl+V / Cmd+V)
-  const handlePanelPaste = (e: React.ClipboardEvent) => {
+  const handlePanelPaste = async (e: React.ClipboardEvent) => {
     // If the event target is an active input/textarea, let standard paste happen
     const target = e.target as HTMLElement;
     if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA') && !target.classList.contains('kgv-split-auto-paste-target')) {
@@ -204,11 +350,28 @@ Bạn có thể:
     const pastedText = e.clipboardData.getData('text/plain');
     if (pastedText && pastedText.trim().length > 0) {
       e.preventDefault();
+      const newTitle = t(lang, 'splitPastedDefaultTitle') || 'Pasted Text.txt';
       setRefContent(pastedText);
       setRefType('text');
-      setRefTitle(lang === 'vi' ? 'Văn bản đã dán.txt' : 'Pasted Text.txt');
+      setRefTitle(newTitle);
       setDisplayMode('extract');
-      showToast(lang === 'vi' ? `Đã dán ${pastedText.length} ký tự từ clipboard!` : `Pasted ${pastedText.length} characters!`);
+      setRefFile(null);
+      setPdfBlobUrl(null);
+      setImageBlobUrl(null);
+      setDocxHtml(null);
+      setFileMeta({});
+
+      await saveReferenceDocumentToDB({
+        title: newTitle,
+        type: 'text',
+        content: pastedText,
+        displayMode: 'extract',
+        fileBlob: null,
+        fileName: newTitle,
+        fontSizeOffset,
+      });
+
+      showToast(`${t(lang, 'splitPasteText') || 'Pasted'}: ${pastedText.length} ${t(lang, 'characters')?.toLowerCase() || 'chars'}!`);
     }
   };
 
@@ -248,7 +411,7 @@ Bạn có thể:
     const quote = textToQuote || selectedText;
     if (quote) {
       onInsertQuoteToEditor(quote);
-      showToast(lang === 'vi' ? 'Đã trích dẫn vào bài viết!' : 'Quote inserted to draft!');
+      showToast(t(lang, 'splitInsertQuote') || 'Quote inserted to draft!');
     }
   };
 
@@ -256,19 +419,57 @@ Bạn có thể:
     navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
-    showToast(lang === 'vi' ? 'Đã sao chép vào bộ nhớ tạm!' : 'Copied to clipboard!');
+    showToast(t(lang, 'copied') || 'Copied to clipboard!');
   };
 
+  // Auto-save edited text or changes to DB
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      // Only auto-save if not currently processing file
+      if (!isProcessingFile && (refType === 'text' || refType === 'markdown' || refType === 'code')) {
+        saveReferenceDocumentToDB({
+          title: refTitle,
+          type: refType,
+          content: refContent,
+          displayMode,
+          docxHtml,
+          fileName: refTitle,
+          fileBlob: null,
+          fileMeta,
+          fontSizeOffset,
+        });
+      }
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [refContent, refTitle, refType, displayMode, docxHtml, fileMeta, fontSizeOffset, isProcessingFile]);
+
   // Select another page from current project
-  const handleSelectProjectPage = (p: Page) => {
+  const handleSelectProjectPage = async (p: Page) => {
     const tmp = document.createElement('div');
     tmp.innerHTML = p.content;
     const cleanText = tmp.innerText || tmp.textContent || '';
-    setRefTitle(`${p.title || 'Untitled'} (Project Doc)`);
+    const newTitle = `${p.title || 'Untitled'} (Project Doc)`;
+    setRefTitle(newTitle);
     setRefContent(cleanText);
     setRefType('text');
     setDisplayMode('extract');
-    showToast(lang === 'vi' ? `Đã mở trang: ${p.title}` : `Opened page: ${p.title}`);
+    setRefFile(null);
+    setPdfBlobUrl(null);
+    setImageBlobUrl(null);
+    setDocxHtml(null);
+    setFileMeta({});
+
+    await saveReferenceDocumentToDB({
+      title: newTitle,
+      type: 'text',
+      content: cleanText,
+      displayMode: 'extract',
+      fileBlob: null,
+      fileName: newTitle,
+      fontSizeOffset,
+    });
+
+    showToast(`${t(lang, 'splitProjectDocs') || 'Project Page'}: ${p.title}`);
   };
 
   // Compare algorithm (Line-by-line diff between Main Editor and Reference Content)
@@ -411,12 +612,10 @@ Bạn có thể:
         >
           <FileUp size={44} className="animate-bounce mb-3" style={{ color: theme.accent }} />
           <h4 className="text-base font-bold mb-1" style={{ color: theme.text }}>
-            {lang === 'vi' ? 'Thả tệp vào đây' : 'Drop file here'}
+            {t(lang, 'splitDropFilesHere') || 'Drop file here'}
           </h4>
           <p className="text-xs text-center max-w-xs opacity-75" style={{ color: theme.textMuted }}>
-            {lang === 'vi' 
-              ? 'Hỗ trợ PDF, Word (.docx), Markdown (.md), TXT, Mã nguồn và Hình ảnh để xem live hoặc trích xuất văn bản.'
-              : 'Supports PDF, Word (.docx), Markdown, TXT, Code and Images for Live View or text extraction.'}
+            {t(lang, 'splitDropFilesDesc') || 'Supports PDF, Word (.docx), Markdown, TXT, Code and Images for Live View or text extraction.'}
           </p>
         </div>
       )}
@@ -453,7 +652,7 @@ Bạn có thể:
               }}
             >
               <BookOpen size={13} />
-              <span>{lang === 'vi' ? 'Tham khảo' : 'Reference'}</span>
+              <span>{t(lang, 'splitReferenceTab') || 'Reference'}</span>
             </button>
             <button
               onClick={() => setTab('compare')}
@@ -464,7 +663,7 @@ Bạn có thể:
               }}
             >
               <Split size={13} />
-              <span>{lang === 'vi' ? 'Đối chiếu & Diff' : 'Compare'}</span>
+              <span>{t(lang, 'splitCompareTab') || 'Compare'}</span>
             </button>
           </div>
         </div>
@@ -481,10 +680,10 @@ Bạn có thể:
               borderColor: theme.accentMid,
               color: theme.accent 
             }}
-            title={lang === 'vi' ? 'Dán văn bản từ Clipboard (hoặc nhấn Ctrl+V)' : 'Paste text from Clipboard (Ctrl+V)'}
+            title={t(lang, 'splitPastePrompt') || 'Paste text from Clipboard (Ctrl+V)'}
           >
             <Clipboard size={12} />
-            <span>{lang === 'vi' ? 'Dán văn bản' : 'Paste'}</span>
+            <span>{t(lang, 'splitPasteText') || 'Paste'}</span>
           </button>
 
           {/* Upload Document Button */}
@@ -494,10 +693,10 @@ Bạn có thể:
             disabled={isProcessingFile}
             className="flex items-center gap-1 text-xs px-2 py-1 rounded-md border transition-all hover:opacity-80 active:scale-95 disabled:opacity-50"
             style={{ borderColor: theme.borderFaint, backgroundColor: theme.surface, color: theme.text }}
-            title={lang === 'vi' ? 'Tải lên file tài liệu (.pdf, .docx, .txt, .md, hình ảnh)' : 'Upload document (.pdf, .docx, .txt, .md, images)'}
+            title={t(lang, 'splitUploadPrompt') || 'Upload document (.pdf, .docx, .txt, .md, images)'}
           >
             <Upload size={12} className={isProcessingFile ? 'animate-spin' : ''} />
-            <span className="hidden sm:inline">{isProcessingFile ? (lang === 'vi' ? 'Đang xử lý...' : 'Processing...') : (lang === 'vi' ? 'Tải tệp' : 'Upload')}</span>
+            <span className="hidden sm:inline">{isProcessingFile ? (t(lang, 'loading') || 'Processing...') : (t(lang, 'splitUploadFile') || 'Upload')}</span>
           </button>
 
           {/* Close Panel Button */}
@@ -526,25 +725,16 @@ Bạn có thể:
           </span>
           {fileMeta.pageCount && fileMeta.pageCount > 1 && (
             <span className="text-[10px] px-1.5 py-0.2 rounded opacity-70 border shrink-0" style={{ borderColor: theme.borderFaint }}>
-              {fileMeta.pageCount} {lang === 'vi' ? 'trang' : 'pages'}
+              {fileMeta.pageCount} {t(lang, 'pages')?.toLowerCase() || 'pages'}
             </span>
           )}
           <button
             type="button"
-            onClick={() => {
-              setRefContent('');
-              setRefTitle(lang === 'vi' ? 'Tài liệu mới' : 'New Reference');
-              setRefType('text');
-              setPdfBlobUrl(null);
-              setImageBlobUrl(null);
-              setDocxHtml(null);
-              setDisplayMode('edit');
-              showToast(lang === 'vi' ? 'Đã làm mới văn bản tham khảo' : 'Reference cleared');
-            }}
-            className="p-0.5 rounded opacity-50 hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/10 transition-all shrink-0"
-            title={lang === 'vi' ? 'Xóa / Làm mới văn bản tham khảo' : 'Clear reference document'}
+            onClick={handleClearReferenceDoc}
+            className="p-1 rounded opacity-50 hover:opacity-100 hover:bg-red-500/10 hover:text-red-500 transition-all shrink-0 ml-1"
+            title={t(lang, 'splitClearFile') || 'Clear reference document'}
           >
-            <RotateCcw size={11} />
+            <Trash2 size={12} />
           </button>
         </div>
 
@@ -562,10 +752,10 @@ Bạn có thể:
                     backgroundColor: displayMode === 'live' ? theme.accentLight : 'transparent',
                     color: displayMode === 'live' ? theme.accent : theme.text,
                   }}
-                  title={lang === 'vi' ? 'Xem trực tiếp (Live View) tài liệu gốc' : 'Direct Live View of file'}
+                  title={t(lang, 'splitLiveViewPrompt') || 'Direct Live View of file'}
                 >
                   <Eye size={11} />
-                  <span>{lang === 'vi' ? 'Xem trực tiếp' : 'Live View'}</span>
+                  <span>{t(lang, 'splitLiveView') || 'Live View'}</span>
                 </button>
               )}
 
@@ -578,10 +768,10 @@ Bạn có thể:
                   backgroundColor: displayMode === 'extract' ? theme.accentLight : 'transparent',
                   color: displayMode === 'extract' ? theme.accent : theme.text,
                 }}
-                title={lang === 'vi' ? 'Xem và trích xuất văn bản thô để trích dẫn & tìm kiếm' : 'Extracted raw text for quotes & search'}
+                title={t(lang, 'splitExtractTextPrompt') || 'Extracted raw text for quotes & search'}
               >
                 <FileCode size={11} />
-                <span>{lang === 'vi' ? 'Trích xuất văn bản' : 'Extract Text'}</span>
+                <span>{t(lang, 'splitExtractText') || 'Extract Text'}</span>
               </button>
 
               {/* Edit Scratchpad Button */}
@@ -593,10 +783,10 @@ Bạn có thể:
                   backgroundColor: displayMode === 'edit' ? theme.accentLight : 'transparent',
                   color: displayMode === 'edit' ? theme.accent : theme.text,
                 }}
-                title={lang === 'vi' ? 'Chỉnh sửa / Soạn thảo trực tiếp văn bản tham khảo' : 'Direct edit reference content'}
+                title={t(lang, 'splitEditScratchpadPrompt') || 'Direct edit reference content'}
               >
                 <Edit3 size={11} />
-                <span>{lang === 'vi' ? 'Soạn/Sửa' : 'Edit'}</span>
+                <span>{t(lang, 'splitEditScratchpad') || 'Edit'}</span>
               </button>
             </div>
           )}
@@ -609,7 +799,7 @@ Bạn có thể:
                 className="text-[11px] px-2 py-0.5 rounded border flex items-center gap-1 transition-all hover:opacity-80"
                 style={{ borderColor: theme.borderFaint, color: theme.textMuted }}
               >
-                <span>{lang === 'vi' ? 'Tài liệu dự án' : 'Project Docs'}</span>
+                <span>{t(lang, 'splitProjectDocs') || 'Project Docs'}</span>
                 <ChevronRight size={11} className="rotate-90" />
               </button>
               <div 
@@ -617,7 +807,7 @@ Bạn có thể:
                 style={{ backgroundColor: theme.surface, borderColor: theme.border }}
               >
                 <div className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider opacity-50">
-                  {lang === 'vi' ? 'Tài liệu cùng dự án' : 'Pages in Project'}
+                  {t(lang, 'splitPagesInProject') || 'Pages in Project'}
                 </div>
                 {activeProject.pages.map(p => (
                   <button
@@ -644,7 +834,7 @@ Bạn có thể:
           style={{ backgroundColor: theme.accentLight, borderColor: theme.accentMid }}
         >
           <span className="truncate text-xs font-medium" style={{ color: theme.accent }}>
-            {lang === 'vi' ? 'Đã chọn đoạn văn bản' : 'Text selected'} ({selectedText.length} {lang === 'vi' ? 'ký tự' : 'chars'})
+            {t(lang, 'splitTextSelected') || 'Text selected'} ({selectedText.length} {t(lang, 'characters')?.toLowerCase() || 'chars'})
           </span>
           <div className="flex items-center gap-1.5 shrink-0">
             <button
@@ -654,14 +844,14 @@ Bạn có thể:
               style={{ backgroundColor: theme.accent }}
             >
               <ArrowRight size={12} />
-              <span>{lang === 'vi' ? 'Trích dẫn vào bài' : 'Insert as Quote'}</span>
+              <span>{t(lang, 'splitInsertQuote') || 'Insert as Quote'}</span>
             </button>
             <button
               type="button"
               onClick={() => handleCopy(selectedText)}
               className="p-1 rounded border transition-all hover:bg-black/5 dark:hover:bg-white/10"
               style={{ borderColor: theme.accentMid, color: theme.accent }}
-              title={lang === 'vi' ? 'Sao chép' : 'Copy'}
+              title={t(lang, 'copy') || 'Copy'}
             >
               {copied ? <Check size={13} /> : <Copy size={13} />}
             </button>
@@ -682,7 +872,7 @@ Bạn có thể:
                 <Search size={12} className="absolute left-2 opacity-50" style={{ color: theme.text }} />
                 <input
                   type="text"
-                  placeholder={lang === 'vi' ? 'Tìm trong văn bản tham khảo...' : 'Search reference text...'}
+                  placeholder={t(lang, 'splitSearchPlaceholder') || 'Search reference text...'}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full pl-6 pr-2 py-0.5 text-xs rounded border outline-none bg-transparent"
@@ -700,7 +890,7 @@ Bạn có thể:
                   type="button"
                   onClick={() => setFontSizeOffset(v => Math.max(-4, v - 1))}
                   className="p-1 rounded hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
-                  title={lang === 'vi' ? 'Giảm cỡ chữ' : 'Decrease font size'}
+                  title={t(lang, 'splitZoomOut') || 'Decrease font size'}
                 >
                   <ZoomOut size={13} style={{ color: theme.textMuted }} />
                 </button>
@@ -708,7 +898,7 @@ Bạn có thể:
                   type="button"
                   onClick={() => setFontSizeOffset(v => Math.min(6, v + 1))}
                   className="p-1 rounded hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
-                  title={lang === 'vi' ? 'Tăng cỡ chữ' : 'Increase font size'}
+                  title={t(lang, 'splitZoomIn') || 'Increase font size'}
                 >
                   <ZoomIn size={13} style={{ color: theme.textMuted }} />
                 </button>
@@ -723,7 +913,7 @@ Bạn có thể:
               {refType === 'pdf' && (refFile || pdfBlobUrl) && (
                 <div className="flex-1 flex flex-col w-full h-full overflow-hidden">
                   <div className="flex items-center justify-between px-3 py-1 bg-black/5 dark:bg-white/5 border-b text-[11px]" style={{ borderColor: theme.borderFaint }}>
-                    <span className="opacity-75">{lang === 'vi' ? 'Xem trước tài liệu PDF' : 'PDF Live Viewer'}</span>
+                    <span className="opacity-75">{t(lang, 'splitPdfViewer') || 'PDF Live Viewer'}</span>
                     <div className="flex items-center gap-2">
                       <button
                         type="button"
@@ -732,7 +922,7 @@ Bạn có thể:
                         style={{ color: theme.accent }}
                       >
                         <FileCode size={11} />
-                        <span>{lang === 'vi' ? 'Xem dạng văn bản trích xuất' : 'Switch to Extracted Text'}</span>
+                        <span>{t(lang, 'splitPdfSwitchExtract') || 'Switch to Extracted Text'}</span>
                       </button>
                       {pdfBlobUrl && (
                         <a
@@ -743,7 +933,7 @@ Bạn có thể:
                           style={{ color: theme.text }}
                         >
                           <ExternalLink size={11} />
-                          <span>{lang === 'vi' ? 'Mở tab mới' : 'Open in tab'}</span>
+                          <span>{t(lang, 'splitPdfOpenTab') || 'Open in tab'}</span>
                         </a>
                       )}
                     </div>
@@ -761,7 +951,7 @@ Bạn có thể:
               {refType === 'docx' && (
                 <div className="flex-1 flex flex-col w-full h-full overflow-hidden">
                   <div className="flex items-center justify-between px-3 py-1 bg-black/5 dark:bg-white/5 border-b text-[11px]" style={{ borderColor: theme.borderFaint }}>
-                    <span className="opacity-75">{lang === 'vi' ? 'Xem định dạng Word (.docx)' : 'Word Document Live View'}</span>
+                    <span className="opacity-75">{t(lang, 'splitWordLiveView') || 'Word Document Live View'}</span>
                     <button
                       type="button"
                       onClick={() => setDisplayMode('extract')}
@@ -769,7 +959,7 @@ Bạn có thể:
                       style={{ color: theme.accent }}
                     >
                       <FileCode size={11} />
-                      <span>{lang === 'vi' ? 'Xem dạng văn bản thô' : 'Switch to Plain Text'}</span>
+                      <span>{t(lang, 'splitWordSwitchPlain') || 'Switch to Plain Text'}</span>
                     </button>
                   </div>
                   <div 
@@ -782,7 +972,7 @@ Bạn có thể:
                       lineHeight: '1.7',
                       color: theme.text,
                     }}
-                    dangerouslySetInnerHTML={{ __html: docxHtml || '<p>Không có nội dung</p>' }}
+                    dangerouslySetInnerHTML={{ __html: docxHtml || `<p>${t(lang, 'splitNoContentLoaded') || 'No content'}</p>` }}
                   />
                 </div>
               )}
@@ -809,13 +999,13 @@ Bạn có thể:
               {refType === 'image' && imageBlobUrl && (
                 <div className="flex-1 flex flex-col w-full h-full overflow-hidden">
                   <div className="flex items-center justify-between px-3 py-1 bg-black/5 dark:bg-white/5 border-b text-[11px]" style={{ borderColor: theme.borderFaint }}>
-                    <span className="opacity-75">{lang === 'vi' ? 'Xem ảnh tham khảo' : 'Image Reference'}</span>
+                    <span className="opacity-75">{t(lang, 'splitImageReference') || 'Image Reference'}</span>
                     <div className="flex items-center gap-1">
                       <button
                         type="button"
                         onClick={() => setImageZoom(z => Math.max(30, z - 20))}
                         className="p-1 rounded hover:bg-black/5 dark:hover:bg-white/10"
-                        title={lang === 'vi' ? 'Thu nhỏ ảnh' : 'Zoom out image'}
+                        title={t(lang, 'splitZoomOutImg') || 'Zoom out image'}
                       >
                         <ZoomOut size={12} />
                       </button>
@@ -824,7 +1014,7 @@ Bạn có thể:
                         type="button"
                         onClick={() => setImageZoom(z => Math.min(300, z + 20))}
                         className="p-1 rounded hover:bg-black/5 dark:hover:bg-white/10"
-                        title={lang === 'vi' ? 'Phóng to ảnh' : 'Zoom in image'}
+                        title={t(lang, 'splitZoomInImg') || 'Zoom in image'}
                       >
                         <ZoomIn size={12} />
                       </button>
@@ -832,7 +1022,7 @@ Bạn có thể:
                         type="button"
                         onClick={() => setImageZoom(100)}
                         className="p-1 rounded hover:bg-black/5 dark:hover:bg-white/10"
-                        title={lang === 'vi' ? 'Đặt lại 100%' : 'Reset 100%'}
+                        title={t(lang, 'splitResetZoom') || 'Reset 100%'}
                       >
                         <RotateCcw size={12} />
                       </button>
@@ -865,9 +1055,9 @@ Bạn có thể:
                 style={{ borderColor: theme.borderFaint, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)' }}
               >
                 <div className="flex items-center gap-2 opacity-70">
-                  <span>{refContent.length} {lang === 'vi' ? 'ký tự' : 'chars'}</span>
+                  <span>{refContent.length} {t(lang, 'characters')?.toLowerCase() || 'chars'}</span>
                   <span>•</span>
-                  <span>{refContent.trim() ? refContent.trim().split(/\s+/).filter(Boolean).length : 0} {lang === 'vi' ? 'từ' : 'words'}</span>
+                  <span>{refContent.trim() ? refContent.trim().split(/\s+/).filter(Boolean).length : 0} {t(lang, 'words')?.toLowerCase() || 'words'}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <button
@@ -877,7 +1067,7 @@ Bạn có thể:
                     style={{ color: theme.accent }}
                   >
                     <Copy size={11} />
-                    <span>{lang === 'vi' ? 'Sao chép tất cả' : 'Copy All'}</span>
+                    <span>{t(lang, 'splitCopyAll') || 'Copy All'}</span>
                   </button>
                   <span>•</span>
                   <button
@@ -887,7 +1077,7 @@ Bạn có thể:
                     style={{ color: theme.accent }}
                   >
                     <ArrowRight size={11} />
-                    <span>{lang === 'vi' ? 'Chèn toàn bộ vào bài' : 'Insert All to Draft'}</span>
+                    <span>{t(lang, 'splitInsertAll') || 'Insert All to Draft'}</span>
                   </button>
                 </div>
               </div>
@@ -907,9 +1097,9 @@ Bạn có thể:
                   {!refContent.trim() ? (
                     <div className="flex flex-col items-center justify-center p-8 text-center rounded-xl border border-dashed my-8" style={{ borderColor: theme.borderFaint }}>
                       <FileText size={36} className="mb-2 opacity-40" style={{ color: theme.accent }} />
-                      <p className="font-medium text-sm mb-1">{lang === 'vi' ? 'Chưa có nội dung tham khảo' : 'No reference content loaded'}</p>
+                      <p className="font-medium text-sm mb-1">{t(lang, 'splitNoContentLoaded') || 'No reference content loaded'}</p>
                       <p className="text-xs opacity-60 max-w-xs mb-4">
-                        {lang === 'vi' ? 'Tải lên tài liệu (.pdf, .docx, .txt, .md) hoặc dán văn bản từ clipboard để bắt đầu đối chiếu.' : 'Upload document or paste text to start.'}
+                        {t(lang, 'splitUploadOrPasteDesc') || 'Upload document (.pdf, .docx, .txt, .md) or paste text from clipboard to start.'}
                       </p>
                       <div className="flex items-center gap-2">
                         <button
@@ -918,7 +1108,7 @@ Bạn có thể:
                           className="px-3 py-1.5 rounded-lg text-xs font-medium text-white shadow-xs"
                           style={{ backgroundColor: theme.accent }}
                         >
-                          {lang === 'vi' ? 'Tải tệp lên' : 'Upload File'}
+                          {t(lang, 'splitUploadFile') || 'Upload File'}
                         </button>
                         <button
                           type="button"
@@ -926,7 +1116,7 @@ Bạn có thể:
                           className="px-3 py-1.5 rounded-lg text-xs border font-medium"
                           style={{ borderColor: theme.borderFaint, color: theme.text }}
                         >
-                          {lang === 'vi' ? 'Dán văn bản' : 'Paste Text'}
+                          {t(lang, 'splitPasteText') || 'Paste Text'}
                         </button>
                       </div>
                     </div>
@@ -945,16 +1135,16 @@ Bạn có thể:
             <div className="flex-1 flex flex-col min-h-0 p-3">
               <div className="flex items-center justify-between pb-2 mb-2 border-b text-xs" style={{ borderColor: theme.borderFaint }}>
                 <span className="font-medium opacity-75">
-                  {lang === 'vi' ? 'Chế độ chỉnh sửa trực tiếp (Scratchpad)' : 'Direct Edit / Scratchpad Mode'}
+                  {t(lang, 'splitScratchpadTitle') || 'Direct Edit / Scratchpad Mode'}
                 </span>
                 <span className="text-[11px] opacity-60">
-                  {refContent.length} {lang === 'vi' ? 'ký tự' : 'chars'} • {refContent.trim().split(/\s+/).filter(Boolean).length} {lang === 'vi' ? 'từ' : 'words'}
+                  {refContent.length} {t(lang, 'characters')?.toLowerCase() || 'chars'} • {refContent.trim().split(/\s+/).filter(Boolean).length} {t(lang, 'words')?.toLowerCase() || 'words'}
                 </span>
               </div>
               <textarea
                 value={refContent}
                 onChange={(e) => setRefContent(e.target.value)}
-                placeholder={lang === 'vi' ? 'Nhập hoặc dán văn bản tham khảo tại đây...' : 'Type or paste reference text here...'}
+                placeholder={t(lang, 'splitScratchpadPlaceholder') || 'Type or paste reference text here...'}
                 className="w-full flex-1 p-3 text-sm rounded-lg border outline-none resize-none leading-relaxed kgv-scroll kgv-split-auto-paste-target"
                 style={{
                   backgroundColor: theme.isDark ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.7)',
@@ -972,7 +1162,7 @@ Bạn có thể:
             style={{ borderColor: theme.borderFaint, color: theme.textFaint }}
           >
             <span className="truncate">
-              {lang === 'vi' ? 'Mẹo: Nhấn Ctrl+V để dán nhanh hoặc bôi đen văn bản để trích dẫn' : 'Tip: Press Ctrl+V to paste or select text to quote'}
+              {t(lang, 'splitTip') || 'Tip: Press Ctrl+V to paste or select text to quote'}
             </span>
             <div className="flex items-center gap-2 shrink-0">
               <button
@@ -982,7 +1172,7 @@ Bạn có thể:
                 style={{ color: theme.accent }}
               >
                 <Clipboard size={11} />
-                <span>{lang === 'vi' ? 'Dán mới' : 'Paste new'}</span>
+                <span>{t(lang, 'splitPasteText') || 'Paste'}</span>
               </button>
             </div>
           </div>
@@ -998,31 +1188,31 @@ Bạn có thể:
             >
               <div className="flex items-center gap-3">
                 <div>
-                  <span className="opacity-60">{lang === 'vi' ? 'Độ tương đồng' : 'Similarity'}: </span>
+                  <span className="opacity-60">{t(lang, 'splitSimilarity') || 'Similarity'}: </span>
                   <span className="font-bold" style={{ color: diffData.similarity > 70 ? '#16a34a' : theme.accent }}>
                     {diffData.similarity}%
                   </span>
                 </div>
                 <div className="h-3 w-px bg-black/10 dark:bg-white/10" />
                 <div>
-                  <span className="opacity-60">{lang === 'vi' ? 'Bản thảo chính' : 'Main Doc'}: </span>
-                  <span className="font-semibold">{diffData.wordCountMain} {lang === 'vi' ? 'từ' : 'words'}</span>
+                  <span className="opacity-60">{t(lang, 'splitMainDoc') || 'Main Doc'}: </span>
+                  <span className="font-semibold">{diffData.wordCountMain} {t(lang, 'words')?.toLowerCase() || 'words'}</span>
                 </div>
                 <div className="h-3 w-px bg-black/10 dark:bg-white/10" />
                 <div>
-                  <span className="opacity-60">{lang === 'vi' ? 'Tham chiếu' : 'Reference'}: </span>
-                  <span className="font-semibold">{diffData.wordCountRef} {lang === 'vi' ? 'từ' : 'words'}</span>
+                  <span className="opacity-60">{t(lang, 'splitRefDoc') || 'Reference'}: </span>
+                  <span className="font-semibold">{diffData.wordCountRef} {t(lang, 'words')?.toLowerCase() || 'words'}</span>
                 </div>
               </div>
 
               <div className="flex items-center gap-2 text-[10px]">
                 <span className="flex items-center gap-1">
                   <span className="w-2 h-2 rounded-full bg-green-500 inline-block" />
-                  {lang === 'vi' ? 'Khớp hoàn toàn' : 'Match'}
+                  {t(lang, 'splitMatch') || 'Match'}
                 </span>
                 <span className="flex items-center gap-1">
                   <span className="w-2 h-2 rounded-full bg-amber-500 inline-block" />
-                  {lang === 'vi' ? 'Khác biệt' : 'Diff'}
+                  {t(lang, 'splitDiff') || 'Diff'}
                 </span>
               </div>
             </div>
@@ -1032,8 +1222,8 @@ Bạn có thể:
           <div className="flex-1 overflow-y-auto p-2 kgv-scroll select-text">
             <div className="w-full text-xs font-mono" style={{ fontFamily: `'${monoFont}', monospace` }}>
               <div className="grid grid-cols-2 gap-2 pb-1 mb-2 border-b font-bold opacity-60 text-[11px]" style={{ borderColor: theme.borderFaint }}>
-                <div>{lang === 'vi' ? 'Bài viết hiện tại (Main Editor)' : 'Current Draft'}</div>
-                <div>{lang === 'vi' ? 'Tài liệu đối chiếu (Reference)' : 'Reference Doc'}</div>
+                <div>{t(lang, 'splitMainDoc') || 'Current Draft'}</div>
+                <div>{t(lang, 'splitRefDoc') || 'Reference Doc'}</div>
               </div>
 
               {diffData?.diffs.map((d, index) => {
@@ -1049,17 +1239,17 @@ Bạn có thể:
                     }}
                   >
                     <div className="overflow-x-auto whitespace-pre-wrap break-words pr-1 border-r" style={{ borderColor: theme.borderFaint, color: theme.text }}>
-                      {d.left || <span className="italic opacity-30">— ({lang === 'vi' ? 'trống' : 'empty'}) —</span>}
+                      {d.left || <span className="italic opacity-30">— ({t(lang, 'splitEmptyDiff') || 'empty'}) —</span>}
                     </div>
                     <div className="overflow-x-auto whitespace-pre-wrap break-words pl-1 flex items-start justify-between gap-1 group" style={{ color: theme.text }}>
-                      <span>{d.right || <span className="italic opacity-30">— ({lang === 'vi' ? 'trống' : 'empty'}) —</span>}</span>
+                      <span>{d.right || <span className="italic opacity-30">— ({t(lang, 'splitEmptyDiff') || 'empty'}) —</span>}</span>
                       {d.right && (
                         <button
                           type="button"
                           onClick={() => handleQuote(d.right)}
                           className="opacity-0 group-hover:opacity-100 p-0.5 rounded text-[10px] border transition-opacity shrink-0"
                           style={{ borderColor: theme.borderFaint, color: theme.accent }}
-                          title={lang === 'vi' ? 'Chèn dòng này vào bài viết' : 'Insert line into draft'}
+                          title={t(lang, 'splitInsertLine') || 'Insert line into draft'}
                         >
                           <ArrowRight size={10} />
                         </button>
@@ -1089,7 +1279,7 @@ Bạn có thể:
               <div className="flex items-center gap-2">
                 <Clipboard size={16} style={{ color: theme.accent }} />
                 <h3 className="font-bold text-sm">
-                  {lang === 'vi' ? 'Dán văn bản tham khảo' : 'Paste Reference Text'}
+                  {t(lang, 'splitPasteModalTitle') || 'Paste Reference Text'}
                 </h3>
               </div>
               <button 
@@ -1103,13 +1293,13 @@ Bạn có thể:
 
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-medium opacity-75">
-                {lang === 'vi' ? 'Tiêu đề tài liệu (Tùy chọn):' : 'Document Title (Optional):'}
+                {t(lang, 'splitDocTitleOptional') || 'Document Title (Optional):'}
               </label>
               <input
                 type="text"
                 value={pasteModalTitle}
                 onChange={(e) => setPasteModalTitle(e.target.value)}
-                placeholder={lang === 'vi' ? 'Ví dụ: Trích dẫn nghiên cứu 2026' : 'E.g. Research Notes'}
+                placeholder={t(lang, 'splitPastedDefaultTitle') || 'E.g. Research Notes'}
                 className="w-full px-3 py-1.5 text-xs rounded border outline-none bg-transparent"
                 style={{ borderColor: theme.borderFaint, color: theme.text }}
               />
@@ -1117,20 +1307,20 @@ Bạn có thể:
 
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-medium opacity-75">
-                {lang === 'vi' ? 'Nội dung văn bản:' : 'Text Content:'}
+                {t(lang, 'splitTextContent') || 'Text Content:'}
               </label>
               <textarea
                 rows={8}
                 value={pasteModalText}
                 onChange={(e) => setPasteModalText(e.target.value)}
-                placeholder={lang === 'vi' ? 'Dán nội dung văn bản (Ctrl+V) vào đây...' : 'Paste text content (Ctrl+V) here...'}
+                placeholder={t(lang, 'splitPastePlaceholder') || 'Paste text content (Ctrl+V) here...'}
                 className="w-full p-3 text-xs rounded-lg border outline-none resize-none leading-relaxed bg-transparent"
                 style={{ borderColor: theme.borderFaint, color: theme.text, fontFamily: `'${docFont}', Georgia, serif` }}
                 autoFocus
               />
               <div className="flex items-center justify-between text-[11px] opacity-60">
-                <span>{pasteModalText.length} {lang === 'vi' ? 'ký tự' : 'chars'}</span>
-                <span>{pasteModalText.trim() ? pasteModalText.trim().split(/\s+/).length : 0} {lang === 'vi' ? 'từ' : 'words'}</span>
+                <span>{pasteModalText.length} {t(lang, 'characters')?.toLowerCase() || 'chars'}</span>
+                <span>{pasteModalText.trim() ? pasteModalText.trim().split(/\s+/).length : 0} {t(lang, 'words')?.toLowerCase() || 'words'}</span>
               </div>
             </div>
 
@@ -1141,44 +1331,79 @@ Bạn có thể:
                 className="px-3 py-1.5 rounded-lg text-xs border hover:opacity-80 transition-all"
                 style={{ borderColor: theme.borderFaint, color: theme.textMuted }}
               >
-                {lang === 'vi' ? 'Hủy' : 'Cancel'}
+                {t(lang, 'cancel') || 'Cancel'}
               </button>
 
               {refContent && (
                 <button
                   type="button"
                   disabled={!pasteModalText.trim()}
-                  onClick={() => {
+                  onClick={async () => {
                     const combined = `${refContent}\n\n${pasteModalText.trim()}`;
+                    const targetTitle = pasteModalTitle.trim() || refTitle;
                     setRefContent(combined);
                     setRefType('text');
                     if (pasteModalTitle.trim()) setRefTitle(pasteModalTitle.trim());
                     setShowPasteModal(false);
                     setDisplayMode('extract');
-                    showToast(lang === 'vi' ? 'Đã nối thêm văn bản!' : 'Appended text!');
+                    setRefFile(null);
+                    setPdfBlobUrl(null);
+                    setImageBlobUrl(null);
+                    setDocxHtml(null);
+                    setFileMeta({});
+
+                    await saveReferenceDocumentToDB({
+                      title: targetTitle,
+                      type: 'text',
+                      content: combined,
+                      displayMode: 'extract',
+                      fileBlob: null,
+                      fileName: targetTitle,
+                      fontSizeOffset,
+                    });
+
+                    showToast(t(lang, 'splitAppendToEnd') || 'Appended text!');
                   }}
                   className="px-3 py-1.5 rounded-lg text-xs border font-medium hover:opacity-90 active:scale-95 transition-all disabled:opacity-40"
                   style={{ borderColor: theme.borderFaint, backgroundColor: theme.surface, color: theme.text }}
                 >
-                  {lang === 'vi' ? 'Nối tiếp vào cuối' : 'Append to End'}
+                  {t(lang, 'splitAppendToEnd') || 'Append to End'}
                 </button>
               )}
 
               <button
                 type="button"
                 disabled={!pasteModalText.trim()}
-                onClick={() => {
-                  setRefContent(pasteModalText.trim());
+                onClick={async () => {
+                  const targetContent = pasteModalText.trim();
+                  const targetTitle = pasteModalTitle.trim() || t(lang, 'splitPastedDefaultTitle') || 'Pasted Text.txt';
+                  setRefContent(targetContent);
                   setRefType('text');
-                  setRefTitle(pasteModalTitle.trim() || (lang === 'vi' ? 'Văn bản đã dán.txt' : 'Pasted Text.txt'));
+                  setRefTitle(targetTitle);
                   setShowPasteModal(false);
                   setDisplayMode('extract');
-                  showToast(lang === 'vi' ? 'Đã dán văn bản mới!' : 'Loaded pasted text!');
+                  setRefFile(null);
+                  setPdfBlobUrl(null);
+                  setImageBlobUrl(null);
+                  setDocxHtml(null);
+                  setFileMeta({});
+
+                  await saveReferenceDocumentToDB({
+                    title: targetTitle,
+                    type: 'text',
+                    content: targetContent,
+                    displayMode: 'extract',
+                    fileBlob: null,
+                    fileName: targetTitle,
+                    fontSizeOffset,
+                  });
+
+                  showToast(t(lang, 'splitReplaceOpen') || 'Loaded pasted text!');
                 }}
                 className="px-4 py-1.5 rounded-lg text-xs font-medium text-white shadow-xs hover:opacity-90 active:scale-95 transition-all disabled:opacity-40"
                 style={{ backgroundColor: theme.accent }}
               >
-                {lang === 'vi' ? 'Ghi đè & Mở' : 'Replace & Open'}
+                {t(lang, 'splitReplaceOpen') || 'Replace & Open'}
               </button>
             </div>
           </div>
