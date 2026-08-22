@@ -34,12 +34,26 @@ export interface ReferenceDocumentState {
   lastUpdated: string;
 }
 
+export interface MoodboardItem {
+  id: string;
+  projectId?: string;
+  title: string;
+  dataUrl: string;
+  url?: string;
+  width?: number;
+  height?: number;
+  palette?: string[];
+  tags?: string[];
+  createdAt: string;
+}
+
 export class WritingAppDexieDB extends Dexie {
   projects!: Table<Project, string>;
   appSettings!: Table<AppSettings, string>;
   folders!: Table<Folder, string>;
   versions!: Table<VersionSnapshot, string>;
   referenceDocument!: Table<ReferenceDocumentState, string>;
+  moodboard!: Table<MoodboardItem, string>;
 
   constructor() {
     super('KgvWritingAppDexieDB');
@@ -66,10 +80,56 @@ export class WritingAppDexieDB extends Dexie {
       versions: 'id, pageId, timestamp',
       referenceDocument: 'id'
     });
+    this.version(5).stores({
+      projects: 'id, title, lastModified, folderId',
+      appSettings: 'id',
+      folders: 'id, name, isDeleted',
+      versions: 'id, pageId, timestamp',
+      referenceDocument: 'id',
+      moodboard: 'id, projectId, createdAt'
+    });
   }
 }
 
 export const db = new WritingAppDexieDB();
+
+export async function getAllMoodboardItemsFromDB(projectId?: string): Promise<MoodboardItem[]> {
+  try {
+    if (projectId) {
+      const items = await db.moodboard.where('projectId').equals(projectId).toArray();
+      if (items.length > 0) return items;
+    }
+    return await db.moodboard.toArray();
+  } catch (err) {
+    console.warn('Error reading moodboard from Dexie:', err);
+    return [];
+  }
+}
+
+export async function saveMoodboardItemToDB(item: MoodboardItem): Promise<void> {
+  try {
+    await db.moodboard.put(item);
+  } catch (err) {
+    console.warn('Error saving moodboard item to Dexie:', err);
+  }
+}
+
+export async function deleteMoodboardItemFromDB(id: string): Promise<void> {
+  try {
+    await db.moodboard.delete(id);
+  } catch (err) {
+    console.warn('Error deleting moodboard item from Dexie:', err);
+  }
+}
+
+export async function clearMoodboardFromDB(): Promise<void> {
+  try {
+    await db.moodboard.clear();
+  } catch (err) {
+    console.warn('Error clearing moodboard in Dexie:', err);
+  }
+}
+
 
 export async function getAllProjectsFromDB(): Promise<Project[]> {
   try {

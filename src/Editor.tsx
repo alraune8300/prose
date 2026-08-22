@@ -13,6 +13,7 @@ import { FontSize, LineHeight, TextTransform, FontFeatures, LetterSpacing, WordS
 import { SpellcheckExtension, spellcheckKey } from './SpellcheckExtension';
 import { SearchHighlightExtension, searchHighlightKey } from './SearchHighlightExtension';
 import { SmartFormatting } from './SmartFormattingExtension';
+import { SpotlightExtension } from './SpotlightExtension';
 import type { ThemeColors, FormatState } from './types';
 import type { Dict } from './i18n';
 import { executeSearchReplace, executeSearchNav } from './searchReplaceFix';
@@ -34,6 +35,8 @@ type Props = {
   isPreviewMode?: boolean;
   onTogglePreviewMode?: () => void;
   typewriterMode?: boolean;
+  isSpotlightMode?: boolean;
+  onToggleSpotlightMode?: () => void;
 };
 
 function Editor({
@@ -41,6 +44,7 @@ function Editor({
   isFocusMode = false,
   isPreviewMode = false,
   typewriterMode = false,
+  isSpotlightMode = false,
 }: Props) {
   const lastEmittedContentRef = useRef(content || '');
   const updateTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -396,9 +400,17 @@ function Editor({
 
     function handleInsertQuote(e: Event) {
       if (!editor) return;
-      const { text } = (e as CustomEvent).detail || {};
+      const { text, source } = (e as CustomEvent).detail || {};
       if (!text) return;
-      editor.chain().focus().insertContent(`\n<blockquote>${text}</blockquote>\n`).run();
+      const sourceCitation = source ? `<p style="text-align: right; font-size: 0.9em; opacity: 0.85;">— <em>${source}</em></p>` : '';
+      editor.chain().focus().insertContent(`<blockquote><p>${text}</p>${sourceCitation}</blockquote><p></p>`).run();
+    }
+
+    function handleInsertImage(e: Event) {
+      if (!editor) return;
+      const { src, alt, caption } = (e as CustomEvent).detail || {};
+      if (!src) return;
+      editor.chain().focus().setImage({ src, alt: alt || caption || 'Image' }).run();
     }
 
     function handleScrollToEditorFootnote(e: Event) {
@@ -435,6 +447,7 @@ function Editor({
     window.addEventListener('kgv-remove-link', handleRemoveLink);
     window.addEventListener('kgv-insert-footnote', handleInsertFootnote);
     window.addEventListener('kgv-insert-quote', handleInsertQuote);
+    window.addEventListener('kgv-insert-image', handleInsertImage);
     window.addEventListener('kgv-scroll-to-editor-footnote', handleScrollToEditorFootnote);
 
     window.addEventListener('kgv-search-replace', handleSearchReplace);
@@ -449,6 +462,7 @@ function Editor({
       window.removeEventListener('kgv-remove-link', handleRemoveLink);
       window.removeEventListener('kgv-insert-footnote', handleInsertFootnote);
       window.removeEventListener('kgv-insert-quote', handleInsertQuote);
+      window.removeEventListener('kgv-insert-image', handleInsertImage);
       window.removeEventListener('kgv-scroll-to-editor-footnote', handleScrollToEditorFootnote);
     };
   }, [editor]);
@@ -471,7 +485,7 @@ function Editor({
 
     return (
       <div 
-        className="w-full h-full relative pointer-events-auto" 
+        className={`w-full h-full relative pointer-events-auto ${isSpotlightMode ? 'kgv-spotlight-mode-active' : ''}`} 
         style={{ 
           color: theme.text,
           fontFamily: `'${currentBodyFont}', Georgia, serif`,
@@ -489,7 +503,7 @@ function Editor({
   }
 
   return (
-    <div className="flex flex-col h-full relative">
+    <div className={`flex flex-col h-full relative ${isSpotlightMode ? 'kgv-spotlight-mode-active' : ''}`}>
       {/* Central Editor Container */}
       <div
         className="flex-1 overflow-y-auto kgv-scroll transition-all duration-300 ease-in-out relative flex justify-center cursor-text"
@@ -546,6 +560,7 @@ export const getEditorExtensions = () => [
     autolink: true,
   }),
   SmartFormatting,
+  SpotlightExtension,
   SpellcheckExtension,
   SearchHighlightExtension,
   TextStyle, FontFamily, FontSize, LineHeight, TextTransform, FontFeatures, LetterSpacing, WordSpacing, Superscript, Subscript, IndentExtension, ResizableImage,

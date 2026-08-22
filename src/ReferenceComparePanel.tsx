@@ -3,7 +3,8 @@ import {
   FileText, Upload, Copy, Check, Split, BookOpen, 
   Search, ZoomIn, ZoomOut, ArrowRight,
   ChevronRight, X, Clipboard, Edit3, Eye, FileCode,
-  RotateCcw, ExternalLink, FileUp, Sparkles, Trash2
+  RotateCcw, ExternalLink, FileUp, Sparkles, Trash2,
+  Bookmark, Quote
 } from 'lucide-react';
 import type { ThemeColors, Page, Project } from './types';
 import type { Lang } from './i18n';
@@ -24,7 +25,8 @@ interface ReferenceComparePanelProps {
   lang: Lang;
   activePage: Page | null;
   activeProject: Project | null;
-  onInsertQuoteToEditor: (quoteText: string) => void;
+  onInsertQuoteToEditor: (quoteText: string, sourceTitle?: string) => void;
+  onAddFootnoteCitation?: (quoteText: string, sourceTitle?: string) => void;
   onClose: () => void;
 }
 
@@ -39,6 +41,7 @@ export default function ReferenceComparePanel({
   activePage,
   activeProject,
   onInsertQuoteToEditor,
+  onAddFootnoteCitation,
   onClose,
 }: ReferenceComparePanelProps) {
   const [tab, setTab] = useState<'reference' | 'compare'>('reference');
@@ -81,6 +84,7 @@ export default function ReferenceComparePanel({
   });
   const [imageZoom, setImageZoom] = useState(100);
   const [selectedText, setSelectedText] = useState('');
+  const [popoverPos, setPopoverPos] = useState<{ top: number; left: number } | null>(null);
   const [copied, setCopied] = useState(false);
   const [isDraggingOver, setIsDraggingOver] = useState(false);
 
@@ -397,21 +401,56 @@ export default function ReferenceComparePanel({
     }
   };
 
-  // Handle text selection in reference area
+  // Handle text selection in reference area (Ghost Clip & Cite)
   const handleMouseUp = () => {
     const sel = window.getSelection();
-    if (sel && !sel.isCollapsed && contentContainerRef.current?.contains(sel.anchorNode)) {
+    if (sel && !sel.isCollapsed) {
       const text = sel.toString().trim();
-      setSelectedText(text);
+      if (text.length > 0) {
+        setSelectedText(text);
+        try {
+          const range = sel.getRangeAt(0);
+          const rect = range.getBoundingClientRect();
+          if (panelRef.current) {
+            const panelRect = panelRef.current.getBoundingClientRect();
+            const top = Math.max(12, rect.top - panelRect.top - 46);
+            const left = Math.max(12, Math.min(panelRect.width - 270, rect.left - panelRect.left + (rect.width / 2) - 135));
+            setPopoverPos({ top, left });
+            return;
+          }
+        } catch {
+          // Ignore range errors
+        }
+        return;
+      }
     }
+    setSelectedText('');
+    setPopoverPos(null);
   };
 
-  // Insert quote into main editor
+  // Insert quote into main editor as blockquote with citation link/title
   const handleQuote = (textToQuote?: string) => {
     const quote = textToQuote || selectedText;
     if (quote) {
-      onInsertQuoteToEditor(quote);
-      showToast(t(lang, 'splitInsertQuote') || 'Quote inserted to draft!');
+      onInsertQuoteToEditor(quote, refTitle || 'Reference');
+      showToast(t(lang, 'quoteInsertedToast') || t(lang, 'splitInsertQuote') || 'Quote inserted to draft!');
+      setSelectedText('');
+      setPopoverPos(null);
+    }
+  };
+
+  // Insert quote as Footnote in editor with citation
+  const handleAddAsFootnote = (textToQuote?: string) => {
+    const quote = textToQuote || selectedText;
+    if (quote) {
+      if (onAddFootnoteCitation) {
+        onAddFootnoteCitation(quote, refTitle || 'Reference');
+      } else {
+        onInsertQuoteToEditor(quote, refTitle || 'Reference');
+      }
+      showToast(t(lang, 'footnoteAddedToast') || 'Footnote citation added to draft!');
+      setSelectedText('');
+      setPopoverPos(null);
     }
   };
 
@@ -635,6 +674,52 @@ export default function ReferenceComparePanel({
         </div>
       )}
 
+      {/* Ghost Clip & Cite Floating Popover */}
+      {selectedText && popoverPos && tab === 'reference' && displayMode !== 'edit' && (
+        <div
+          className="absolute z-50 flex items-center gap-1.5 p-1 rounded-xl shadow-2xl border backdrop-blur-md animate-in fade-in zoom-in-95 duration-150 select-none"
+          style={{
+            top: `${popoverPos.top}px`,
+            left: `${popoverPos.left}px`,
+            backgroundColor: theme.isDark ? 'rgba(28, 28, 35, 0.96)' : 'rgba(255, 255, 255, 0.96)',
+            borderColor: theme.accent,
+            boxShadow: '0 12px 30px -4px rgba(0, 0, 0, 0.3), 0 6px 12px -4px rgba(0, 0, 0, 0.15)',
+          }}
+          onMouseDown={(e) => e.stopPropagation()}
+        >
+          <button
+            type="button"
+            onClick={() => handleQuote(selectedText)}
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium text-white transition-all hover:opacity-90 active:scale-95 shadow-xs shrink-0"
+            style={{ backgroundColor: theme.accent }}
+            title={t(lang, 'quoteToEditor') || 'Quote to Editor (Blockquote + Source)'}
+          >
+            <ArrowRight size={12} />
+            <span>{t(lang, 'quoteToEditor') || 'Quote to Editor'}</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => handleAddAsFootnote(selectedText)}
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium border transition-all hover:bg-black/5 dark:hover:bg-white/10 active:scale-95 shrink-0"
+            style={{ borderColor: theme.border, color: theme.text }}
+            title={t(lang, 'addAsFootnote') || 'Add as Footnote'}
+          >
+            <Bookmark size={12} style={{ color: theme.accent }} />
+            <span>{t(lang, 'addAsFootnote') || 'Add as Footnote'}</span>
+          </button>
+          <div className="w-px h-4 mx-0.5" style={{ backgroundColor: theme.border }} />
+          <button
+            type="button"
+            onClick={() => handleCopy(selectedText)}
+            className="p-1.5 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 text-xs shrink-0"
+            style={{ color: theme.textMuted }}
+            title={t(lang, 'copy') || 'Copy'}
+          >
+            {copied ? <Check size={13} /> : <Copy size={13} />}
+          </button>
+        </div>
+      )}
+
       {/* Top Header */}
       <div 
         className="flex items-center justify-between px-3 py-2 border-b shrink-0 gap-2 select-none"
@@ -833,8 +918,9 @@ export default function ReferenceComparePanel({
           className="px-3 py-1.5 flex items-center justify-between gap-2 border-b animate-in fade-in slide-in-from-top-1 text-xs shrink-0 select-none"
           style={{ backgroundColor: theme.accentLight, borderColor: theme.accentMid }}
         >
-          <span className="truncate text-xs font-medium" style={{ color: theme.accent }}>
-            {t(lang, 'splitTextSelected') || 'Text selected'} ({selectedText.length} {t(lang, 'characters')?.toLowerCase() || 'chars'})
+          <span className="truncate text-xs font-medium flex items-center gap-1" style={{ color: theme.accent }}>
+            <Quote size={13} />
+            <span>{t(lang, 'ghostClipCite') || 'Ghost Clip & Cite'}: {selectedText.length} {t(lang, 'characters')?.toLowerCase() || 'chars'}</span>
           </span>
           <div className="flex items-center gap-1.5 shrink-0">
             <button
@@ -842,9 +928,20 @@ export default function ReferenceComparePanel({
               onClick={() => handleQuote(selectedText)}
               className="flex items-center gap-1 px-2.5 py-1 rounded shadow-xs font-medium transition-all hover:opacity-90 active:scale-95 text-xs text-white"
               style={{ backgroundColor: theme.accent }}
+              title={t(lang, 'quoteToEditor') || 'Quote to Editor'}
             >
               <ArrowRight size={12} />
-              <span>{t(lang, 'splitInsertQuote') || 'Insert as Quote'}</span>
+              <span>{t(lang, 'quoteToEditor') || 'Quote to Editor'}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleAddAsFootnote(selectedText)}
+              className="flex items-center gap-1 px-2.5 py-1 rounded border shadow-xs font-medium transition-all hover:bg-white/40 active:scale-95 text-xs"
+              style={{ borderColor: theme.accent, color: theme.accent }}
+              title={t(lang, 'addAsFootnote') || 'Add as Footnote'}
+            >
+              <Bookmark size={12} />
+              <span>{t(lang, 'addAsFootnote') || 'Add as Footnote'}</span>
             </button>
             <button
               type="button"

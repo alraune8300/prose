@@ -7,12 +7,12 @@ import { getDict, type Dict } from './i18n';
 import { exportTxt, exportJson } from './exportUtils';
 import { importFile, exportToPdf, exportToDocx, exportToHtmlFile, exportToMarkdownFile, exportToJsonBackup } from './fileHandlers';
 import { saveApiKey, loadApiKey, injectGoogleFont, reinjectSavedFonts } from './googleFontsApi';
-import { X, Plus, Minus, ZoomIn, Eye, Maximize2, PanelLeft, Hourglass, Coffee, Settings, LayoutList, Columns } from 'lucide-react';
+import { X, Plus, Minus, ZoomIn, Eye, Maximize2, PanelLeft, Hourglass, Coffee, Settings, LayoutList, Columns, Brain, FileText } from 'lucide-react';
 import { type Editor as TiptapEditorType } from '@tiptap/react';
 import LeftPanel from './LeftPanel';
 import RightPanel from './RightPanel';
 import BlockOrganizerPanel from './BlockOrganizerPanel';
-import WordCountDropdown from './WordCountDropdown';
+import FlashcardStudio from './FlashcardStudio';
 import GoogleFontsPanel from './GoogleFontsPanel';
 import Editor from './Editor';
 import Toolbar from './Toolbar';
@@ -155,6 +155,7 @@ export default function App() {
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [typewriterMode, setTypewriterMode] = useState(false);
   const [isSplitView, setIsSplitView] = useState(false);
+  const [viewMode, setViewMode] = useState<'normal' | 'block' | 'flashcard'>('normal');
   const [activeFootnoteHighlight, setActiveFootnoteHighlight] = useState<string | null>(null);
   const [blockViewOpen, setBlockViewOpen] = useState(false);
   const [githubModalOpen, setGithubModalOpen] = useState(false);
@@ -1728,8 +1729,43 @@ export default function App() {
               </button>
             )}
 
+            <div className={`absolute top-4 z-50 hidden lg:flex items-center p-1 rounded-xl border shadow-xs gap-1 transition-all duration-300 ${sidebarOpen ? 'left-4' : 'left-16'}`} style={{ backgroundColor: theme.surface, borderColor: theme.border }}>
+              <button
+                onClick={() => { setViewMode('normal'); setBlockViewOpen(false); }}
+                className={`p-2 rounded-lg transition-all ${viewMode === 'normal' && !blockViewOpen ? 'shadow-xs' : 'opacity-70 hover:opacity-100'}`}
+                style={{
+                  backgroundColor: viewMode === 'normal' && !blockViewOpen ? theme.accent : 'transparent',
+                  color: viewMode === 'normal' && !blockViewOpen ? '#fff' : theme.text
+                }}
+                title={t.normalView || 'Normal View'}
+              >
+                <FileText size={16} />
+              </button>
+              <button
+                onClick={() => { setViewMode('block'); setBlockViewOpen(true); setIsFocusMode(false); setIsPreviewMode(false); }}
+                className={`p-2 rounded-lg transition-all ${viewMode === 'block' || blockViewOpen ? 'shadow-xs' : 'opacity-70 hover:opacity-100'}`}
+                style={{
+                  backgroundColor: viewMode === 'block' || blockViewOpen ? theme.accent : 'transparent',
+                  color: viewMode === 'block' || blockViewOpen ? '#fff' : theme.text
+                }}
+                title={t.blockView || 'Block View'}
+              >
+                <LayoutList size={16} />
+              </button>
+              <button
+                onClick={() => { setViewMode('flashcard'); setBlockViewOpen(false); setIsFocusMode(false); setIsPreviewMode(false); }}
+                className={`p-2 rounded-lg transition-all ${viewMode === 'flashcard' ? 'shadow-xs' : 'opacity-70 hover:opacity-100'}`}
+                style={{
+                  backgroundColor: viewMode === 'flashcard' ? theme.accent : 'transparent',
+                  color: viewMode === 'flashcard' ? '#fff' : theme.text
+                }}
+                title={t.flashcardMode || 'Flashcard Mode'}
+              >
+                <Brain size={16} />
+              </button>
+            </div>
+
             <div className="absolute top-4 right-16 z-50 flex items-center gap-2 pr-2">
-              <WordCountDropdown wordCount={wordCount} charCount={charCount} readMin={Math.ceil(wordCount / 200)} theme={theme} uiFont={uiFont} lang={lang} />
               <button
                 onClick={handleToggleFocusMode}
                 className="p-1.5 rounded transition-all hover:opacity-80 active:scale-95"
@@ -1889,8 +1925,16 @@ export default function App() {
           />
         )}
 
-        {/* Split Screen Mode vs Standard Editor Mode */}
-        {isSplitView ? (
+        {/* Flashcard Mode vs Split Screen Mode vs Standard Editor Mode */}
+        {viewMode === 'flashcard' ? (
+          <FlashcardStudio
+            theme={theme}
+            uiFont={uiFont}
+            lang={lang}
+            activePage={activePage || null}
+            onClose={() => setViewMode('normal')}
+          />
+        ) : isSplitView ? (
           <div className="flex-1 flex flex-col md:flex-row w-full h-[calc(100%-60px)] overflow-hidden">
             {/* Left Column: Main Editor */}
             <div className="flex-1 h-full overflow-y-auto kgv-scroll flex flex-col items-center p-4 md:p-6 border-r" style={{ borderColor: theme.borderFaint }}>
