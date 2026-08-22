@@ -5,6 +5,7 @@ import TurndownService from 'turndown';
 import { PageFormat, PAPER_SIZES_PX, Project, Folder } from './types';
 import { saveProjectToDB, saveFolderToDB } from './db';
 import { Document, Packer, Paragraph, TextRun, AlignmentType, PageNumber, Footer, HeadingLevel, PageOrientation } from 'docx';
+import { extractTextFromPdfBlob } from './referenceExtractor';
 
 const turndownService = new TurndownService();
 
@@ -415,42 +416,64 @@ export async function importFile(file: File): Promise<{ title: string; htmlConte
   const ext = name.split('.').pop()?.toLowerCase();
   const title = name.replace(/\.[^/.]+$/, '');
 
-  if (ext === 'docx') {
-    const arrayBuffer = await file.arrayBuffer();
-    const result = await mammoth.convertToHtml({ arrayBuffer });
-    return { title, htmlContent: result.value || '<p></p>' };
-  } else if (ext === 'pdf') {
-    const text = await file.text();
-    const paragraphs = text.split(/\r?\n\r?\n/).map(p => `<p>${escapeHtml(p)}</p>`).join('');
-    return { title, htmlContent: paragraphs || `<p>${escapeHtml(text)}</p>` };
-  } else if (ext === 'html' || ext === 'htm') {
-    const htmlText = await file.text();
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(htmlText, 'text/html');
-    const bodyHtml = doc.body ? doc.body.innerHTML : htmlText;
-    return { title, htmlContent: bodyHtml };
-  } else if (ext === 'md') {
-    const mdText = await file.text();
-    const div = document.createElement('div');
-    div.innerHTML = mdText.replace(/^# (.*$)/gm, '<h1>$1</h1>').replace(/^## (.*$)/gm, '<h2>$1</h2>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n\n/g, '</p><p>');
-    return { title, htmlContent: `<p>${div.innerHTML}</p>` };
-  } else if (ext === 'json') {
-    const jsonText = await file.text();
-    try {
-      const data = JSON.parse(jsonText);
-      if (data.projects && Array.isArray(data.projects) && data.projects.length > 0) {
-        const p = data.projects[0];
-        const firstPage = p.pages?.[0];
-        return { title: p.title || title, htmlContent: firstPage?.content || '<p></p>' };
+  try {
+    if (ext === 'docx') {
+      const arrayBuffer = await file.arrayBuffer();
+      const result = await mammoth.convertToHtml({ arrayBuffer });
+      return { title, htmlContent: result.value || '<p></p>' };
+    } else if (ext === 'pdf') {
+      try {
+        const { text } = await extractTextFromPdfBlob(file);
+        const paragraphs = text
+          .split(/\r?\n\r?\n+/)
+          .map((p) => p.trim())
+          .filter(Boolean)
+          .map((p) => `<p>${escapeHtml(p).replace(/\n/g, '<br>')}</p>`)
+          .join('');
+        return { title, htmlContent: paragraphs || `<p>${escapeHtml(text)}</p>` };
+      } catch (pdfErr) {
+        console.warn('PDF text extraction error in importFile:', pdfErr);
+        return { title, htmlContent: `<p><em>[Tài liệu PDF: ${escapeHtml(name)}]</em></p>` };
       }
-    } catch {
-      // fallback
+    } else if (ext === 'html' || ext === 'htm') {
+      const htmlText = await file.text();
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(htmlText, 'text/html');
+      const bodyHtml = doc.body ? doc.body.innerHTML : htmlText;
+      return { title, htmlContent: bodyHtml };
+    } else if (ext === 'md') {
+      const mdText = await file.text();
+      const div = document.createElement('div');
+      div.innerHTML = mdText
+        .replace(/^# (.*$)/gm, '<h1>$1</h1>')
+        .replace(/^## (.*$)/gm, '<h2>$1</h2>')
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\n\n/g, '</p><p>');
+      return { title, htmlContent: `<p>${div.innerHTML}</p>` };
+    } else if (ext === 'json') {
+      const jsonText = await file.text();
+      try {
+        const data = JSON.parse(jsonText);
+        if (data.projects && Array.isArray(data.projects) && data.projects.length > 0) {
+          const p = data.projects[0];
+          const firstPage = p.pages?.[0];
+          return { title: p.title || title, htmlContent: firstPage?.content || '<p></p>' };
+        }
+      } catch {
+        // fallback
+      }
+      return { title, htmlContent: `<p>${escapeHtml(jsonText)}</p>` };
+    } else {
+      const text = await file.text();
+      const paragraphs = text
+        .split(/\r?\n\r?\n+/)
+        .map((p) => `<p>${escapeHtml(p).replace(/\n/g, '<br>')}</p>`)
+        .join('');
+      return { title, htmlContent: paragraphs || `<p>${escapeHtml(text)}</p>` };
     }
-    return { title, htmlContent: `<p>${escapeHtml(jsonText)}</p>` };
-  } else {
-    const text = await file.text();
-    const paragraphs = text.split(/\r?\n\r?\n/).map(p => `<p>${escapeHtml(p)}</p>`).join('');
-    return { title, htmlContent: paragraphs || `<p>${escapeHtml(text)}</p>` };
+  } catch (err) {
+    console.error('importFile error:', err);
+    throw err;
   }
 }
 

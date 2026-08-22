@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
+import Link from '@tiptap/extension-link';
 import TextAlign from '@tiptap/extension-text-align';
 import FontFamily from '@tiptap/extension-font-family';
 import { TextStyle } from '@tiptap/extension-text-style';
@@ -208,6 +209,39 @@ function Editor({
         }
         return false;
       },
+      handleClick: (view, pos, event) => {
+        const target = event.target as HTMLElement;
+        const footnoteTarget = target.closest('.kgv-footnote-marker, sup.footnote-ref');
+        if (footnoteTarget) {
+          const fnId = footnoteTarget.getAttribute('data-footnote-id') || footnoteTarget.textContent?.replace(/[^\w\d]/g, '');
+          if (fnId) {
+            window.dispatchEvent(new CustomEvent('kgv-footnote-clicked', { detail: { id: fnId } }));
+            return true;
+          }
+        }
+
+        // Also check if text at click pos matches [^n]
+        try {
+          const doc = view.state.doc;
+          const $pos = doc.resolve(pos);
+          const parentText = $pos.parent.textContent;
+          const offset = $pos.parentOffset;
+          const matchRegex = /\[\^([^\]]+)\]/g;
+          let m;
+          while ((m = matchRegex.exec(parentText)) !== null) {
+            const start = m.index;
+            const end = start + m[0].length;
+            if (offset >= start && offset <= end) {
+              window.dispatchEvent(new CustomEvent('kgv-footnote-clicked', { detail: { id: m[1] } }));
+              break;
+            }
+          }
+        } catch {
+          // ignore
+        }
+
+        return false;
+      },
       attributes: {
         class: 'kgv-editor kgv-caret text-left direction-ltr pointer-events-auto user-select-text',
         style: `color: ${theme.text}; caret-color: ${theme.text}; line-height: 1.7;`,
@@ -336,11 +370,72 @@ function Editor({
       editor.commands.insertContentAt({ from: detail.from, to: detail.to }, detail.word);
       window.dispatchEvent(new CustomEvent('kgv-spellcheck-error', { detail: null }));
     }
+
+    function handleInsertLink(e: Event) {
+      if (!editor) return;
+      const { url, text } = (e as CustomEvent).detail || {};
+      if (!url) return;
+      if (editor.state.selection.empty && text) {
+        editor.chain().focus().insertContent(`<a href="${url}">${text}</a>`).run();
+      } else {
+        editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
+      }
+    }
+
+    function handleRemoveLink() {
+      if (!editor) return;
+      editor.chain().focus().unsetLink().run();
+    }
+
+    function handleInsertFootnote(e: Event) {
+      if (!editor) return;
+      const { id } = (e as CustomEvent).detail || {};
+      const fnNum = id || '1';
+      editor.chain().focus().insertContent(`[^${fnNum}] `).run();
+    }
+
+    function handleInsertQuote(e: Event) {
+      if (!editor) return;
+      const { text } = (e as CustomEvent).detail || {};
+      if (!text) return;
+      editor.chain().focus().insertContent(`\n<blockquote>${text}</blockquote>\n`).run();
+    }
+
+    function handleScrollToEditorFootnote(e: Event) {
+      if (!editor) return;
+      const { id } = (e as CustomEvent).detail || {};
+      if (!id) return;
+      
+      // Find element containing [^id] in the editor DOM
+      requestAnimationFrame(() => {
+        const editorEl = document.querySelector('.kgv-editor');
+        if (!editorEl) return;
+        const walker = document.createTreeWalker(editorEl, NodeFilter.SHOW_TEXT);
+        let node;
+        while ((node = walker.nextNode())) {
+          if (node.textContent && node.textContent.includes(`[^${id}]`)) {
+            const parent = node.parentElement;
+            if (parent) {
+              parent.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              parent.classList.add('active-highlight');
+              setTimeout(() => {
+                parent.classList.remove('active-highlight');
+              }, 2500);
+              break;
+            }
+          }
+        }
+      });
+    }
+
     window.addEventListener('kgv-spellcheck', handleSpellcheck);
     window.addEventListener('kgv-spellcheck-replace', handleSpellcheckReplace);
     window.addEventListener('kgv-search-query', handleSearchQuery);
-
-    
+    window.addEventListener('kgv-insert-link', handleInsertLink);
+    window.addEventListener('kgv-remove-link', handleRemoveLink);
+    window.addEventListener('kgv-insert-footnote', handleInsertFootnote);
+    window.addEventListener('kgv-insert-quote', handleInsertQuote);
+    window.addEventListener('kgv-scroll-to-editor-footnote', handleScrollToEditorFootnote);
 
     window.addEventListener('kgv-search-replace', handleSearchReplace);
     window.addEventListener('kgv-search-nav', handleSearchNav);
@@ -350,6 +445,11 @@ function Editor({
       window.removeEventListener('kgv-search-query', handleSearchQuery);
       window.removeEventListener('kgv-spellcheck', handleSpellcheck);
       window.removeEventListener('kgv-spellcheck-replace', handleSpellcheckReplace);
+      window.removeEventListener('kgv-insert-link', handleInsertLink);
+      window.removeEventListener('kgv-remove-link', handleRemoveLink);
+      window.removeEventListener('kgv-insert-footnote', handleInsertFootnote);
+      window.removeEventListener('kgv-insert-quote', handleInsertQuote);
+      window.removeEventListener('kgv-scroll-to-editor-footnote', handleScrollToEditorFootnote);
     };
   }, [editor]);
 
@@ -432,7 +532,19 @@ function Editor({
 export default React.memo(Editor);
 
 export const getEditorExtensions = () => [
-  StarterKit.configure({ heading: { levels: [1, 2, 3] }, horizontalRule: {} }),
+  StarterKit.configure({
+    link: false,
+    heading: { levels: [1, 2, 3] },
+    horizontalRule: {},
+  }),
+  Link.configure({
+    openOnClick: false,
+    HTMLAttributes: {
+      class: 'kgv-smart-link',
+      rel: 'noopener noreferrer',
+    },
+    autolink: true,
+  }),
   SmartFormatting,
   SpellcheckExtension,
   SearchHighlightExtension,

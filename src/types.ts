@@ -89,7 +89,7 @@ export interface Footnote {
 
 export type SyncStatus = 'saved' | 'saving' | 'unsaved' | 'error'
 
-export type Panel = 'none' | 'format' | 'export' | 'preview' | 'timer' | 'colors' | 'fonts' | 'importexport' | 'settings' | 'history' | 'search' | 'spellcheck'
+export type Panel = 'none' | 'format' | 'export' | 'preview' | 'timer' | 'colors' | 'fonts' | 'importexport' | 'settings' | 'history' | 'search' | 'spellcheck' | 'footnotes'
 
 export type PaperSize = 'A4' | 'Letter' | 'Legal' | 'A5' | 'Tabloid' | 'pageless'
 export type PageOrientation = 'portrait' | 'landscape'

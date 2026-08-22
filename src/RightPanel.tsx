@@ -6,6 +6,7 @@ import GoogleFontsPanel from './GoogleFontsPanel'
 import SpellcheckPanel from './SpellcheckPanel'
 import SearchPanel from './SearchPanel'
 import VersionHistoryPanel from './VersionHistoryPanel'
+import FootnotesPanel from './FootnotesPanel'
 import { Lang, t as i18nT, LANG_LABELS, LANG_FLAGS } from './i18n'
 import { CustomSelect } from './CustomSelect'
 import { Download, Upload, FileText, Printer, Copy, Check, FileCode, FileSpreadsheet, FileDown } from 'lucide-react';
@@ -402,6 +403,7 @@ ${content.split('\n\n').map(para => {
     { key: 'format', icon: '¶', label: 'Format' },
     { key: 'export', icon: '↓', label: 'Export' },
     { key: 'fonts', icon: 'Aa', label: 'Fonts' },
+    { key: 'footnotes', icon: '[^]', label: lang === 'vi' ? 'Chú thích' : 'Footnotes' },
     { key: 'timer', icon: '◷', label: 'Timer' },
     { key: 'history', icon: '⟲', label: 'History' },
     { key: 'search', icon: '⌕', label: 'Search' },
@@ -469,7 +471,7 @@ ${content.split('\n\n').map(para => {
               <span style={{ fontFamily: uiFont, fontSize: '0.78rem', fontWeight: 700, color: c.text, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                 {panel === 'format' ? (t(lang, 'format') || 'Format') :
                  panel === 'export' ? (t(lang, 'export') || 'Export') :
-                 
+                 panel === 'footnotes' ? (lang === 'vi' ? 'Chú thích (Footnotes)' : 'Footnotes') :
                  panel === 'fonts' ? (t(lang, 'fonts') || 'Fonts') :
                  panel === 'timer' ? (t(lang, 'timer') || 'Timer') :
                  panel === 'history' ? (t(lang, 'versionHistory') || 'History') :
@@ -1408,6 +1410,23 @@ ${content.split('\n\n').map(para => {
           </div>
         )}
         
+        {/* FOOTNOTES PANEL */}
+        {panel === 'footnotes' && (
+          <FootnotesPanel
+            theme={props.theme as any || c as any}
+            uiFont={uiFont}
+            docFont={bodyFont}
+            lang={lang}
+            rawContent={(props.activePage as any)?.content || (props.content as string) || ''}
+            onUpdateFootnoteContent={(props.onUpdateFootnoteContent as any) || (() => {})}
+            onInsertNewFootnote={(props.onInsertNewFootnote as any) || (() => {})}
+            onDeleteFootnote={(props.onDeleteFootnote as any) || (() => {})}
+            onScrollToEditorMarker={(props.onScrollToEditorMarker as any) || (() => {})}
+            activeHighlightedId={(props.activeFootnoteHighlight as string) || (props.activeHighlightedId as string) || null}
+            onClearHighlight={(props.onClearFootnoteHighlight as any) || (props.onClearHighlight as any) || (() => {})}
+          />
+        )}
+
         {/* HISTORY PANEL */}
         {panel === 'history' && (
           <VersionHistoryPanel

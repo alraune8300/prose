@@ -124,9 +124,37 @@
   margin: 0.2em 0;
 }
 
-.kgv-editor a {
-  color: #2563eb;
+.kgv-editor a,
+.ProseMirror a {
+  color: #3b82f6;
   text-decoration: underline;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 3px;
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+
+.kgv-editor a:hover,
+.ProseMirror a:hover {
+  color: #2563eb;
+  background-color: rgba(59, 130, 246, 0.08);
+  border-radius: 4px;
+}
+
+/* Smart chip style for raw URL links */
+.kgv-editor a.kgv-smart-chip,
+.ProseMirror a.kgv-smart-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 6px;
+  margin: 0 2px;
+  border-radius: 6px;
+  font-size: 0.9em;
+  text-decoration: none;
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  vertical-align: middle;
 }
 
 .kgv-editor::selection {
@@ -146,17 +174,49 @@
   height: 0;
 }
 
-.kgv-editor .kgv-footnote-marker {
-  font-size: 0.7em;
+/* Footnote marker styling */
+.kgv-editor .kgv-footnote-marker,
+.ProseMirror .kgv-footnote-marker,
+.kgv-editor sup.footnote-ref,
+.ProseMirror sup.footnote-ref {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72em;
+  font-weight: 700;
   vertical-align: super;
-  color: #2563eb;
+  color: #3b82f6;
+  background-color: rgba(59, 130, 246, 0.12);
+  border: 1px solid rgba(59, 130, 246, 0.25);
+  border-radius: 6px;
+  padding: 0 4px;
+  margin: 0 2px;
   cursor: pointer;
-  font-weight: 600;
-  padding: 0 1px;
+  line-height: 1.3;
+  transition: all 0.2s ease;
+  user-select: none;
 }
 
-.kgv-editor .kgv-footnote-marker:hover {
-  text-decoration: underline;
+.kgv-editor .kgv-footnote-marker:hover,
+.ProseMirror .kgv-footnote-marker:hover,
+.kgv-editor sup.footnote-ref:hover,
+.ProseMirror sup.footnote-ref:hover {
+  background-color: #3b82f6;
+  color: #ffffff;
+  transform: scale(1.1);
+}
+
+.kgv-editor .kgv-footnote-marker.active-highlight,
+.ProseMirror .kgv-footnote-marker.active-highlight {
+  animation: footnotePulse 1.5s infinite alternate;
+  background-color: #f59e0b;
+  color: #ffffff;
+  border-color: #d97706;
+}
+
+@keyframes footnotePulse {
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); }
+  100% { transform: scale(1.15); box-shadow: 0 0 0 6px rgba(245, 158, 11, 0); }
 }
 
 .kgv-footnotes-section {

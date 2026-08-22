@@ -2,11 +2,10 @@ import { createPortal } from 'react-dom';
 import React, { useState, useEffect } from 'react';
 import {
   Bold, Italic, Underline as UnderlineIcon, Strikethrough,
-  
   List, ListOrdered,
   AlignLeft, AlignCenter, AlignRight,
   Eraser, Plus, Minus,
-  
+  Link2, Bookmark, Quote,
 } from 'lucide-react';
 import type { Editor } from '@tiptap/react';
 import type { ThemeColors } from './types';
@@ -199,6 +198,41 @@ function Toolbar({
       <ToolBtn onClick={() => editor.chain().focus().setTextAlign('left').run()} icon={<AlignLeft size={15} />} label={t.alignLeft} active={editor.isActive({ textAlign: 'left' })} />
       <ToolBtn onClick={() => editor.chain().focus().setTextAlign('center').run()} icon={<AlignCenter size={15} />} label={t.alignCenter} active={editor.isActive({ textAlign: 'center' })} />
       <ToolBtn onClick={() => editor.chain().focus().setTextAlign('right').run()} icon={<AlignRight size={15} />} label={t.alignRight} active={editor.isActive({ textAlign: 'right' })} />
+
+      <Divider />
+
+      <ToolBtn 
+        onClick={() => {
+          if (editor.isActive('link')) {
+            editor.chain().focus().unsetLink().run();
+          } else {
+            const previousUrl = editor.getAttributes('link').href;
+            const url = window.prompt(lang === 'vi' ? 'Nhập đường dẫn URL (Hyperlink):' : 'Enter hyperlink URL:', previousUrl || 'https://');
+            if (url) {
+              editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
+            }
+          }
+        }} 
+        icon={<Link2 size={15} />} 
+        label={lang === 'vi' ? 'Chèn liên kết (Ctrl+K)' : 'Insert link (Ctrl+K)'} 
+        active={editor.isActive('link')} 
+      />
+      <ToolBtn 
+        onClick={() => {
+          const fnNum = prompt(lang === 'vi' ? 'Nhập số hoặc nhãn chú thích (ví dụ 1, 2, note):' : 'Enter footnote number/label (e.g. 1, 2, note):', '1');
+          if (fnNum) {
+            window.dispatchEvent(new CustomEvent('kgv-insert-footnote', { detail: { id: fnNum } }));
+          }
+        }} 
+        icon={<Bookmark size={15} />} 
+        label={lang === 'vi' ? 'Chèn chú thích neo lề [^n]' : 'Insert margin footnote [^n]'} 
+      />
+      <ToolBtn 
+        onClick={() => editor.chain().focus().toggleBlockquote().run()} 
+        icon={<Quote size={15} />} 
+        label={lang === 'vi' ? 'Đoạn trích dẫn' : 'Blockquote'} 
+        active={editor.isActive('blockquote')} 
+      />
 
       <Divider />
 
