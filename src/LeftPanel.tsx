@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react'
 import { Page, Folder, SyncStatus, Project } from './types'
 import { Lang, t as i18nT } from './i18n'
-import { Home, Folder as FolderIcon, Edit2, FileText, Trash2, ChevronDown, RotateCcw, X, MoreHorizontal, Upload, Plus, PanelLeftClose } from 'lucide-react'
+import { Home, Folder as FolderIcon, Edit2, FileText, Trash2, ChevronDown, RotateCcw, X, MoreHorizontal, Upload, Plus, PanelLeftClose, Bookmark, BookOpen } from 'lucide-react'
 import { importJsonBackupFile } from './fileHandlers'
+import FootnotesPanel from './FootnotesPanel'
+import CitationsPanel from './CitationsPanel'
+import type { CitationSource, CitationStyle } from './citationsEngine'
 
 function timeSince(date: Date, lang: Lang): string {
   const seconds = Math.floor((Date.now() - date.getTime()) / 1000)
@@ -576,45 +579,126 @@ const renderFolder = (folder: Folder, depth = 0) => {
         </div>
       )}
 
-      {/* Main scrollable body */}
-      <div style={{ flex: 1, height: '100%', overflowY: 'auto', overflowX: 'hidden', minHeight: 0, display: 'flex', flexDirection: 'column', paddingTop: 12 }}>
-        
-        {/* Pages Section */}
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 16px', marginBottom: 12 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <FileText size={16} color={c.textMuted} />
-              <span style={{ fontSize: '0.9rem', fontWeight: 600, color: c.text, fontFamily: uiFont, letterSpacing: '0.05em' }}>{t(lang, 'pages')}</span>
-            </div>
-            <button 
-              onClick={() => { setActiveTab('pages'); onNewPage(false); }} 
-              style={{ background: 'none', border: 'none', cursor: 'pointer', color: c.textFaint }}
-            >
-              <Plus size={16} />
-            </button>
-          </div>
-          {renderTabContent(false)}
-        </div>
+      {/* Main Sidebar Tab Switcher */}
+      <div className="flex border-b px-3 py-2 gap-1 shrink-0" style={{ borderColor: c.border, backgroundColor: c.surface }}>
+        <button
+          type="button"
+          onClick={() => (props.onLeftSidebarMainTabChange as unknown as (tab: 'files' | 'footnotes' | 'citations') => void)?.('files')}
+          className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-medium flex items-center justify-center gap-1 transition-all ${(props.leftSidebarMainTab || 'files') === 'files' ? 'shadow-xs font-semibold' : ''}`}
+          style={{ backgroundColor: (props.leftSidebarMainTab || 'files') === 'files' ? c.accentLight : 'transparent', color: (props.leftSidebarMainTab || 'files') === 'files' ? c.accent : c.textMuted }}
+        >
+          <FileText size={13} />
+          <span>Files</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => (props.onLeftSidebarMainTabChange as unknown as (tab: 'files' | 'footnotes' | 'citations') => void)?.('footnotes')}
+          className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-medium flex items-center justify-center gap-1 transition-all ${props.leftSidebarMainTab === 'footnotes' ? 'shadow-xs font-semibold' : ''}`}
+          style={{ backgroundColor: props.leftSidebarMainTab === 'footnotes' ? c.accentLight : 'transparent', color: props.leftSidebarMainTab === 'footnotes' ? c.accent : c.textMuted }}
+        >
+          <Bookmark size={13} />
+          <span>Footnotes</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => (props.onLeftSidebarMainTabChange as unknown as (tab: 'files' | 'footnotes' | 'citations') => void)?.('citations')}
+          className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-medium flex items-center justify-center gap-1 transition-all ${props.leftSidebarMainTab === 'citations' ? 'shadow-xs font-semibold' : ''}`}
+          style={{ backgroundColor: props.leftSidebarMainTab === 'citations' ? c.accentLight : 'transparent', color: props.leftSidebarMainTab === 'citations' ? c.accent : c.textMuted }}
+        >
+          <BookOpen size={13} />
+          <span>Citations</span>
+        </button>
+      </div>
 
-        {/* Drafts Section */}
-        <div style={{ marginTop: 24, marginBottom: 24 }}>
-           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 16px', marginBottom: 12 }}>
-             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={c.textMuted} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="6" y1="3" x2="6" y2="15"></line><circle cx="18" cy="6" r="3"></circle><circle cx="6" cy="18" r="3"></circle><path d="M18 9a9 9 0 0 1-9 9"></path></svg>
-               <span style={{ fontSize: '0.9rem', fontWeight: 600, color: c.text, fontFamily: uiFont, letterSpacing: '0.05em' }}>{t(lang, 'drafts')}</span>
-             </div>
-             <button 
-               onClick={() => { setActiveTab('drafts'); onNewPage(true); }} 
-               style={{ background: 'none', border: 'none', cursor: 'pointer', color: c.textFaint }}
-             >
-               <Plus size={16} />
-             </button>
-           </div>
-           
-           <div style={{ display: 'flex', flexDirection: 'column' }}>
-             {renderTabContent(true)}
-           </div>
-        </div>
+      {/* Main scrollable body */}
+      <div style={{ flex: 1, height: '100%', overflowY: 'auto', overflowX: 'hidden', minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+        {(props.leftSidebarMainTab || 'files') === 'footnotes' ? (
+          <FootnotesPanel
+            theme={{
+              bg: c.bg,
+              text: c.text,
+              textMuted: c.textMuted,
+              textFaint: c.textFaint,
+              accent: c.accent,
+              accentLight: c.accentLight,
+              border: c.border,
+              borderFaint: c.borderFaint,
+              surface: c.surface,
+              isDark: c.isDark,
+            }}
+            uiFont={uiFont}
+            docFont={(props.docFont as string) || 'Georgia'}
+            lang={lang}
+            rawContent={(props.activePage as { content?: string } | undefined)?.content || ''}
+            onUpdateFootnoteContent={(props.onUpdateFootnoteContent as unknown as (id: string, content: string) => void) || (() => {})}
+            onInsertNewFootnote={(props.onInsertNewFootnote as unknown as () => void) || (() => {})}
+            onDeleteFootnote={(props.onDeleteFootnote as unknown as (id: string) => void) || (() => {})}
+            onScrollToEditorMarker={(props.onScrollToEditorMarker as unknown as (id: string) => void) || (() => {})}
+            activeHighlightedId={props.activeFootnoteHighlight as string | null | undefined}
+            onClearHighlight={(props.onClearFootnoteHighlight as unknown as () => void) || (() => {})}
+          />
+        ) : (props.leftSidebarMainTab || 'files') === 'citations' ? (
+          <CitationsPanel
+            theme={{
+              bg: c.bg,
+              text: c.text,
+              textMuted: c.textMuted,
+              textFaint: c.textFaint,
+              accent: c.accent,
+              accentLight: c.accentLight,
+              border: c.border,
+              borderFaint: c.borderFaint,
+              surface: c.surface,
+              isDark: c.isDark,
+            }}
+            uiFont={uiFont}
+            lang={lang}
+            sources={(props.citationSources as unknown as CitationSource[]) || []}
+            onUpdateSources={(props.onUpdateCitationSources as unknown as (sources: CitationSource[]) => void) || (() => {})}
+            currentStyle={(props.citationStyle as unknown as CitationStyle) || 'apa'}
+            onChangeStyle={(props.onUpdateCitationStyle as unknown as (style: CitationStyle) => void) || (() => {})}
+            onInsertCitationMarker={(props.onInsertCitationMarker as unknown as (key: string) => void) || (() => {})}
+          />
+        ) : (
+          <div className="p-3 space-y-4">
+            {/* Pages Section */}
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 4px', marginBottom: 8 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <FileText size={16} color={c.textMuted} />
+                  <span style={{ fontSize: '0.9rem', fontWeight: 600, color: c.text, fontFamily: uiFont, letterSpacing: '0.05em' }}>{t(lang, 'pages')}</span>
+                </div>
+                <button 
+                  onClick={() => { setActiveTab('pages'); onNewPage(false); }} 
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: c.textFaint }}
+                >
+                  <Plus size={16} />
+                </button>
+              </div>
+              {renderTabContent(false)}
+            </div>
+
+            {/* Drafts Section */}
+            <div style={{ marginTop: 16 }}>
+               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 4px', marginBottom: 8 }}>
+                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={c.textMuted} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="6" y1="3" x2="6" y2="15"></line><circle cx="18" cy="6" r="3"></circle><circle cx="6" cy="18" r="3"></circle><path d="M18 9a9 9 0 0 1-9 9"></path></svg>
+                   <span style={{ fontSize: '0.9rem', fontWeight: 600, color: c.text, fontFamily: uiFont, letterSpacing: '0.05em' }}>{t(lang, 'drafts')}</span>
+                 </div>
+                 <button 
+                   onClick={() => { setActiveTab('drafts'); onNewPage(true); }} 
+                   style={{ background: 'none', border: 'none', cursor: 'pointer', color: c.textFaint }}
+                 >
+                   <Plus size={16} />
+                 </button>
+               </div>
+               
+               <div style={{ display: 'flex', flexDirection: 'column' }}>
+                 {renderTabContent(true)}
+               </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Footer */}
@@ -683,6 +767,11 @@ const renderFolder = (folder: Folder, depth = 0) => {
 }
 
 export default React.memo(LeftPanel, (prevProps, nextProps) => {
+  if (prevProps.leftSidebarMainTab !== nextProps.leftSidebarMainTab) return false;
+  if (prevProps.citationStyle !== nextProps.citationStyle) return false;
+  if (prevProps.activeFootnoteHighlight !== nextProps.activeFootnoteHighlight) return false;
+  if (prevProps.citationSources !== nextProps.citationSources) return false;
+  if ((prevProps.activePage as { content?: string })?.content !== (nextProps.activePage as { content?: string })?.content) return false;
   if (prevProps.activeProjectId !== nextProps.activeProjectId) return false;
   if (prevProps.activePageId !== nextProps.activePageId) return false;
   if (prevProps.sidebarOpen !== nextProps.sidebarOpen) return false;

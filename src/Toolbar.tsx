@@ -5,7 +5,7 @@ import {
   List, ListOrdered,
   AlignLeft, AlignCenter, AlignRight,
   Eraser, Plus, Minus,
-  Link2, Bookmark, Quote,
+  Link2, Bookmark, BookOpen, Quote,
   Split
 } from 'lucide-react';
 import type { Editor } from '@tiptap/react';
@@ -230,6 +230,13 @@ function Toolbar({
         }} 
         icon={<Bookmark size={15} />} 
         label={lang === 'vi' ? 'Chèn chú thích neo lề [^n]' : 'Insert margin footnote [^n]'} 
+      />
+      <ToolBtn 
+        onClick={() => {
+          window.dispatchEvent(new CustomEvent('kgv-open-citations'));
+        }} 
+        icon={<BookOpen size={15} />} 
+        label={lang === 'vi' ? 'Thư viện trích dẫn & Thư mục (Citations)' : 'Citations & Bibliography Desk'} 
       />
       <ToolBtn 
         onClick={() => editor.chain().focus().toggleBlockquote().run()} 

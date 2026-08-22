@@ -21,6 +21,7 @@ import WelcomeScreen from './WelcomeScreen';
 import GithubCloudSaveModal from './GithubCloudSaveModal';
 import ReferenceComparePanel from './ReferenceComparePanel';
 import LinkHoverPreview from './LinkHoverPreview';
+import type { CitationSource, CitationStyle } from './citationsEngine';
 import type { Document, Folder, ThemeColors, ThemeMode, CustomTheme, CustomFont, Lang, Project, Page, FormatState, PageFormat, Panel } from './types';
 import { PAPER_SIZES_PX } from './types';
 import { getAllProjectsFromDB, saveProjectToDB, deleteProjectFromDB, getAppSettings, saveAppSettings, db, getAllFoldersFromDB } from './db';
@@ -168,19 +169,56 @@ export default function App() {
   const [zoomInput, setZoomInput] = useState<string>('100');
   const [containerWidth, setContainerWidth] = useState(window.innerWidth);
 
-  // Footnote event listener
+  const [citationSources, setCitationSources] = useState<CitationSource[]>(() => {
+    try {
+      const raw = localStorage.getItem('kgv-citation-sources');
+      return raw ? JSON.parse(raw) : [];
+    } catch { return []; }
+  });
+  const [citationStyle, setCitationStyle] = useState<CitationStyle>('apa');
+  const [leftSidebarMainTab, setLeftSidebarMainTab] = useState<'files' | 'footnotes' | 'citations'>('files');
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('kgv-citation-sources', JSON.stringify(citationSources));
+    } catch (err) {
+      console.error('Failed to save citations', err);
+    }
+  }, [citationSources]);
+
+  // Footnote and citation open event listeners -> switches Left sidebar tabs and opens sidebar
   useEffect(() => {
     const handleFootnoteClicked = (e: Event) => {
       const { id } = (e as CustomEvent).detail || {};
       if (id) {
         setActiveFootnoteHighlight(id);
-        setRightPanelTab('footnotes');
-        setRightOpen(true);
+        setLeftSidebarMainTab('footnotes');
+        setSidebarOpen(true);
       }
     };
+    const handleOpenCitations = () => {
+      setLeftSidebarMainTab('citations');
+      setSidebarOpen(true);
+    };
+    const handleOpenFootnotes = () => {
+      setLeftSidebarMainTab('footnotes');
+      setSidebarOpen(true);
+    };
     window.addEventListener('kgv-footnote-clicked', handleFootnoteClicked);
-    return () => window.removeEventListener('kgv-footnote-clicked', handleFootnoteClicked);
+    window.addEventListener('kgv-open-citations', handleOpenCitations);
+    window.addEventListener('kgv-open-footnotes', handleOpenFootnotes);
+    return () => {
+      window.removeEventListener('kgv-footnote-clicked', handleFootnoteClicked);
+      window.removeEventListener('kgv-open-citations', handleOpenCitations);
+      window.removeEventListener('kgv-open-footnotes', handleOpenFootnotes);
+    };
   }, []);
+
+  const handleInsertCitationMarker = (key: string) => {
+    if (!activePage) return;
+    const updated = (activePage.content || '') + ` [@${key}] `;
+    updatePageContent(activePage.id, updated);
+  };
 
   // Global drag & drop prevention to stop browser from navigating/refreshing when files are dropped outside handled zones
   useEffect(() => {
@@ -1671,6 +1709,21 @@ export default function App() {
           projects={projects}
           activeProjectId={activeProjectId}
           activePageId={activePageId}
+          activePage={activePage}
+          leftSidebarMainTab={leftSidebarMainTab}
+          onLeftSidebarMainTabChange={setLeftSidebarMainTab}
+          citationSources={citationSources}
+          onUpdateCitationSources={setCitationSources}
+          citationStyle={citationStyle}
+          onUpdateCitationStyle={setCitationStyle}
+          onInsertCitationMarker={handleInsertCitationMarker}
+          onUpdateFootnoteContent={handleUpdateFootnoteContent}
+          onInsertNewFootnote={handleInsertNewFootnote}
+          onDeleteFootnote={handleDeleteFootnote}
+          onScrollToEditorMarker={handleScrollToEditorMarker}
+          activeFootnoteHighlight={activeFootnoteHighlight}
+          onClearFootnoteHighlight={() => setActiveFootnoteHighlight(null)}
+          docFont={docFont}
           onGoHome={() => {
             setIsWorkspaceActive(false);
             if (window.history.state?.workspace) {
