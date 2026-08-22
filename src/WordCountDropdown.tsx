@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import type { ThemeColors, Lang } from './types';
 import { t } from './i18n';
+import { FileText, Clock, Type, BarChart2 } from 'lucide-react';
 
 interface WordCountDropdownProps {
   wordCount: number;
@@ -9,9 +10,20 @@ interface WordCountDropdownProps {
   theme: ThemeColors;
   uiFont: string;
   lang?: Lang;
+  direction?: 'up' | 'down';
+  className?: string;
 }
 
-export default function WordCountDropdown({ wordCount, charCount, readMin, theme, uiFont, lang = 'vi' }: WordCountDropdownProps) {
+export default function WordCountDropdown({ 
+  wordCount, 
+  charCount, 
+  readMin, 
+  theme, 
+  uiFont, 
+  lang = 'vi',
+  direction = 'down',
+  className = ''
+}: WordCountDropdownProps) {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -29,52 +41,77 @@ export default function WordCountDropdown({ wordCount, charCount, readMin, theme
   const charsLabel = t(lang, 'characters') || t(lang, 'chars') || 'Characters';
   const readingTimeLabel = t(lang, 'readingTime') || t(lang, 'readTime') || 'Reading time';
   const minLabel = t(lang, 'min') || 'm';
+  const statsLabel = t(lang, 'stats') || 'Statistics';
 
-  // Capitalize first letter helper for table row
   const capitalizedWords = wordsLabel.charAt(0).toUpperCase() + wordsLabel.slice(1);
 
   return (
-    <div className="relative z-50 flex items-center h-[34px]" ref={containerRef}>
+    <div className={`relative z-40 flex items-center ${className}`} ref={containerRef}>
       <button 
+        type="button"
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-1.5 transition-all hover:opacity-80 active:scale-95 px-2 py-1 outline-none rounded-md"
+        className="flex items-center gap-1.5 transition-all hover:opacity-80 active:scale-95 px-2.5 py-1 rounded-lg border shadow-xs cursor-pointer select-none text-xs"
         style={{
+          backgroundColor: theme.surface,
+          borderColor: theme.border,
           color: theme.text,
-          fontFamily: uiFont,
-          fontSize: '0.85rem',
-          fontWeight: 600,
-          background: 'transparent',
+          fontFamily: `'${uiFont}', sans-serif`,
         }}
-        title={`${wordCount.toLocaleString()} ${wordsLabel} · ${charCount.toLocaleString()} ${charsLabel}`}
+        title={`${wordCount.toLocaleString()} ${wordsLabel} · ${charCount.toLocaleString()} ${charsLabel} · ~${readMin} ${minLabel} ${readingTimeLabel}`}
       >
-        <span style={{ fontWeight: 700 }}>{wordCount.toLocaleString()}</span> <span style={{ opacity: 0.8, fontWeight: 400 }}>{wordsLabel}</span>
+        <BarChart2 size={13} style={{ color: theme.textMuted }} className="shrink-0" />
+        <span className="font-semibold">{wordCount.toLocaleString()}</span>
+        <span style={{ color: theme.textMuted }} className="font-normal">{wordsLabel}</span>
+        <span style={{ color: theme.border }} className="mx-0.5">·</span>
+        <Clock size={12} style={{ color: theme.textMuted }} className="shrink-0" />
+        <span style={{ color: theme.textMuted }} className="font-normal">{readMin} {minLabel}</span>
       </button>
 
       {open && (
         <div 
-          className="absolute right-0 mt-2 p-3 rounded-2xl shadow-2xl w-56 border backdrop-blur-md"
+          className="absolute right-0 p-3 rounded-xl shadow-xl w-56 border backdrop-blur-md animate-in fade-in duration-150 z-50"
           style={{
-            top: '100%',
+            ...(direction === 'up' 
+              ? { bottom: 'calc(100% + 6px)' } 
+              : { top: 'calc(100% + 6px)' }),
             backgroundColor: theme.surface,
             borderColor: theme.border,
             color: theme.text,
-            fontFamily: uiFont,
+            fontFamily: `'${uiFont}', sans-serif`,
           }}
         >
-          <div className="flex justify-between items-center py-2.5 border-b" style={{ borderColor: theme.borderFaint }}>
-            <span style={{ fontSize: '0.95rem' }}>{capitalizedWords}</span>
-            <span style={{ fontSize: '0.95rem', fontWeight: 600 }}>{wordCount.toLocaleString()}</span>
+          <div className="text-[10px] font-semibold uppercase tracking-wider mb-2 px-1 flex items-center justify-between" style={{ color: theme.textMuted }}>
+            <span>{statsLabel}</span>
+            <span className="text-[10px] font-normal lowercase opacity-60">live</span>
           </div>
-          <div className="flex justify-between items-center py-2.5 border-b" style={{ borderColor: theme.borderFaint }}>
-            <span style={{ fontSize: '0.95rem' }}>{charsLabel}</span>
-            <span style={{ fontSize: '0.95rem', fontWeight: 600 }}>{charCount.toLocaleString()}</span>
+
+          <div className="flex justify-between items-center py-1.5 px-1 border-b text-xs" style={{ borderColor: theme.borderFaint }}>
+            <span className="flex items-center gap-2" style={{ color: theme.textMuted }}>
+              <FileText size={13} style={{ color: theme.textMuted }} />
+              {capitalizedWords}
+            </span>
+            <span className="font-semibold font-mono text-xs">{wordCount.toLocaleString()}</span>
           </div>
-          <div className="flex justify-between items-center py-2.5">
-            <span style={{ fontSize: '0.95rem' }}>{readingTimeLabel}</span>
-            <span style={{ fontSize: '0.95rem', fontWeight: 600 }}>{readMin} {minLabel}</span>
+
+          <div className="flex justify-between items-center py-1.5 px-1 border-b text-xs" style={{ borderColor: theme.borderFaint }}>
+            <span className="flex items-center gap-2" style={{ color: theme.textMuted }}>
+              <Type size={13} style={{ color: theme.textMuted }} />
+              {charsLabel}
+            </span>
+            <span className="font-semibold font-mono text-xs">{charCount.toLocaleString()}</span>
+          </div>
+
+          <div className="flex justify-between items-center py-1.5 px-1 text-xs">
+            <span className="flex items-center gap-2" style={{ color: theme.textMuted }}>
+              <Clock size={13} style={{ color: theme.textMuted }} />
+              {readingTimeLabel}
+            </span>
+            <span className="font-semibold font-mono text-xs">~{readMin} {minLabel}</span>
           </div>
         </div>
       )}
     </div>
   );
 }
+
+

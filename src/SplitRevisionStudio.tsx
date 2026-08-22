@@ -165,9 +165,9 @@ export default function SplitRevisionStudio({
             <GitCompare size={24} />
           </div>
           <div>
-            <h2 className="text-lg font-bold tracking-tight flex items-center gap-2.5">
-              <span>{t(lang, 'splitRevisionStudio') || 'Split Revision Studio'}</span>
-              <span className="text-[11px] px-2.5 py-0.5 rounded-full uppercase tracking-wider font-semibold shadow-xs" style={{ backgroundColor: theme.accentLight, color: theme.accent }}>
+            <h2 className="text-lg font-bold tracking-tight flex items-center gap-2.5 flex-wrap sm:flex-nowrap">
+              <span className="truncate">{t(lang, 'splitRevisionStudio') || 'Split Revision Studio'}</span>
+              <span className="text-[11px] px-2.5 py-0.5 rounded-full uppercase tracking-wider font-semibold shadow-xs whitespace-nowrap shrink-0" style={{ backgroundColor: theme.accentLight, color: theme.accent }}>
                 {t(lang, 'liveDiffAndRevisions') || 'Live Diff & Revisions'}
               </span>
             </h2>

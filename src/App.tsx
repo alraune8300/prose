@@ -21,6 +21,7 @@ import WelcomeScreen from './WelcomeScreen';
 import GithubCloudSaveModal from './GithubCloudSaveModal';
 import ReferenceComparePanel from './ReferenceComparePanel';
 import LinkHoverPreview from './LinkHoverPreview';
+import WordCountDropdown from './WordCountDropdown';
 import type { CitationSource, CitationStyle } from './citationsEngine';
 import type { Document, Folder, ThemeColors, ThemeMode, CustomTheme, CustomFont, Lang, Project, Page, FormatState, PageFormat, Panel } from './types';
 import { PAPER_SIZES_PX } from './types';
@@ -804,11 +805,14 @@ export default function App() {
     }
   }, [activePageId, activeProjectId, editorInstance]);
 
-  const { wordCount, charCount } = useMemo(() => {
+  const { wordCount, charCount, readMin } = useMemo(() => {
     const raw = activePage?.content || '';
-    if (!raw) return { wordCount: 0, charCount: 0 };
+    if (!raw) return { wordCount: 0, charCount: 0, readMin: 0 };
     const text = raw.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
-    return { wordCount: text ? text.split(/\s+/).length : 0, charCount: text.length };
+    const words = text ? text.split(/\s+/).length : 0;
+    const chars = text.length;
+    const mins = Math.max(1, Math.ceil(words / 200));
+    return { wordCount: words, charCount: chars, readMin: mins };
   }, [activePage?.content]);
 
   // Save isolated project to IndexedDB (offline-first with 3.5s strict debounce & structural dirty-checking)
@@ -1821,6 +1825,15 @@ export default function App() {
             </div>
 
             <div className="absolute top-4 right-16 z-50 flex items-center gap-2 pr-2">
+              <WordCountDropdown
+                wordCount={wordCount}
+                charCount={charCount}
+                readMin={readMin}
+                theme={theme}
+                uiFont={uiFont}
+                lang={lang}
+                direction="down"
+              />
               <button
                 onClick={handleToggleFocusMode}
                 className="p-1.5 rounded transition-all hover:opacity-80 active:scale-95"
@@ -1919,7 +1932,8 @@ export default function App() {
             className="relative z-30 w-full flex flex-col items-center select-none shrink-0 border-b"
             style={{ backgroundColor: theme.bg, borderColor: theme.borderFaint }}
           >
-            <div className="max-w-2xl mx-auto w-full px-6 md:px-8 pt-8 md:pt-10 pb-3 transition-all duration-300 flex items-center justify-between">
+            <div className="max-w-4xl mx-auto w-full px-6 md:px-8 pt-6 md:pt-8 pb-3 transition-all duration-300 flex items-center justify-between gap-4">
+              <div className="w-24 hidden md:block shrink-0" />
               <input
                 value={activePage?.title || ''}
                 onChange={(e) => {
@@ -1933,14 +1947,16 @@ export default function App() {
                 style={{ fontFamily: `'${docFont}', Georgia, serif`, color: theme.text }}
               />
               {activePage?.isDraft && activePage?.originalPageId && (
-                <button
-                  onClick={handleCommitDraft}
-                  className="ml-4 px-3 py-1.5 rounded-md text-sm font-medium transition-colors"
-                  style={{ backgroundColor: theme.accent, color: theme.isDark ? theme.bg : '#fff' }}
-                  title="Update original document with these changes"
-                >
-                  Commit to Original
-                </button>
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    onClick={handleCommitDraft}
+                    className="px-3 py-1.5 rounded-md text-sm font-medium transition-colors"
+                    style={{ backgroundColor: theme.accent, color: theme.isDark ? theme.bg : '#fff' }}
+                    title="Update original document with these changes"
+                  >
+                    Commit to Original
+                  </button>
+                </div>
               )}
             </div>
           </div>
@@ -2423,12 +2439,13 @@ export default function App() {
 
       {!sidebarOpen && (
         <div 
-          className="absolute left-5 z-20 text-xs pointer-events-none" 
+          className="fixed left-5 z-20 text-xs pointer-events-none" 
           style={{ bottom: 'calc(1rem + env(safe-area-inset-bottom))', color: theme.faint }}
         >
           {saving ? (t.saving || 'Saving...') : (t.saved || 'Saved')}
         </div>
       )}
+
 
       {(isFocusMode || isPreviewMode) && (
         <div 
@@ -2447,6 +2464,8 @@ export default function App() {
             <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-800/90 text-slate-200 text-xs font-medium border border-slate-700/50 shrink-0">
               {isPreviewMode ? <Eye size={13} className="text-slate-300" /> : <Maximize2 size={13} className="text-slate-300" />}
               <span>{isFocusMode ? (t.focusMode || 'Focus Mode') : (t.previewMode || 'Preview Mode')}</span>
+              <span className="opacity-40">·</span>
+              <span className="font-mono text-emerald-400 font-semibold">{wordCount.toLocaleString()} {t.words || 'words'}</span>
             </div>
 
             <div className="w-px h-3.5 bg-slate-700/60 shrink-0 mx-0.5" />
