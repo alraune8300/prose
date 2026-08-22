@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <!-- Background Gradient -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1C1B18" />
+      <stop offset="50%" stop-color="#141311" />
+      <stop offset="100%" stop-color="#0A0908" />
+    </linearGradient>
+
+    <!-- Metallic Gold/Warm Cream Gradient -->
+    <linearGradient id="pGoldGrad" x1="15%" y1="10%" x2="85%" y2="90%">
+      <stop offset="0%" stop-color="#FFF3DC" />
+      <stop offset="35%" stop-color="#F2D299" />
+      <stop offset="70%" stop-color="#D9A855" />
+      <stop offset="100%" stop-color="#B38032" />
+    </linearGradient>
+
+    <!-- Subtle Accent Glow -->
+    <radialGradient id="centerGlow" cx="50%" cy="45%" r="50%">
+      <stop offset="0%" stop-color="#D9A855" stop-opacity="0.18" />
+      <stop offset="100%" stop-color="#D9A855" stop-opacity="0" />
+    </radialGradient>
+
+    <filter id="shadowFilter" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000000" flood-opacity="0.6"/>
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#D9A855" flood-opacity="0.2"/>
+    </filter>
+  </defs>
+
+  <!-- Base Icon Container (Rounded Square) -->
+  <rect x="16" y="16" width="480" height="480" rx="108" fill="url(#bgGrad)" stroke="#2D2A24" stroke-width="6" />
+  
+  <!-- Subtle Radial Glow behind P -->
+  <rect x="20" y="20" width="472" height="472" rx="104" fill="url(#centerGlow)" />
+
+  <!-- Inner Elegant Gold Frame Ring -->
+  <rect x="36" y="36" width="440" height="440" rx="90" fill="none" stroke="url(#pGoldGrad)" stroke-width="2.5" opacity="0.3" stroke-dasharray="8 4" />
+
+  <g filter="url(#shadowFilter)">
+    <!-- Stylized Serif Letter 'P' Path -->
+    <!-- Crafted vector with serif brackets, high contrast stem/bowl ratio, and ball terminal flourish -->
+    <path d="
+      M 160 135
+      C 160 128, 175 120, 205 120
+      L 300 120
+      C 355 120, 395 145, 395 192
+      C 395 240, 355 268, 295 268
+      L 230 268
+      L 230 365
+      C 230 380, 248 385, 260 385
+      L 265 385
+      L 265 398
+      L 155 398
+      L 155 385
+      L 160 385
+      C 172 385, 190 380, 190 365
+      L 190 153
+      C 190 138, 172 135, 160 135
+      Z
+      
+      M 230 142
+      L 230 246
+      L 290 246
+      C 328 246, 352 228, 352 194
+      C 352 160, 328 142, 290 142
+      Z
+    " fill="url(#pGoldGrad)" />
+
+    <!-- Stylized Decorative Flourish Accent / Pen Swash under the P -->
+    <path d="
+      M 165 418
+      Q 260 445, 355 418
+      Q 260 435, 165 418
+    " fill="url(#pGoldGrad)" opacity="0.85" />
+    
+    <circle cx="355" cy="418" r="3.5" fill="url(#pGoldGrad)" />
+  </g>
+</svg>

@@ -446,9 +446,14 @@ function WelcomeScreen({ theme, themeMode, onSelectTheme, uiFont, lang = 'vi', o
       >
         <div className="flex flex-row md:flex-col items-center md:items-start gap-3 md:gap-10 w-full">
           <div className="mb-0 md:mb-0 px-0 md:px-2 flex items-center justify-center md:justify-start w-full">
-            <h2 className="text-2xl md:text-3xl font-serif tracking-tight" style={{ color: theme.text, fontFamily: `'${uiFont}', Georgia, serif` }}>
-              Prose
-            </h2>
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center shadow-xs overflow-hidden shrink-0" style={{ backgroundColor: '#1C1B18', border: '1px solid rgba(217,168,85,0.3)' }}>
+                <span className="font-serif italic text-lg font-bold leading-none select-none" style={{ color: '#F2D299', fontFamily: "'Playfair Display', Georgia, serif" }}>P</span>
+              </div>
+              <h2 className="text-2xl md:text-3xl font-serif tracking-tight" style={{ color: theme.text, fontFamily: `'${uiFont}', Georgia, serif` }}>
+                Prose
+              </h2>
+            </div>
           </div>
           <nav className="flex flex-row md:flex-col gap-2 w-full mt-2">
             <button 
