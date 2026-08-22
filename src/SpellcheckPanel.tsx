@@ -110,7 +110,7 @@ export default function SpellcheckPanel({ c, uiFont, headingFont, lang, }: Spell
                 value: l,
                 label: `${LANG_FLAGS[l]} ${LANG_LABELS[l]}`
               }))}
-              theme={c as any}
+              theme={c as unknown as import("./types").ThemeColors}
               buttonStyle={{ 
                  width: '100%', padding: '8px 12px', borderRadius: 8, border: `1px solid ${c.borderFaint}`,
                 background: 'transparent', color: c.text, fontFamily: uiFont, fontSize: '0.9rem',

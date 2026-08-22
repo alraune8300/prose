@@ -7,10 +7,11 @@ import { getDict, type Dict } from './i18n';
 import { exportTxt, exportJson } from './exportUtils';
 import { importFile, exportToPdf, exportToDocx, exportToHtmlFile, exportToMarkdownFile, exportToJsonBackup } from './fileHandlers';
 import { saveApiKey, loadApiKey, injectGoogleFont, reinjectSavedFonts } from './googleFontsApi';
-import { X, Plus, Minus, ZoomIn, Eye, Maximize2, PanelLeft, Hourglass, Coffee, Settings } from 'lucide-react';
+import { X, Plus, Minus, ZoomIn, Eye, Maximize2, PanelLeft, Hourglass, Coffee, Settings, LayoutList } from 'lucide-react';
 import { type Editor as TiptapEditorType } from '@tiptap/react';
 import LeftPanel from './LeftPanel';
 import RightPanel from './RightPanel';
+import BlockOrganizerPanel from './BlockOrganizerPanel';
 import WordCountDropdown from './WordCountDropdown';
 import GoogleFontsPanel from './GoogleFontsPanel';
 import Editor from './Editor';
@@ -151,6 +152,7 @@ export default function App() {
   const [isFocusMode, setIsFocusMode] = useState(false);
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [typewriterMode, setTypewriterMode] = useState(false);
+  const [blockViewOpen, setBlockViewOpen] = useState(false);
   const [githubModalOpen, setGithubModalOpen] = useState(false);
   const [rightPanelTab, setRightPanelTab] = useState<string>('settings');
   const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -457,6 +459,7 @@ export default function App() {
     setIsFocusMode(prev => {
       const next = !prev;
       setIsPreviewMode(false);
+      setBlockViewOpen(false);
       restoreScroll();
       return next;
     });
@@ -466,6 +469,7 @@ export default function App() {
     setIsPreviewMode(prev => {
       const next = !prev;
       setIsFocusMode(false);
+      setBlockViewOpen(false);
       restoreScroll();
       return next;
     });
@@ -1670,6 +1674,20 @@ export default function App() {
                 <Coffee size={16} />
               </button>
               <button
+                onClick={() => {
+                  setBlockViewOpen(prev => !prev);
+                  setIsFocusMode(false);
+                  setIsPreviewMode(false);
+                }}
+                className="p-1.5 rounded transition-all hover:opacity-80 active:scale-95"
+                style={{
+                  color: blockViewOpen ? theme.accent : theme.text,
+                }}
+                title={t.blockView || 'Block View Organizer'}
+              >
+                <LayoutList size={16} />
+              </button>
+              <button
                 onClick={handleToggleTypewriterMode}
                 className="p-1.5 rounded transition-all hover:opacity-80 active:scale-95"
                 style={{
@@ -1826,10 +1844,47 @@ export default function App() {
               );
             }
 
+            if (blockViewOpen) {
+              return (
+                <div
+                  className="flex-1 flex flex-col w-full relative transition-all duration-300 ease-in-out kgv-hardware-accelerated h-full w-full max-w-4xl px-4 md:px-8 pt-4 pb-24 md:pt-8 md:pb-32"
+                  style={{ backgroundColor: 'transparent' }}
+                >
+                  {editorInstance && (
+                    <BlockOrganizerPanel 
+                      editor={editorInstance as TiptapEditorType} 
+                      onClose={() => setBlockViewOpen(false)} 
+                      theme={theme}
+                      lang={lang}
+                      uiFont={uiFont}
+                    />
+                  )}
+                  {/* Keep the Editor mounted but hidden so the state is preserved */}
+                  <div className="hidden">
+                    <Editor
+                      key={activePage?.id || 'empty'}
+                      theme={theme}
+                      docFont={docFont}
+                      fontSize={fontSize}
+                      formatState={formatState}
+                      onEditorReady={setEditorInstance}
+                      t={t}
+                      content={activePage?.content || ''}
+                      onContentChange={handleContentChange}
+                      isFocusMode={isFocusMode}
+                      onToggleFocusMode={handleToggleFocusMode}
+                      isPreviewMode={isPreviewMode}
+                      onTogglePreviewMode={handleTogglePreviewMode}
+                      typewriterMode={typewriterMode}
+                    />
+                  </div>
+                </div>
+              );
+            }
             if (isPageless) {
               return (
                 <div
-                  className="flex-1 flex flex-col w-full relative transition-all duration-300 ease-in-out kgv-hardware-accelerated max-w-4xl px-8 md:px-16 pt-12 pb-24 md:pt-16 md:pb-32"
+                  className={`flex-1 flex flex-col w-full relative transition-all duration-300 ease-in-out kgv-hardware-accelerated max-w-4xl px-8 md:px-16 pt-12 pb-24 md:pt-16 md:pb-32 ${blockViewOpen ? "hidden" : ""}`}
                   style={{
                     maxWidth: `${formatState.maxW || 800}px`,
                     backgroundColor: 'transparent',
@@ -1861,7 +1916,7 @@ export default function App() {
 
             return (
               <div 
-                className="document-workspace flex flex-col items-center transition-all duration-300 relative"
+                className={`document-workspace flex flex-col items-center transition-all duration-300 relative ${blockViewOpen ? "hidden" : ""}`}
                 style={{ 
                   width: `${paperWidth}px`, 
                   zoom: autoFitScale 
@@ -1971,7 +2026,9 @@ export default function App() {
       {rightOpen && !isFocusMode && !isPreviewMode && (
         <div className="fixed inset-0 bg-black/30 z-30 md:hidden" onClick={() => setRightOpen(false)} />
       )}
-      <div
+      
+      
+      <div 
         className={`
           fixed md:relative top-0 right-0 h-full z-40 flex-shrink-0
           transition-all duration-300 ease-in-out transform shadow-2xl md:shadow-none kgv-adaptive-panel kgv-hardware-accelerated

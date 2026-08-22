@@ -47,7 +47,7 @@ const FONT_CATEGORIES = [
   }
 ];
 
-const loadedFonts = new Set<string>();
+
 
 function loadGoogleFont(name: string) {
   injectGoogleFont(name);

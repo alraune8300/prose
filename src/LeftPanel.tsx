@@ -102,7 +102,7 @@ function LeftPanel(props: Record<string, unknown>) {
   const onRenameFolder = (props.onRenameFolder || (() => {})) as (id: string, name: string) => void
   const onDeleteFolder = (props.onDeleteFolder || (() => {})) as (id: string) => void
   const onMovePageToFolder = (props.onMovePageToFolder || props.onMoveDoc || (() => {})) as (pageId: string, folderId: string | undefined) => void
-  const onCloseSidebar = (props.onCloseSidebar || props.onClose || (() => {})) as () => void
+  
   const onOpenGithubCloudSave = (props.onOpenGithubCloudSave || (() => {})) as () => void
 
   const [renamingId, setRenamingId] = useState<string | null>(null)
@@ -482,20 +482,12 @@ const renderFolder = (folder: Folder, depth = 0) => {
               <FolderIcon size={18} style={{ color: c.accent, fill: c.accent, opacity: 0.2, position: 'absolute' }} />
               <FolderIcon size={18} style={{ color: c.accent, position: 'absolute' }} />
             </div>
-            <span style={{ fontSize: '1.05rem', fontWeight: 600, color: c.text, fontFamily: uiFont, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            <span style={{ fontSize: '1.05rem', fontWeight: 600, color: c.text, fontFamily: uiFont, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', lineHeight: '18px', display: 'flex', alignItems: 'center' }}>
               {activeProject?.title || 'English'}
             </span>
           </div>
         </div>
-        {(props.onCloseSidebar || props.onClose) && (
-          <button
-            onClick={onCloseSidebar}
-            title={t(lang, 'collapse') || 'Collapse'}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', color: c.textMuted, padding: '2px 4px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-          >
-            ×
-          </button>
-        )}
+
       </div>
       {/* Project Switcher Dropdown (Conditional) */}
       {showProjSearch && (

@@ -152,6 +152,34 @@ export default function SearchPanel({ c, uiFont, lang, }: SearchPanelProps) {
           {t(lang, 'replaceAll')}
         </button>
       </div>
+      <div style={{ display: 'flex', gap: 8, padding: '0 4px', marginTop: 8 }}>
+        <button
+          onClick={() => {
+            window.dispatchEvent(new CustomEvent('kgv-search-replace', { detail: { find: findText, replace: '', matchCase, wholeWord, regex, all: false, isDelete: true } }));
+          }}
+          style={{
+            flex: 1, padding: '10px 0', borderRadius: 12,
+            background: '#ef444420', border: `1px solid #ef444450`,
+            color: '#ef4444', fontFamily: uiFont, fontSize: '0.9rem',
+            cursor: 'pointer', fontWeight: 500,
+          }}
+        >
+          {t(lang, 'delete')}
+        </button>
+        <button
+          onClick={() => {
+            window.dispatchEvent(new CustomEvent('kgv-search-replace', { detail: { find: findText, replace: '', matchCase, wholeWord, regex, all: true, isDelete: true } }));
+          }}
+          style={{
+            flex: 1, padding: '10px 0', borderRadius: 12,
+            background: '#ef444420', border: `1px solid #ef444450`,
+            color: '#ef4444', fontFamily: uiFont, fontSize: '0.9rem',
+            cursor: 'pointer', fontWeight: 500,
+          }}
+        >
+          {t(lang, 'deleteAll')}
+        </button>
+      </div>
 
       <div style={{ marginTop: 12 }}>
         <SectionLabel label={t(lang, 'searchOptions')} />

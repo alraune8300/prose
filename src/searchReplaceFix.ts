@@ -1,5 +1,5 @@
-export function executeSearchReplace(editor: import("@tiptap/react").Editor, detail: { find: string; replace: string; matchCase: boolean; wholeWord: boolean; regex: boolean; all: boolean }) {
-  const { find, replace, matchCase, wholeWord, regex, all } = detail;
+export function executeSearchReplace(editor: import("@tiptap/react").Editor, detail: { find: string; replace: string; matchCase: boolean; wholeWord: boolean; regex: boolean; all: boolean; isDelete?: boolean }) {
+  const { find, replace, matchCase, wholeWord, regex, all, isDelete } = detail;
   if (!find || !editor || editor.isDestroyed) return;
 
   const state = editor.state;
@@ -36,14 +36,84 @@ export function executeSearchReplace(editor: import("@tiptap/react").Editor, det
      if (!nextResult) nextResult = results[0]; // wrap around
      
      if (nextResult) {
-         editor.chain().focus().setTextSelection({ from: nextResult.from, to: nextResult.to }).insertContent(replace).run();
+         let extendFrom = nextResult.from;
+         let extendTo = nextResult.to;
+         
+         if (isDelete) {
+             const doc = state.doc;
+             let spacesBefore = 0;
+             while (extendFrom > 0 && /^\s$/.test(doc.textBetween(extendFrom - 1, extendFrom))) {
+                 extendFrom--;
+                 spacesBefore++;
+             }
+             
+             let spacesAfter = 0;
+             while (extendTo < doc.content.size && /^\s$/.test(doc.textBetween(extendTo, extendTo + 1))) {
+                 extendTo++;
+                 spacesAfter++;
+             }
+             
+             const totalSpaces = spacesBefore + spacesAfter;
+             const charBefore = extendFrom > 0 ? doc.textBetween(extendFrom - 1, extendFrom) : '';
+             const charAfter = extendTo < doc.content.size ? doc.textBetween(extendTo, extendTo + 1) : '';
+             
+             const isPunctAfter = /^[.,;:!?\)]$/.test(charAfter);
+             const isPunctBefore = /^[\({\[]$/.test(charBefore);
+             
+             let replacement = '';
+             if (totalSpaces > 0) {
+                 if (isPunctAfter || isPunctBefore || !charBefore || !charAfter) {
+                     replacement = '';
+                 } else {
+                     replacement = ' ';
+                 }
+             }
+             editor.chain().focus().setTextSelection({ from: extendFrom, to: extendTo }).insertContent(replacement).run();
+         } else {
+             editor.chain().focus().setTextSelection({ from: extendFrom, to: extendTo }).insertContent(replace).run();
+         }
      }
   } else {
      // Replace all from back to front
      editor.commands.command(({ tr, dispatch }) => {
         for (let i = results.length - 1; i >= 0; i--) {
            const r = results[i];
-           tr.insertText(replace, r.from, r.to);
+           let extendFrom = r.from;
+           let extendTo = r.to;
+           
+           if (isDelete) {
+               const doc = tr.doc;
+             let spacesBefore = 0;
+             while (extendFrom > 0 && /^\s$/.test(doc.textBetween(extendFrom - 1, extendFrom))) {
+                 extendFrom--;
+                 spacesBefore++;
+             }
+             
+             let spacesAfter = 0;
+             while (extendTo < doc.content.size && /^\s$/.test(doc.textBetween(extendTo, extendTo + 1))) {
+                 extendTo++;
+                 spacesAfter++;
+             }
+             
+             const totalSpaces = spacesBefore + spacesAfter;
+             const charBefore = extendFrom > 0 ? doc.textBetween(extendFrom - 1, extendFrom) : '';
+             const charAfter = extendTo < doc.content.size ? doc.textBetween(extendTo, extendTo + 1) : '';
+             
+             const isPunctAfter = /^[.,;:!?\)]$/.test(charAfter);
+             const isPunctBefore = /^[\({\[]$/.test(charBefore);
+             
+             let replacement = '';
+             if (totalSpaces > 0) {
+                 if (isPunctAfter || isPunctBefore || !charBefore || !charAfter) {
+                     replacement = '';
+                 } else {
+                     replacement = ' ';
+                 }
+             }
+             tr.insertText(replacement, extendFrom, extendTo);
+           } else {
+               tr.insertText(replace, r.from, r.to);
+           }
         }
         if (dispatch) dispatch(tr);
         return true;

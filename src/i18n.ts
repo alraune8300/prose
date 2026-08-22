@@ -22,6 +22,7 @@ interface Strings {
   arrange: string
   timer: string
   preview: string
+  blockView?: string
   language: string
   pages: string
   drafts: string
@@ -80,6 +81,7 @@ interface Strings {
   exitFocusMode: string
   exitPreviewMode: string
   preview: string
+  blockView?: string
   customFonts: string
   dropFontHere: string
   orClickToBrowse: string
@@ -251,6 +253,7 @@ interface Strings {
   find: string
   replace: string
   replaceAll: string
+  deleteAll: string
   noResults: string
   resultsCount: string
   resultCount: string
@@ -558,6 +561,7 @@ export const translations: { en: Strings } & Record<Lang, Partial<Strings>> = {
     find: 'Find',
     replace: 'Replace',
     replaceAll: 'Replace all',
+    deleteAll: 'Delete all',
     noResults: 'No results',
     resultsCount: '{count} results',
     resultCount: '{count} result',
@@ -863,6 +867,7 @@ export const translations: { en: Strings } & Record<Lang, Partial<Strings>> = {
     find: 'Tìm kiếm',
     replace: 'Thay thế',
     replaceAll: 'Thay thế tất cả',
+    deleteAll: 'Xóa tất cả',
     noResults: 'Không tìm thấy kết quả',
     resultsCount: '{count} kết quả',
     resultCount: '{count} kết quả',
@@ -1126,6 +1131,7 @@ exitFocusMode: 'Quitter le mode focus',    exitPreviewMode: 'Quitter l\'aperçu'
     find: 'Rechercher',
     replace: 'Remplacer',
     replaceAll: 'Tout remplacer',
+    deleteAll: 'Tout supprimer',
     noResults: 'Aucun résultat',
     resultsCount: '{count} résultats',
     resultCount: '{count} résultat',
@@ -1390,6 +1396,7 @@ exitFocusMode: 'Quitter le mode focus',    exitPreviewMode: 'Quitter l\'aperçu'
     find: 'Suchen',
     replace: 'Ersetzen',
     replaceAll: 'Alles ersetzen',
+    deleteAll: 'Alles löschen',
     noResults: 'Keine Ergebnisse',
     resultsCount: '{count} Ergebnisse',
     resultCount: '{count} Ergebnis',
@@ -1654,6 +1661,7 @@ exitFocusMode: 'Quitter le mode focus',    exitPreviewMode: 'Quitter l\'aperçu'
     find: 'Trova',
     replace: 'Sostituisci',
     replaceAll: 'Sostituisci tutto',
+    deleteAll: 'Elimina tutto',
     noResults: 'Nessun risultato',
     resultsCount: '{count} risultati',
     resultCount: '{count} risultato',
@@ -1918,6 +1926,7 @@ exitFocusMode: 'Quitter le mode focus',    exitPreviewMode: 'Quitter l\'aperçu'
     find: 'Buscar',
     replace: 'Reemplazar',
     replaceAll: 'Reemplazar todo',
+    deleteAll: 'Eliminar todo',
     noResults: 'Sin resultados',
     resultsCount: '{count} resultados',
     resultCount: '{count} resultado',
@@ -2182,6 +2191,7 @@ exitFocusMode: 'Quitter le mode focus',    exitPreviewMode: 'Quitter l\'aperçu'
     find: '찾기',
     replace: '바꾸기',
     replaceAll: '모두 바꾸기',
+    deleteAll: '모두 삭제',
     noResults: '결과 없음',
     resultsCount: '{count}개 결과',
     resultCount: '{count}개 결과',
@@ -2446,6 +2456,7 @@ exitFocusMode: 'Quitter le mode focus',    exitPreviewMode: 'Quitter l\'aperçu'
     find: '查找',
     replace: '替换',
     replaceAll: '全部替换',
+    deleteAll: '全部删除',
     noResults: '未找到结果',
     resultsCount: '{count} 个结果',
     resultCount: '{count} 个结果',
@@ -2710,6 +2721,7 @@ exitFocusMode: 'Quitter le mode focus',    exitPreviewMode: 'Quitter l\'aperçu'
     find: '検索',
     replace: '置換',
     replaceAll: 'すべて置換',
+    deleteAll: 'すべて削除',
     noResults: '一致なし',
     resultsCount: '{count} 件の一致',
     resultCount: '{count} 件の一致',
