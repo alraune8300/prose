@@ -291,9 +291,7 @@ export default function SplitRevisionStudio({
             <span className="text-[10px] px-2.5 py-1 rounded-lg bg-rose-500/10 text-rose-600 dark:text-rose-400 font-mono font-semibold">
               Baseline View
             </span>
-          </div>
-
-          <div 
+          </div>           <div 
             ref={leftColRef}
             onScroll={handleScrollLeft}
             className="flex-1 overflow-y-auto p-6 whitespace-pre-wrap leading-relaxed text-base select-text"
@@ -324,17 +322,25 @@ export default function SplitRevisionStudio({
                         )}
                       </span>
                     );
-                  } else if (!part.added) {
+                  } else if (part.added) {
+                    return (
+                      <span
+                        key={idx}
+                        className="inline-block text-emerald-700 dark:text-emerald-300 bg-emerald-500/20 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded-md font-medium mx-0.5 shadow-xs"
+                      >
+                        {part.value}
+                      </span>
+                    );
+                  } else {
                     return <span key={idx}>{part.value}</span>;
                   }
-                  return null;
                 })}
               </div>
             )}
           </div>
         </div>
 
-        {/* Right Column: Live Active Editor with Overlay Highlight Layer */}
+        {/* Right Column: Live Active Editor (Clean Textarea) */}
         <div 
           className="flex-1 flex flex-col rounded-2xl border shadow-lg overflow-hidden relative"
           style={{ borderColor: theme.border, backgroundColor: theme.surface }}
@@ -353,41 +359,14 @@ export default function SplitRevisionStudio({
             <div 
               ref={rightColRef}
               onScroll={handleScrollRight}
-              className="flex-1 overflow-y-auto p-6 relative"
+              className="flex-1 overflow-y-auto p-6 relative flex flex-col"
             >
-              {/* Highlight background layer showing emerald for added text & newline markers */}
-              <div 
-                className="absolute inset-6 whitespace-pre-wrap leading-relaxed text-base pointer-events-none select-none"
-                style={{ fontFamily: `'${docFont}', Georgia, serif`, color: 'transparent' }}
-              >
-                {diffParts.map((part, idx) => {
-                  if (part.added) {
-                    return (
-                      <span
-                        key={idx}
-                        className="text-emerald-700 dark:text-emerald-300 bg-emerald-500/20 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded-md font-medium shadow-xs inline-block"
-                      >
-                        {part.value.includes('\n') ? part.value.split('\n').map((line, i, arr) => (
-                          <React.Fragment key={i}>
-                            {line}
-                            {i < arr.length - 1 && <span className="text-emerald-400 opacity-60 font-mono text-xs ml-1">↵</span>}
-                          </React.Fragment>
-                        )) : part.value}
-                      </span>
-                    );
-                  } else if (!part.removed) {
-                    return <span key={idx} className="opacity-0">{part.value}</span>;
-                  }
-                  return null;
-                })}
-              </div>
-
-              {/* Foreground transparent textarea for 100% native typing and cursor handling */}
+              {/* Foreground clean textarea for 100% native typing and cursor handling */}
               <textarea
                 value={liveText}
                 onChange={(e) => setLiveText(e.target.value)}
                 placeholder="Start typing or editing your document here..."
-                className="w-full h-full bg-transparent resize-none outline-none leading-relaxed text-base relative z-10 selection:bg-emerald-500/30"
+                className="w-full h-full bg-transparent resize-none outline-none leading-relaxed text-base relative z-10 selection:bg-emerald-500/30 flex-1"
                 style={{ 
                   fontFamily: `'${docFont}', Georgia, serif`, 
                   color: theme.text,
