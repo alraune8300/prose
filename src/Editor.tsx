@@ -13,7 +13,6 @@ import { FontSize, LineHeight, TextTransform, FontFeatures, LetterSpacing, WordS
 import { SpellcheckExtension, spellcheckKey } from './SpellcheckExtension';
 import { SearchHighlightExtension, searchHighlightKey } from './SearchHighlightExtension';
 import { SmartFormatting } from './SmartFormattingExtension';
-import { SpotlightExtension } from './SpotlightExtension';
 import type { ThemeColors, FormatState } from './types';
 import type { Dict } from './i18n';
 import { executeSearchReplace, executeSearchNav } from './searchReplaceFix';
@@ -35,8 +34,6 @@ type Props = {
   isPreviewMode?: boolean;
   onTogglePreviewMode?: () => void;
   typewriterMode?: boolean;
-  isSpotlightMode?: boolean;
-  onToggleSpotlightMode?: () => void;
 };
 
 function Editor({
@@ -44,7 +41,6 @@ function Editor({
   isFocusMode = false,
   isPreviewMode = false,
   typewriterMode = false,
-  isSpotlightMode = false,
 }: Props) {
   const lastEmittedContentRef = useRef(content || '');
   const updateTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -321,6 +317,8 @@ function Editor({
     return () => window.removeEventListener('kgv-docfont', handleDocFont);
   }, [editor]);
 
+
+
   useEffect(() => {
     function handleFontSelection(e: Event) {
       editor?.chain().focus().setFontFamily((e as CustomEvent).detail as string).run();
@@ -485,7 +483,7 @@ function Editor({
 
     return (
       <div 
-        className={`w-full h-full relative pointer-events-auto ${isSpotlightMode ? 'kgv-spotlight-mode-active' : ''}`} 
+        className="w-full h-full relative pointer-events-auto" 
         style={{ 
           color: theme.text,
           fontFamily: `'${currentBodyFont}', Georgia, serif`,
@@ -503,7 +501,7 @@ function Editor({
   }
 
   return (
-    <div className={`flex flex-col h-full relative ${isSpotlightMode ? 'kgv-spotlight-mode-active' : ''}`}>
+    <div className="flex flex-col h-full relative">
       {/* Central Editor Container */}
       <div
         className="flex-1 overflow-y-auto kgv-scroll transition-all duration-300 ease-in-out relative flex justify-center cursor-text"
@@ -560,7 +558,6 @@ export const getEditorExtensions = () => [
     autolink: true,
   }),
   SmartFormatting,
-  SpotlightExtension,
   SpellcheckExtension,
   SearchHighlightExtension,
   TextStyle, FontFamily, FontSize, LineHeight, TextTransform, FontFeatures, LetterSpacing, WordSpacing, Superscript, Subscript, IndentExtension, ResizableImage,

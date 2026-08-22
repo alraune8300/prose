@@ -243,40 +243,5 @@
   margin: 1rem auto;
 }
 
-/* -------------------------------------------------------------
-   Sentence / Paragraph Spotlight Mode
-   ------------------------------------------------------------- */
-.kgv-spotlight-mode-active.kgv-editor,
-.kgv-spotlight-mode-active.ProseMirror,
-.kgv-spotlight-container .kgv-editor,
-.kgv-spotlight-container .ProseMirror {
-  /* Spotlight container marker */
-}
 
-.kgv-spotlight-mode-active.kgv-editor > *,
-.kgv-spotlight-mode-active.ProseMirror > *,
-.kgv-spotlight-container .kgv-editor > *,
-.kgv-spotlight-container .ProseMirror > * {
-  opacity: 0.32;
-  filter: blur(0.25px);
-  transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), filter 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.kgv-spotlight-mode-active.kgv-editor > *.kgv-spotlight-active-block,
-.kgv-spotlight-mode-active.ProseMirror > *.kgv-spotlight-active-block,
-.kgv-spotlight-container .kgv-editor > *.kgv-spotlight-active-block,
-.kgv-spotlight-container .ProseMirror > *.kgv-spotlight-active-block {
-  opacity: 1 !important;
-  filter: none !important;
-  transform: translateX(1px);
-}
-
-/* User hover over any background paragraph gently reveals it */
-.kgv-spotlight-mode-active.kgv-editor > *:hover,
-.kgv-spotlight-mode-active.ProseMirror > *:hover,
-.kgv-spotlight-container .kgv-editor > *:hover,
-.kgv-spotlight-container .ProseMirror > *:hover {
-  opacity: 0.82;
-  filter: none;
-}
 

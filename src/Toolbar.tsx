@@ -6,7 +6,7 @@ import {
   AlignLeft, AlignCenter, AlignRight,
   Eraser, Plus, Minus,
   Link2, Bookmark, Quote,
-  Focus, Image as ImageIcon, Split
+  Split
 } from 'lucide-react';
 import type { Editor } from '@tiptap/react';
 import type { ThemeColors } from './types';
@@ -36,10 +36,6 @@ type Props = {
   onZoomOut?: () => void;
   onZoomInputChange?: (val: string) => void;
   onZoomInputBlur?: () => void;
-  isSpotlightMode?: boolean;
-  onToggleSpotlightMode?: () => void;
-  isMoodboardOpen?: boolean;
-  onToggleMoodboard?: () => void;
   isSplitView?: boolean;
   onToggleSplitView?: () => void;
 };
@@ -52,8 +48,6 @@ function Toolbar({
   zoomPercent, zoomInput,
   onZoomIn, onZoomOut,
   onZoomInputChange, onZoomInputBlur,
-  isSpotlightMode, onToggleSpotlightMode,
-  isMoodboardOpen, onToggleMoodboard,
   isSplitView, onToggleSplitView,
 }: Props) {
   const [, forceUpdate] = useState({});
@@ -245,24 +239,6 @@ function Toolbar({
       />
 
       <Divider />
-
-      {onToggleSpotlightMode && (
-        <ToolBtn
-          onClick={onToggleSpotlightMode}
-          icon={<Focus size={15} />}
-          label={t('spotlightMode') || 'Spotlight Focus (Alt+F)'}
-          active={isSpotlightMode}
-        />
-      )}
-
-      {onToggleMoodboard && (
-        <ToolBtn
-          onClick={onToggleMoodboard}
-          icon={<ImageIcon size={15} />}
-          label={t('mediaDrawer') || 'Visual Media & Moodboard'}
-          active={isMoodboardOpen}
-        />
-      )}
 
       {onToggleSplitView && (
         <ToolBtn

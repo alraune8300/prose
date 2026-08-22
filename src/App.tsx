@@ -7,13 +7,14 @@ import { getDict, type Dict } from './i18n';
 import { exportTxt, exportJson } from './exportUtils';
 import { importFile, exportToPdf, exportToDocx, exportToHtmlFile, exportToMarkdownFile, exportToJsonBackup } from './fileHandlers';
 import { saveApiKey, loadApiKey, injectGoogleFont, reinjectSavedFonts } from './googleFontsApi';
-import { X, Plus, Minus, ZoomIn, Eye, Maximize2, PanelLeft, Hourglass, Coffee, Settings, LayoutList, Columns, Brain, FileText } from 'lucide-react';
-import { type Editor as TiptapEditorType } from '@tiptap/react';
+import { X, Plus, Minus, ZoomIn, Eye, Maximize2, PanelLeft, Hourglass, Coffee, Settings, LayoutList, Columns, Brain, FileText, GitCompare } from 'lucide-react';
+import type { Editor as TiptapEditorType } from '@tiptap/react';
 import LeftPanel from './LeftPanel';
 import RightPanel from './RightPanel';
 import BlockOrganizerPanel from './BlockOrganizerPanel';
 import FlashcardStudio from './FlashcardStudio';
 import GoogleFontsPanel from './GoogleFontsPanel';
+import SplitRevisionStudio from './SplitRevisionStudio';
 import Editor from './Editor';
 import Toolbar from './Toolbar';
 import WelcomeScreen from './WelcomeScreen';
@@ -155,6 +156,7 @@ export default function App() {
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [typewriterMode, setTypewriterMode] = useState(false);
   const [isSplitView, setIsSplitView] = useState(false);
+  const [isSplitRevisionOpen, setIsSplitRevisionOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'normal' | 'block' | 'flashcard'>('normal');
   const [activeFootnoteHighlight, setActiveFootnoteHighlight] = useState<string | null>(null);
   const [blockViewOpen, setBlockViewOpen] = useState(false);
@@ -1820,7 +1822,7 @@ export default function App() {
                     setIsPreviewMode(false);
                   }
                 }}
-                className="p-1.5 rounded transition-all hover:opacity-80 active:scale-95 flex items-center gap-1 text-xs"
+                className="p-1.5 rounded transition-all hover:opacity-80 active:scale-95 flex items-center justify-center"
                 style={{
                   backgroundColor: isSplitView ? theme.accentLight : 'transparent',
                   color: isSplitView ? theme.accent : theme.text,
@@ -1829,9 +1831,14 @@ export default function App() {
                 title={t.toggleSplitView || 'Toggle Split Screen: Reference & Compare'}
               >
                 <Columns size={16} />
-                <span className="hidden md:inline font-medium text-xs">
-                  {t.splitView || 'Split View'}
-                </span>
+              </button>
+              <button
+                onClick={() => setIsSplitRevisionOpen(true)}
+                className="p-1.5 rounded transition-all hover:opacity-80 active:scale-95 flex items-center justify-center"
+                style={{ color: theme.text }}
+                title={t.splitRevisionStudio || 'Split Revision Studio'}
+              >
+                <GitCompare size={16} />
               </button>
             </div>
 
@@ -2467,6 +2474,8 @@ export default function App() {
         </div>
       )}
 
+
+
       {/* GitHub Cloud Save Modal */}
       <GithubCloudSaveModal
         isOpen={githubModalOpen}
@@ -2511,6 +2520,22 @@ export default function App() {
           if (activePage) {
             const updatedContent = document.querySelector('.kgv-editor')?.innerHTML;
             if (updatedContent) handleContentChange(updatedContent);
+          }
+        }}
+      />
+
+      {/* Split Revision Studio Modal */}
+      <SplitRevisionStudio
+        isOpen={isSplitRevisionOpen}
+        onClose={() => setIsSplitRevisionOpen(false)}
+        activePage={activePage}
+        theme={theme}
+        lang={lang}
+        uiFont={uiFont}
+        docFont={docFont}
+        onUpdateContent={(newContent) => {
+          if (activePage) {
+            handleContentChange(newContent);
           }
         }}
       />
