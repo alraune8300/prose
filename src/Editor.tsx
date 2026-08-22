@@ -7,15 +7,22 @@ import FontFamily from '@tiptap/extension-font-family';
 import { TextStyle } from '@tiptap/extension-text-style';
 import Superscript from '@tiptap/extension-superscript';
 import Subscript from '@tiptap/extension-subscript';
+import { Table } from '@tiptap/extension-table';
+import { TableRow } from '@tiptap/extension-table-row';
+import { TableCell } from '@tiptap/extension-table-cell';
+import { TableHeader } from '@tiptap/extension-table-header';
 import { ResizableImage } from './tiptapExtensions';
 import './Editor.css';
 import { FontSize, LineHeight, TextTransform, FontFeatures, LetterSpacing, WordSpacing, IndentExtension } from './tiptapExtensions';
 import { SpellcheckExtension, spellcheckKey } from './SpellcheckExtension';
 import { SearchHighlightExtension, searchHighlightKey } from './SearchHighlightExtension';
 import { SmartFormatting } from './SmartFormattingExtension';
+import { CollapsibleHeadingsExtension, toggleHeadingFold, foldAllHeadingsInDoc, unfoldAllHeadingsInDoc } from './CollapsibleHeadingsExtension';
+import TableContextualToolbar from './TableContextualToolbar';
 import type { ThemeColors, FormatState } from './types';
 import type { Dict } from './i18n';
 import { executeSearchReplace, executeSearchNav } from './searchReplaceFix';
+
 
 
 type Props = {
@@ -159,6 +166,18 @@ function Editor({
         const state = window.__formatState;
         if (!state) return false;
         
+        // Intercept /table shortcut
+        if (text === ' ' || text === 'e') {
+          const before = view.state.doc.textBetween(Math.max(0, from - 6), from);
+          if (before === '/table' || (text === ' ' && before.endsWith('/table'))) {
+            const tr = view.state.tr;
+            tr.delete(from - 6, from);
+            view.dispatch(tr);
+            window.dispatchEvent(new CustomEvent('kgv-open-table-picker'));
+            return true;
+          }
+        }
+
         // Double space for period
         if (state.doubleSpacePeriod !== false && text === ' ' && from >= 1) {
           const prevChar = view.state.doc.textBetween(from - 1, from);
@@ -272,6 +291,50 @@ function Editor({
       },
     },
   });
+
+  useEffect(() => {
+    const handleToggleFold = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      if (editor && !editor.isDestroyed && customEvent.detail) {
+        toggleHeadingFold(editor.view, customEvent.detail.pos, customEvent.detail.text || '');
+      }
+    };
+    const handleFoldAll = () => {
+      if (editor && !editor.isDestroyed) {
+        foldAllHeadingsInDoc(editor.view);
+      }
+    };
+    const handleUnfoldAll = () => {
+      if (editor && !editor.isDestroyed) {
+        unfoldAllHeadingsInDoc(editor.view);
+      }
+    };
+    const handleInsertTableGrid = (e: Event) => {
+      const { rows, cols } = (e as CustomEvent).detail || {};
+      if (editor && !editor.isDestroyed && rows && cols) {
+        editor.chain().focus().insertTable({ rows, cols, withHeaderRow: true }).run();
+      }
+    };
+    const handleDeleteTable = () => {
+      if (editor && !editor.isDestroyed && editor.isActive('table')) {
+        editor.chain().focus().deleteTable().run();
+      }
+    };
+
+    window.addEventListener('kgv-toggle-heading-fold', handleToggleFold);
+    window.addEventListener('kgv-fold-all-headings', handleFoldAll);
+    window.addEventListener('kgv-unfold-all-headings', handleUnfoldAll);
+    window.addEventListener('kgv-insert-table-grid', handleInsertTableGrid);
+    window.addEventListener('kgv-delete-table', handleDeleteTable);
+
+    return () => {
+      window.removeEventListener('kgv-toggle-heading-fold', handleToggleFold);
+      window.removeEventListener('kgv-fold-all-headings', handleFoldAll);
+      window.removeEventListener('kgv-unfold-all-headings', handleUnfoldAll);
+      window.removeEventListener('kgv-insert-table-grid', handleInsertTableGrid);
+      window.removeEventListener('kgv-delete-table', handleDeleteTable);
+    };
+  }, [editor]);
 
   useEffect(() => {
     if (editor) {
@@ -533,10 +596,11 @@ function Editor({
           } as React.CSSProperties}
         >
           <EditorContent editor={editor} />
-        
-          
         </div>
       </div>
+
+      {/* Floating Table Toolbar */}
+      <TableContextualToolbar editor={editor} theme={theme} />
     </div>
   );
 }
@@ -549,6 +613,24 @@ export const getEditorExtensions = () => [
     heading: { levels: [1, 2, 3] },
     horizontalRule: {},
   }),
+  Table.configure({
+    resizable: true,
+    HTMLAttributes: {
+      class: 'kgv-rich-table border-collapse w-full my-4 border text-sm',
+    },
+  }),
+  TableRow,
+  TableCell.configure({
+    HTMLAttributes: {
+      class: 'border p-2 min-w-[80px] relative align-top',
+    },
+  }),
+  TableHeader.configure({
+    HTMLAttributes: {
+      class: 'border p-2 min-w-[80px] font-semibold bg-slate-500/10 align-top text-left',
+    },
+  }),
+  CollapsibleHeadingsExtension,
   Link.configure({
     openOnClick: false,
     HTMLAttributes: {
@@ -563,3 +645,4 @@ export const getEditorExtensions = () => [
   TextStyle, FontFamily, FontSize, LineHeight, TextTransform, FontFeatures, LetterSpacing, WordSpacing, Superscript, Subscript, IndentExtension, ResizableImage,
   TextAlign.configure({ types: ['heading', 'paragraph'] }),
 ];
+

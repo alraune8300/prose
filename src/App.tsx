@@ -7,7 +7,7 @@ import { getDict, type Dict } from './i18n';
 import { exportTxt, exportJson } from './exportUtils';
 import { importFile, exportToPdf, exportToDocx, exportToHtmlFile, exportToMarkdownFile, exportToJsonBackup } from './fileHandlers';
 import { saveApiKey, loadApiKey, injectGoogleFont, reinjectSavedFonts } from './googleFontsApi';
-import { X, Plus, Minus, ZoomIn, Eye, Maximize2, PanelLeft, Hourglass, Coffee, Settings, LayoutList, Columns, Brain, FileText, GitCompare } from 'lucide-react';
+import { X, Plus, Minus, ZoomIn, Eye, Maximize2, PanelLeft, Hourglass, Coffee, Settings, LayoutList, Columns, Brain, FileText, GitCompare, Table, FoldVertical, UnfoldVertical, Terminal, Sparkles, Trash2 } from 'lucide-react';
 import type { Editor as TiptapEditorType } from '@tiptap/react';
 import LeftPanel from './LeftPanel';
 import RightPanel from './RightPanel';
@@ -15,6 +15,8 @@ import BlockOrganizerPanel from './BlockOrganizerPanel';
 import FlashcardStudio from './FlashcardStudio';
 import GoogleFontsPanel from './GoogleFontsPanel';
 import SplitRevisionStudio from './SplitRevisionStudio';
+import CommandPaletteModal, { type CommandItem } from './CommandPaletteModal';
+import TableGridPickerModal from './TableGridPickerModal';
 import Editor from './Editor';
 import Toolbar from './Toolbar';
 import WelcomeScreen from './WelcomeScreen';
@@ -179,6 +181,28 @@ export default function App() {
   const [citationStyle, setCitationStyle] = useState<CitationStyle>('apa');
   const [leftSidebarMainTab, setLeftSidebarMainTab] = useState<'files' | 'footnotes' | 'citations'>('files');
 
+  // Command Palette & Table Picker states
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+  const [tablePickerOpen, setTablePickerOpen] = useState(false);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setCommandPaletteOpen(prev => !prev);
+      }
+    };
+    const handleOpenTable = () => setTablePickerOpen(true);
+
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('kgv-open-table-picker', handleOpenTable);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('kgv-open-table-picker', handleOpenTable);
+    };
+  }, []);
+
   useEffect(() => {
     try {
       localStorage.setItem('kgv-citation-sources', JSON.stringify(citationSources));
@@ -247,7 +271,7 @@ export default function App() {
     handleContentChange(updated);
   };
 
-  const handleInsertNewFootnote = () => {
+  const handleInsertNewFootnote = useCallback(() => {
     const current = activePage?.content || '';
     // Find highest footnote number
     const regex = /\[\^(\d+)\]/g;
@@ -259,7 +283,7 @@ export default function App() {
     }
     const nextNum = String(maxNum + 1);
     window.dispatchEvent(new CustomEvent('kgv-insert-footnote', { detail: { id: nextNum } }));
-  };
+  }, [activePage?.content]);
 
   const handleDeleteFootnote = (id: string) => {
     if (!activePage) return;
@@ -622,6 +646,148 @@ export default function App() {
     });
     return fonts;
   }, [customFonts, injectedGoogleFonts, t]);
+
+  const commandActions: CommandItem[] = useMemo(() => [
+    {
+      id: 'insert-table',
+      label: lang === 'vi' ? 'Chèn bảng tương tác (Rich Table)' : 'Insert Rich Table',
+      category: 'Actions & Tools',
+      icon: <Table size={16} />,
+      shortcut: 'Alt+T',
+      description: lang === 'vi' ? 'Chèn bảng với tùy chọn kích thước, thêm hàng/cột linh hoạt' : 'Insert a customizable rich text table',
+      perform: () => setTablePickerOpen(true),
+    },
+    {
+      id: 'delete-table',
+      label: lang === 'vi' ? 'Xóa bảng hiện tại (Delete Table)' : 'Delete Table',
+      category: 'Actions & Tools',
+      icon: <Trash2 size={16} />,
+      description: lang === 'vi' ? 'Xóa toàn bộ bảng biểu đang được con trỏ tập trung' : 'Delete currently focused table',
+      perform: () => window.dispatchEvent(new CustomEvent('kgv-delete-table')),
+    },
+    {
+      id: 'fold-all-headings',
+      label: lang === 'vi' ? 'Gập tất cả khối đề mục' : 'Fold All Headings',
+      category: 'View & Layout',
+      icon: <FoldVertical size={16} />,
+      shortcut: 'Ctrl+Shift+[',
+      description: lang === 'vi' ? 'Thu gọn tất cả khối nội dung H1, H2, H3 theo phân cấp' : 'Collapse all heading sections in document',
+      perform: () => window.dispatchEvent(new CustomEvent('kgv-fold-all-headings')),
+    },
+    {
+      id: 'unfold-all-headings',
+      label: lang === 'vi' ? 'Mở tất cả khối đề mục' : 'Unfold All Headings',
+      category: 'View & Layout',
+      icon: <UnfoldVertical size={16} />,
+      shortcut: 'Ctrl+Shift+]',
+      description: lang === 'vi' ? 'Mở rộng lại tất cả khối đề mục đã bị thu gọn' : 'Expand all collapsed heading sections',
+      perform: () => window.dispatchEvent(new CustomEvent('kgv-unfold-all-headings')),
+    },
+    {
+      id: 'toggle-focus-mode',
+      label: lang === 'vi' ? 'Chế độ tập trung (Focus Mode)' : 'Toggle Focus Mode',
+      category: 'View & Layout',
+      icon: <Maximize2 size={16} />,
+      shortcut: 'F11',
+      description: lang === 'vi' ? 'Ẩn tất cả thanh công cụ để tập trung viết' : 'Hide all UI panels for distraction-free writing',
+      perform: () => setIsFocusMode(prev => !prev),
+    },
+    {
+      id: 'toggle-preview-mode',
+      label: lang === 'vi' ? 'Chế độ xem trước (Preview Mode)' : 'Toggle Preview Mode',
+      category: 'View & Layout',
+      icon: <Eye size={16} />,
+      description: lang === 'vi' ? 'Xem trước giao diện trang hoàn chỉnh' : 'Preview document layout cleanly',
+      perform: () => setIsPreviewMode(prev => !prev),
+    },
+    {
+      id: 'typewriter-mode',
+      label: lang === 'vi' ? 'Cuộn kiểu máy đánh chữ (Typewriter Mode)' : 'Toggle Typewriter Scroll',
+      category: 'View & Layout',
+      icon: <Terminal size={16} />,
+      description: lang === 'vi' ? 'Giữ dòng đang viết luôn nằm ở trung tâm màn hình' : 'Keep active cursor line centered',
+      perform: () => setTypewriterMode(prev => !prev),
+    },
+    {
+      id: 'block-view',
+      label: lang === 'vi' ? 'Trình sắp xếp khối (Block View Studio)' : 'Block Organizer Studio',
+      category: 'View & Layout',
+      icon: <LayoutList size={16} />,
+      description: lang === 'vi' ? 'Kéo rê sắp xếp, tách, ghép và chuyển đổi các khối văn bản' : 'Drag & drop reorder document blocks',
+      perform: () => setBlockViewOpen(true),
+    },
+    {
+      id: 'flashcard-studio',
+      label: lang === 'vi' ? 'Xưởng Flashcards học tập' : 'Flashcard Learning Studio',
+      category: 'View & Layout',
+      icon: <Brain size={16} />,
+      description: lang === 'vi' ? 'Tạo thẻ ghi nhớ từ tài liệu và ôn tập thông minh' : 'Generate flashcards for active document',
+      perform: () => setViewMode('flashcard'),
+    },
+    {
+      id: 'split-diff-studio',
+      label: lang === 'vi' ? 'So sánh phiên bản (Split Diff Studio)' : 'Split Revision Studio',
+      category: 'View & Layout',
+      icon: <GitCompare size={16} />,
+      description: lang === 'vi' ? 'So sánh song song nội dung hiện tại với lịch sử sao lưu' : 'Side-by-side revision diff compare',
+      perform: () => setIsSplitRevisionOpen(true),
+    },
+    {
+      id: 'add-footnote',
+      label: lang === 'vi' ? 'Thêm chú thích chân trang (Add Footnote)' : 'Add Footnote',
+      category: 'Actions & Tools',
+      icon: <FileText size={16} />,
+      description: lang === 'vi' ? 'Tạo đánh số chú thích và quản lý nội dung chân trang' : 'Insert footnote marker at current position',
+      perform: () => handleInsertNewFootnote(),
+    },
+    {
+      id: 'insert-citation',
+      label: lang === 'vi' ? 'Trích dẫn tài liệu (Add Citation)' : 'Add Citation',
+      category: 'Actions & Tools',
+      icon: <Sparkles size={16} />,
+      description: lang === 'vi' ? 'Thêm nguồn tham khảo chuẩn APA, MLA, Chicago' : 'Insert citation reference in text',
+      perform: () => {
+        setLeftSidebarMainTab('citations');
+        setSidebarOpen(true);
+      },
+    },
+    {
+      id: 'export-pdf',
+      label: lang === 'vi' ? 'Xuất tài liệu PDF (Export PDF)' : 'Export PDF',
+      category: 'System & Export',
+      icon: <FileText size={16} />,
+      description: lang === 'vi' ? 'Xuất file PDF chất lượng cao có canh lề chuẩn trang' : 'Download formatted PDF document',
+      perform: () => {
+        if (activePage) exportToPdf(activePage.title || 'Untitled', activePage.content || '', theme, docFont);
+      },
+    },
+    {
+      id: 'export-markdown',
+      label: lang === 'vi' ? 'Xuất file Markdown (.md)' : 'Export Markdown',
+      category: 'System & Export',
+      icon: <FileText size={16} />,
+      description: lang === 'vi' ? 'Xuất nội dung sang định dạng Markdown chuẩn' : 'Download .md raw text file',
+      perform: () => {
+        if (activePage) exportToMarkdownFile(activePage.title || 'Untitled', activePage.content || '');
+      },
+    },
+    {
+      id: 'backup-json',
+      label: lang === 'vi' ? 'Sao lưu dữ liệu JSON (Backup JSON)' : 'Backup JSON',
+      category: 'System & Export',
+      icon: <FileText size={16} />,
+      description: lang === 'vi' ? 'Tạo bản sao lưu đầy đủ dự án và cài đặt' : 'Backup entire workspace database to JSON',
+      perform: () => exportToJsonBackup(),
+    },
+    {
+      id: 'sync-github',
+      label: lang === 'vi' ? 'Đồng bộ GitHub Cloud' : 'Sync GitHub Cloud',
+      category: 'System & Export',
+      icon: <Settings size={16} />,
+      description: lang === 'vi' ? 'Lưu trữ và khôi phục dữ liệu qua kho GitHub Gist' : 'Sync workspace with GitHub account',
+      perform: () => setGithubModalOpen(true),
+    },
+  ], [lang, activePage, theme, docFont, handleInsertNewFootnote]);
   // Sync document body styles with the current active theme
   useEffect(() => {
     document.body.style.background = theme.bg;
@@ -1822,6 +1988,17 @@ export default function App() {
               >
                 <Brain size={16} />
               </button>
+
+              <div className="w-px h-4 mx-0.5 opacity-20 bg-current shrink-0" style={{ backgroundColor: theme.border }} />
+
+              <button
+                onClick={() => setCommandPaletteOpen(true)}
+                className="p-2 rounded-lg opacity-70 hover:opacity-100 transition-all cursor-pointer"
+                style={{ color: theme.text }}
+                title={lang === 'vi' ? 'Command Palette (Ctrl + K)' : 'Command Palette (Ctrl + K)'}
+              >
+                <Terminal size={16} />
+              </button>
             </div>
 
             <div className="absolute top-4 right-16 z-50 flex items-center gap-2 pr-2">
@@ -2610,6 +2787,28 @@ export default function App() {
             handleContentChange(newContent);
           }
         }}
+      />
+
+      {/* Universal Command Palette Modal */}
+      <CommandPaletteModal
+        isOpen={commandPaletteOpen}
+        onClose={() => setCommandPaletteOpen(false)}
+        theme={theme}
+        lang={lang}
+        uiFont={uiFont}
+        commands={commandActions}
+      />
+
+      {/* Interactive Rich Table Grid Picker Modal */}
+      <TableGridPickerModal
+        isOpen={tablePickerOpen}
+        onClose={() => setTablePickerOpen(false)}
+        onInsertTable={(rows, cols) => {
+          window.dispatchEvent(new CustomEvent('kgv-insert-table-grid', { detail: { rows, cols } }));
+        }}
+        theme={theme}
+        uiFont={uiFont}
+        lang={lang}
       />
     </div>
   );
