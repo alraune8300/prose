@@ -156,14 +156,14 @@ export default function FootnotesPanel({
   return (
     <div className="flex flex-col h-full overflow-hidden select-none" style={{ color: theme.text, fontFamily: uiFont }}>
       {/* Header with Title & Add Action */}
-      <div className="flex items-center justify-between px-4 py-3 border-b shrink-0" style={{ borderColor: theme.border, backgroundColor: theme.surface }}>
-        <div className="flex items-center gap-2">
-          <Bookmark size={16} style={{ color: theme.accent }} />
-          <span className="font-semibold text-sm" style={{ color: theme.text }}>
+      <div className="flex items-center justify-between gap-2 px-4 py-3 border-b shrink-0" style={{ borderColor: theme.border, backgroundColor: theme.surface }}>
+        <div className="flex items-center gap-2 min-w-0 flex-1">
+          <Bookmark size={16} className="shrink-0" style={{ color: theme.accent }} />
+          <span className="font-semibold text-sm truncate min-w-0 flex-1" style={{ color: theme.text }}>
             {t(lang, 'contextualFootnotes')}
           </span>
           <span 
-            className="text-[10px] px-1.5 py-0.5 rounded-full font-mono font-semibold" 
+            className="text-[10px] px-1.5 py-0.5 rounded-full font-mono font-semibold shrink-0" 
             style={{ backgroundColor: theme.accentLight, color: theme.accent }}
           >
             {footnotes.length}
@@ -172,12 +172,12 @@ export default function FootnotesPanel({
 
         <button
           onClick={onInsertNewFootnote}
-          className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg transition-all hover:opacity-90 active:scale-95 text-white shadow-xs font-medium"
+          className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg transition-all hover:opacity-90 active:scale-95 text-white shadow-xs font-medium shrink-0"
           style={{ backgroundColor: theme.accent }}
           title={t(lang, 'insertNewFootnote')}
         >
           <Plus size={13} />
-          <span>{lang === 'vi' ? 'Thêm' : 'Add'}</span>
+          <span>{t(lang, 'insertNewFootnote') || 'Add'}</span>
         </button>
       </div>
 
@@ -270,7 +270,7 @@ export default function FootnotesPanel({
                       title={t(lang, 'jumpToText')}
                     >
                       <ArrowUpRight size={13} />
-                      <span className="hidden sm:inline text-[10px]">Jump</span>
+                      <span className="hidden sm:inline text-[10px]">{t(lang, 'jumpToText') || 'Jump'}</span>
                     </button>
 
                     {/* Copy citation */}

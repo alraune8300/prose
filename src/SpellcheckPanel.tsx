@@ -79,13 +79,13 @@ export default function SpellcheckPanel({ c, uiFont, headingFont, lang, }: Spell
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <span style={{ fontFamily: uiFont, fontSize: '1rem', color: c.text }}>{t(lang, 'checkSpelling')}</span>
-          <Info size={14} color={c.textMuted} />
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flex: 1, minWidth: 0 }}>
+          <span style={{ fontFamily: uiFont, fontSize: '0.88rem', fontWeight: 600, color: c.text, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t(lang, 'checkSpelling')}</span>
+          <Info size={14} color={c.textMuted} style={{ flexShrink: 0 }} />
         </div>
         <div style={{
-          width: 44, height: 24, borderRadius: 12,
+          width: 44, height: 24, borderRadius: 12, flexShrink: 0,
           background: enabled ? c.accent : 'transparent',
           border: `1px solid ${enabled ? c.accent : c.borderFaint}`,
           position: 'relative', transition: 'all 0.2s', cursor: 'pointer'
@@ -156,7 +156,7 @@ export default function SpellcheckPanel({ c, uiFont, headingFont, lang, }: Spell
             </div>
             <button
               onClick={() => setActiveError(null)}
-              style={{ background: 'transparent', border: `1px solid ${c.borderFaint}`, borderRadius: 6, padding: '4px 10px', color: c.text, fontFamily: uiFont, fontSize: '0.75rem', cursor: 'pointer' }}
+              style={{ background: 'transparent', border: `1px solid ${c.borderFaint}`, borderRadius: 6, padding: '4px 10px', color: c.text, fontFamily: uiFont, fontSize: '0.75rem', cursor: 'pointer', flexShrink: 0, whiteSpace: 'nowrap' }}
             >
               {t(lang, 'ignore')}
             </button>

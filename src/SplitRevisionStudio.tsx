@@ -8,6 +8,7 @@ import { getPageVersionsFromDB } from './db';
 import type { ThemeColors, VersionSnapshot, Lang, Page } from './types';
 import { t } from './i18n';
 import { format } from 'date-fns';
+import { CustomSelect } from './CustomSelect';
 
 interface SplitRevisionStudioProps {
   isOpen: boolean;
@@ -167,11 +168,11 @@ export default function SplitRevisionStudio({
             <h2 className="text-lg font-bold tracking-tight flex items-center gap-2.5">
               <span>{t(lang, 'splitRevisionStudio') || 'Split Revision Studio'}</span>
               <span className="text-[11px] px-2.5 py-0.5 rounded-full uppercase tracking-wider font-semibold shadow-xs" style={{ backgroundColor: theme.accentLight, color: theme.accent }}>
-                Live Diff & Revisions
+                {t(lang, 'liveDiffAndRevisions') || 'Live Diff & Revisions'}
               </span>
             </h2>
             <p className="text-xs opacity-75 mt-0.5">
-              {activePage?.title || 'Untitled'} • Compare live writing against saved snapshot milestones
+              {activePage?.title || 'Untitled'} • {t(lang, 'compareLiveWriting') || 'Compare live writing against saved snapshot milestones'}
             </p>
           </div>
         </div>
@@ -179,25 +180,24 @@ export default function SplitRevisionStudio({
         {/* Snapshot Selector & Global Actions */}
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2 bg-black/5 dark:bg-white/5 px-3 py-1.5 rounded-xl border" style={{ borderColor: theme.border }}>
-            <span className="text-xs font-semibold opacity-75 flex items-center gap-1.5">
-              <Clock size={14} className="text-indigo-400" /> Snapshot:
+            <span className="text-xs font-semibold opacity-75 flex items-center gap-1.5 shrink-0">
+              <Clock size={14} className="text-indigo-400" /> {t(lang, 'snapshotLabel') || 'Snapshot:'}
             </span>
-            <select
+            <CustomSelect
               value={selectedVersionId || ''}
-              onChange={(e) => setSelectedVersionId(e.target.value)}
-              className="text-xs font-medium px-2 py-1 rounded-lg bg-transparent outline-none cursor-pointer transition-colors"
-              style={{ color: theme.text }}
-            >
-              {versions.length === 0 ? (
-                <option value="">No snapshots found</option>
-              ) : (
-                versions.map(v => (
-                  <option key={v.id} value={v.id} style={{ backgroundColor: theme.surface, color: theme.text }}>
-                    {v.label ? `${v.label} (${format(new Date(v.timestamp), 'MMM d, HH:mm')})` : format(new Date(v.timestamp), 'PPpp')}
-                  </option>
-                ))
-              )}
-            </select>
+              onChange={(val) => setSelectedVersionId(val)}
+              theme={theme}
+              options={
+                versions.length === 0
+                  ? [{ value: '', label: t(lang, 'noSnapshotsFound') || 'No snapshots found' }]
+                  : versions.map(v => ({
+                      value: v.id,
+                      label: v.label ? `${v.label} (${format(new Date(v.timestamp), 'MMM d, HH:mm')})` : format(new Date(v.timestamp), 'PPpp')
+                    }))
+              }
+              buttonClassName="text-xs font-medium px-2.5 py-1 rounded-lg border outline-none cursor-pointer flex items-center justify-between gap-2 transition-all min-w-[160px]"
+              buttonStyle={{ borderColor: theme.border, backgroundColor: theme.surface, color: theme.text }}
+            />
           </div>
 
           <div className="h-6 w-[1px]" style={{ backgroundColor: theme.border }} />
@@ -246,11 +246,11 @@ export default function SplitRevisionStudio({
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-2 px-3 py-1 rounded-lg bg-rose-500/10 border border-rose-500/20">
             <span className="w-2.5 h-2.5 rounded-full inline-block bg-rose-500 animate-pulse shadow-sm" />
-            <span className="line-through text-rose-500 dark:text-rose-400 font-semibold">Deleted / Modified Text (Baseline)</span>
+            <span className="line-through text-rose-500 dark:text-rose-400 font-semibold">{t(lang, 'deletedModifiedText') || 'Deleted / Modified Text (Baseline)'}</span>
           </div>
           <div className="flex items-center gap-2 px-3 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
             <span className="w-2.5 h-2.5 rounded-full inline-block bg-emerald-500 animate-pulse shadow-sm" />
-            <span className="text-emerald-600 dark:text-emerald-400 font-semibold">Added / New Text (Live Editor)</span>
+            <span className="text-emerald-600 dark:text-emerald-400 font-semibold">{t(lang, 'addedNewText') || 'Added / New Text (Live Editor)'}</span>
           </div>
         </div>
 
@@ -289,7 +289,7 @@ export default function SplitRevisionStudio({
               )}
             </h3>
             <span className="text-[10px] px-2.5 py-1 rounded-lg bg-rose-500/10 text-rose-600 dark:text-rose-400 font-mono font-semibold">
-              Baseline View
+              {t(lang, 'baselineView') || 'Baseline View'}
             </span>
           </div>           <div 
             ref={leftColRef}
@@ -351,7 +351,7 @@ export default function SplitRevisionStudio({
               <span>{t(lang, 'liveActiveEditor') || 'Live Active Editor'}</span>
             </h3>
             <span className="text-[10px] px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-mono font-semibold">
-              Editable & Live
+              {t(lang, 'editableAndLive') || 'Editable & Live'}
             </span>
           </div>
 
@@ -365,7 +365,7 @@ export default function SplitRevisionStudio({
               <textarea
                 value={liveText}
                 onChange={(e) => setLiveText(e.target.value)}
-                placeholder="Start typing or editing your document here..."
+                placeholder={t(lang, 'startTypingPlaceholder') || 'Start typing or editing your document here...'}
                 className="w-full h-full bg-transparent resize-none outline-none leading-relaxed text-base relative z-10 selection:bg-emerald-500/30 flex-1"
                 style={{ 
                   fontFamily: `'${docFont}', Georgia, serif`, 
@@ -378,9 +378,9 @@ export default function SplitRevisionStudio({
 
             {/* Bottom Status bar */}
             <div className="px-6 py-3 border-t flex items-center justify-between text-xs opacity-75" style={{ borderColor: theme.border, backgroundColor: theme.background }}>
-              <span className="font-medium">Live character count: {liveText.length}</span>
+              <span className="font-medium">{t(lang, 'liveCharacterCount') || 'Live character count:'} {liveText.length}</span>
               <span className="flex items-center gap-1.5 font-mono text-[11px]">
-                <Pilcrow size={13} className="text-emerald-500" /> Auto-diffing active (100ms)
+                <Pilcrow size={13} className="text-emerald-500" /> {t(lang, 'autoDiffingActive') || 'Auto-diffing active (100ms)'}
               </span>
             </div>
           </div>

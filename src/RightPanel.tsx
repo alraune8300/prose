@@ -37,9 +37,10 @@ const MONO_FONTS = ['JetBrains Mono', 'Space Mono', 'Courier Prime', 'Courier Ne
 function SectionLabel({ label, uiFont, c }: { label: string, uiFont: string, c: Record<string, unknown> }) {
   return (
     <div style={{
-      fontFamily: uiFont, fontSize: '0.6rem', fontWeight: 700,
-      textTransform: 'uppercase', letterSpacing: '0.12em',
-      color: c.textFaint as string, marginBottom: 8, marginTop: 4,
+      fontFamily: uiFont, fontSize: '0.64rem', fontWeight: 700,
+      textTransform: 'uppercase', letterSpacing: '0.08em',
+      color: c.textFaint as string, marginBottom: 8, marginTop: 6,
+      lineHeight: 1.3,
     }}>
       {label}
     </div>
@@ -56,11 +57,11 @@ function Accordion({ title, uiFont, c, children, defaultOpen = false }: { title:
           width: '100%', padding: '10px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           background: 'none', border: 'none', cursor: 'pointer',
           fontFamily: uiFont, fontSize: '0.76rem', fontWeight: 600, color: c.text as string,
-          transition: 'color 0.12s',
+          transition: 'color 0.12s', textAlign: 'left'
         }}
       >
-        {title}
-        <span style={{ fontSize: '0.65rem', color: c.textFaint as string, transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>▾</span>
+        <span style={{ flex: 1, paddingRight: 8, overflow: 'hidden', textOverflow: 'ellipsis', lineHeight: 1.3 }}>{title}</span>
+        <span style={{ fontSize: '0.65rem', color: c.textFaint as string, transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s', flexShrink: 0 }}>▾</span>
       </button>
       {open && <div style={{ paddingBottom: 14 }}>{children}</div>}
     </div>
@@ -473,9 +474,9 @@ ${content.split('\n\n').map(para => {
 
   const label = (text: string) => (
     <label style={{
-      fontFamily: uiFont, fontSize: '0.66rem', color: c.textFaint,
-      textTransform: 'uppercase' as const, letterSpacing: '0.08em',
-      display: 'flex', justifyContent: 'space-between', marginBottom: 7,
+      fontFamily: uiFont, fontSize: '0.7rem', color: c.textMuted,
+      fontWeight: 600, letterSpacing: '0.02em',
+      display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6, lineHeight: 1.3,
     }}>
       <span>{text}</span>
     </label>
@@ -495,15 +496,15 @@ ${content.split('\n\n').map(para => {
   const isOpen = panel !== 'none'
 
   const TABS: { key: Exclude<Panel, 'none' | 'preview' | 'importexport'>; icon: string; label: string }[] = [
-    { key: 'format', icon: '¶', label: 'Format' },
-    { key: 'export', icon: '↓', label: 'Export' },
-    { key: 'fonts', icon: 'Aa', label: 'Fonts' },
-    { key: 'footnotes', icon: '[^]', label: lang === 'vi' ? 'Chú thích' : 'Footnotes' },
-    { key: 'timer', icon: '◷', label: 'Timer' },
-    { key: 'history', icon: '⟲', label: 'History' },
-    { key: 'search', icon: '⌕', label: 'Search' },
-    { key: 'spellcheck', icon: '✓', label: 'Spell Check' },
-    { key: 'settings', icon: '⚙', label: 'Settings' },
+    { key: 'format', icon: '¶', label: t(lang, 'format') || 'Format' },
+    { key: 'export', icon: '↓', label: t(lang, 'export') || 'Export' },
+    { key: 'fonts', icon: 'Aa', label: t(lang, 'fonts') || 'Fonts' },
+    { key: 'footnotes', icon: '[^]', label: t(lang, 'footnotes') || 'Footnotes' },
+    { key: 'timer', icon: '◷', label: t(lang, 'timer') || 'Timer' },
+    { key: 'history', icon: '⟲', label: t(lang, 'versionHistory') || 'History' },
+    { key: 'search', icon: '⌕', label: t(lang, 'findAndReplace') || 'Search' },
+    { key: 'spellcheck', icon: '✓', label: t(lang, 'spellCheck') || 'Spell Check' },
+    { key: 'settings', icon: '⚙', label: t(lang, 'settings') || 'Settings' },
   ]
 
   return (
@@ -563,10 +564,10 @@ ${content.split('\n\n').map(para => {
               paddingBottom: 10, marginBottom: 12, borderBottom: `1px solid ${c.borderFaint}`,
               flexShrink: 0,
             }}>
-              <span style={{ fontFamily: uiFont, fontSize: '0.78rem', fontWeight: 700, color: c.text, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              <span style={{ fontFamily: uiFont, fontSize: '0.8rem', fontWeight: 700, color: c.text, letterSpacing: '0.02em', flex: 1, paddingRight: 8, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {panel === 'format' ? (t(lang, 'format') || 'Format') :
                  panel === 'export' ? (t(lang, 'export') || 'Export') :
-                 panel === 'footnotes' ? (lang === 'vi' ? 'Chú thích (Footnotes)' : 'Footnotes') :
+                 panel === 'footnotes' ? (t(lang, 'footnotes') || 'Footnotes') :
                  panel === 'fonts' ? (t(lang, 'fonts') || 'Fonts') :
                  panel === 'timer' ? (t(lang, 'timer') || 'Timer') :
                  panel === 'history' ? (t(lang, 'versionHistory') || 'History') :
@@ -594,10 +595,10 @@ ${content.split('\n\n').map(para => {
         {/* FORMAT PANEL */}
         {panel === 'format' && (
           <div>
-            <Accordion title="Typography" uiFont={uiFont} c={c} defaultOpen>
+            <Accordion title={t(lang, 'typography') || 'Typography'} uiFont={uiFont} c={c} defaultOpen>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 <div>
-                  {label('Font size')}
+                  {label(t(lang, 'fontSize') || 'Font size')}
                   {numInput(formatState.fontSize, 8, 96, 1, 'px', v => {
                     const editor = (props.editor as TiptapEditorType | null);
                     if (editor) editor.chain().focus().setFontSize(v).run();
@@ -605,7 +606,7 @@ ${content.split('\n\n').map(para => {
                   })}
                 </div>
                 <div>
-                  {label('Line height')}
+                  {label(t(lang, 'lineHeight') || 'Line height')}
                   {numInput(formatState.lineH, 1.0, 4.0, 0.05, '×', v => {
                     const editor = (props.editor as TiptapEditorType | null);
                     if (editor) editor.chain().focus().setLineHeight(v).run();
@@ -613,7 +614,7 @@ ${content.split('\n\n').map(para => {
                   }, 2)}
                 </div>
                 <div>
-                  {label('Letter spacing')}
+                  {label(t(lang, 'letterSpacing') || 'Letter spacing')}
                   {numInput(formatState.letterSpacing, -3, 8, 0.5, 'px', v => {
                     const editor = (props.editor as TiptapEditorType | null);
                     if (editor) (editor.chain().focus() as unknown as Record<string, (arg: number) => { run: () => boolean }>).setLetterSpacing?.(v)?.run?.();
@@ -621,7 +622,7 @@ ${content.split('\n\n').map(para => {
                   }, 1)}
                 </div>
                 <div>
-                  {label('Word spacing')}
+                  {label(t(lang, 'wordSpacing') || 'Word spacing')}
                   {numInput(formatState.wordSpacing, -4, 16, 0.5, 'px', v => {
                     const editor = (props.editor as TiptapEditorType | null);
                     if (editor) (editor.chain().focus() as unknown as Record<string, (arg: number) => { run: () => boolean }>).setWordSpacing?.(v)?.run?.();
@@ -631,10 +632,10 @@ ${content.split('\n\n').map(para => {
               </div>
             </Accordion>
 
-            <Accordion title="Advanced Typography" uiFont={uiFont} c={c}>
+            <Accordion title={t(lang, 'advancedTypography') || 'Advanced Typography'} uiFont={uiFont} c={c}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 <div>
-                  {label('Text transform')}
+                  {label(t(lang, 'textTransform') || 'Text transform')}
                   <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
                     {([
                       { val: 'none', label: 'Aa' },
@@ -655,34 +656,34 @@ ${content.split('\n\n').map(para => {
                   </div>
                 </div>
                 <div>
-                  {label('Superscript / Subscript')}
-                  <div style={{ display: 'flex', gap: 4 }}>
+                  {label(t(lang, 'superscriptSubscript') || 'Superscript / Subscript')}
+                  <div style={{ display: 'flex', gap: 6 }}>
                     <button onClick={() => {
                         const editor = (props.editor as TiptapEditorType | null);
                         if (editor) editor.chain().focus().toggleSuperscript().run();
                         else { const ta = textareaRef.current; if (ta) { const s = ta.selectionStart, e = ta.selectionEnd; const sel = content.slice(s, e); onContentChange(content.slice(0, s) + `<sup>${sel || 'sup'}</sup>` + content.slice(e)) } }
                       }}
-                      style={{ flex: 1, padding: '5px', borderRadius: 5, border: `1px solid ${(props.editor as TiptapEditorType | null)?.isActive?.('superscript') ? c.accent : c.border}`, background: (props.editor as TiptapEditorType | null)?.isActive?.('superscript') ? c.accentLight : 'transparent', fontFamily: uiFont, fontSize: '0.72rem', color: (props.editor as TiptapEditorType | null)?.isActive?.('superscript') ? c.accent : c.textMuted, cursor: 'pointer', transition: 'all 0.12s' }}>
-                      X<sup style={{ fontSize: '0.6em' }}>2</sup> Sup
+                      style={{ flex: 1, padding: '6px 4px', borderRadius: 6, border: `1px solid ${(props.editor as TiptapEditorType | null)?.isActive?.('superscript') ? c.accent : c.border}`, background: (props.editor as TiptapEditorType | null)?.isActive?.('superscript') ? c.accentLight : 'transparent', fontFamily: uiFont, fontSize: '0.7rem', color: (props.editor as TiptapEditorType | null)?.isActive?.('superscript') ? c.accent : c.textMuted, cursor: 'pointer', transition: 'all 0.12s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, textAlign: 'center' }}>
+                      X<sup style={{ fontSize: '0.6em' }}>2</sup> <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t(lang, 'superscript') || 'Sup'}</span>
                     </button>
                     <button onClick={() => {
                         const editor = (props.editor as TiptapEditorType | null);
                         if (editor) editor.chain().focus().toggleSubscript().run();
                         else { const ta = textareaRef.current; if (ta) { const s = ta.selectionStart, e = ta.selectionEnd; const sel = content.slice(s, e); onContentChange(content.slice(0, s) + `<sub>${sel || 'sub'}</sub>` + content.slice(e)) } }
                       }}
-                      style={{ flex: 1, padding: '5px', borderRadius: 5, border: `1px solid ${(props.editor as TiptapEditorType | null)?.isActive?.('subscript') ? c.accent : c.border}`, background: (props.editor as TiptapEditorType | null)?.isActive?.('subscript') ? c.accentLight : 'transparent', fontFamily: uiFont, fontSize: '0.72rem', color: (props.editor as TiptapEditorType | null)?.isActive?.('subscript') ? c.accent : c.textMuted, cursor: 'pointer', transition: 'all 0.12s' }}>
-                      X<sub style={{ fontSize: '0.6em' }}>2</sub> Sub
+                      style={{ flex: 1, padding: '6px 4px', borderRadius: 6, border: `1px solid ${(props.editor as TiptapEditorType | null)?.isActive?.('subscript') ? c.accent : c.border}`, background: (props.editor as TiptapEditorType | null)?.isActive?.('subscript') ? c.accentLight : 'transparent', fontFamily: uiFont, fontSize: '0.7rem', color: (props.editor as TiptapEditorType | null)?.isActive?.('subscript') ? c.accent : c.textMuted, cursor: 'pointer', transition: 'all 0.12s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, textAlign: 'center' }}>
+                      X<sub style={{ fontSize: '0.6em' }}>2</sub> <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t(lang, 'subscript') || 'Sub'}</span>
                     </button>
                   </div>
                 </div>
                 <div>
-                  {label('OpenType features')}
+                  {label(t(lang, 'openTypeFeatures') || 'OpenType features')}
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
                     {[
-                      { label: 'Ligatures', feat: 'liga' },
-                      { label: 'Small caps', feat: 'smcp' },
-                      { label: 'Old figures', feat: 'onum' },
-                      { label: 'Fractions', feat: 'frac' },
+                      { label: t(lang, 'ligatures') || 'Ligatures', feat: 'liga' },
+                      { label: t(lang, 'smallCaps') || 'Small caps', feat: 'smcp' },
+                      { label: t(lang, 'oldFigures') || 'Old figures', feat: 'onum' },
+                      { label: t(lang, 'fractions') || 'Fractions', feat: 'frac' },
                     ].map(({ label: lbl, feat }) => {
                       const active = ((formatState as unknown as Record<string, string>)['fontFeatures'] ?? '').includes(feat)
                       return (
@@ -705,10 +706,10 @@ ${content.split('\n\n').map(para => {
               </div>
             </Accordion>
 
-            <Accordion title="Paragraph" uiFont={uiFont} c={c}>
+            <Accordion title={t(lang, 'paragraph') || 'Paragraph'} uiFont={uiFont} c={c}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 <div>
-                  {label('Alignment')}
+                  {label(t(lang, 'alignment') || 'Alignment')}
                   <div style={{ display: 'flex', gap: 4 }}>
                     {(['left', 'center', 'right', 'justify'] as const).map(a => {
                       const editor = (props.editor as TiptapEditorType | null);
@@ -726,14 +727,16 @@ ${content.split('\n\n').map(para => {
                   </div>
                 </div>
                 <div>
-                  {label('Para spacing')}
+                  {label(t(lang, 'paraSpacing') || 'Para spacing')}
                   {numInput(formatState.paraSpacing, 0, 4, 0.1, 'em', v => onFormatChange({ paraSpacing: v }), 1)}
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <span style={{ fontFamily: uiFont, fontSize: '0.74rem', color: c.text }}>{t(lang, 'firstLineIndent')}</span>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 0' }}>
+                  <span style={{ fontFamily: uiFont, fontSize: '0.78rem', color: c.text, flex: 1, paddingRight: 12, textAlign: 'left', lineHeight: 1.35 }}>{t(lang, 'firstLineIndent')}</span>
                   <button onClick={() => onFormatChange({ firstLineIndent: !formatState.firstLineIndent })}
-                    style={{ width: 36, height: 20, borderRadius: 10, background: formatState.firstLineIndent ? c.accent : c.border, border: 'none', cursor: 'pointer', position: 'relative', transition: 'background 0.2s' }}>
-                    <div style={{ position: 'absolute', top: 2, left: formatState.firstLineIndent ? 18 : 2, width: 16, height: 16, borderRadius: '50%', background: 'white', transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.2)' }} />
+                    style={{ width: 44, height: 24, borderRadius: 12, background: formatState.firstLineIndent ? c.accent : 'transparent', border: `1px solid ${formatState.firstLineIndent ? c.accent : c.border}`, cursor: 'pointer', position: 'relative', transition: 'all 0.2s', flexShrink: 0 }}>
+                    <div style={{ position: 'absolute', top: 2, left: formatState.firstLineIndent ? 22 : 2, width: 18, height: 18, borderRadius: '50%', background: formatState.firstLineIndent ? c.surface : c.border, transition: 'left 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      {formatState.firstLineIndent && <Check size={12} color={c.accent} strokeWidth={3} />}
+                    </div>
                   </button>
                 </div>
               </div>
@@ -743,7 +746,7 @@ ${content.split('\n\n').map(para => {
             <Accordion title={t(lang, 'smartFormatting')} uiFont={uiFont} c={c}>
               <div style={{ display: 'flex', flexDirection: 'column' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: `1px solid ${c.borderFaint}` }}>
-                  <span style={{ fontFamily: uiFont, fontSize: '0.85rem', color: c.text }}>Quotes</span>
+                  <span style={{ fontFamily: uiFont, fontSize: '0.78rem', color: c.text, flex: 1, paddingRight: 12, textAlign: 'left', lineHeight: 1.35 }}>{t(lang, 'smartQuotes')}</span>
                   <button onClick={() => onFormatChange({ smartQuotes: !formatState.smartQuotes })}
                     style={{ width: 44, height: 24, borderRadius: 12, background: formatState.smartQuotes ? c.accent : 'transparent', border: `1px solid ${formatState.smartQuotes ? c.accent : c.border}`, cursor: 'pointer', position: 'relative', transition: 'all 0.2s', flexShrink: 0 }}>
                     <div style={{ position: 'absolute', top: 2, left: formatState.smartQuotes ? 22 : 2, width: 18, height: 18, borderRadius: '50%', background: formatState.smartQuotes ? c.surface : c.border, transition: 'left 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -753,7 +756,7 @@ ${content.split('\n\n').map(para => {
                 </div>
                 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: `1px solid ${c.borderFaint}` }}>
-                  <span style={{ fontFamily: uiFont, fontSize: '0.85rem', color: c.text }}>Ellipses</span>
+                  <span style={{ fontFamily: uiFont, fontSize: '0.78rem', color: c.text, flex: 1, paddingRight: 12, textAlign: 'left', lineHeight: 1.35 }}>{t(lang, 'smartEllipses') || 'Ellipses'}</span>
                   <button onClick={() => onFormatChange({ smartEllipses: !formatState.smartEllipses })}
                     style={{ width: 44, height: 24, borderRadius: 12, background: formatState.smartEllipses ? c.accent : 'transparent', border: `1px solid ${formatState.smartEllipses ? c.accent : c.border}`, cursor: 'pointer', position: 'relative', transition: 'all 0.2s', flexShrink: 0 }}>
                     <div style={{ position: 'absolute', top: 2, left: formatState.smartEllipses ? 22 : 2, width: 18, height: 18, borderRadius: '50%', background: formatState.smartEllipses ? c.surface : c.border, transition: 'left 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -763,7 +766,7 @@ ${content.split('\n\n').map(para => {
                 </div>
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: `1px solid ${c.borderFaint}` }}>
-                  <span style={{ fontFamily: uiFont, fontSize: '0.85rem', color: c.text }}>Markdown shortcuts</span>
+                  <span style={{ fontFamily: uiFont, fontSize: '0.78rem', color: c.text, flex: 1, paddingRight: 12, textAlign: 'left', lineHeight: 1.35 }}>{t(lang, 'markdownShortcuts') || 'Markdown shortcuts'}</span>
                   <button onClick={() => onFormatChange({ markdownShortcuts: !formatState.markdownShortcuts })}
                     style={{ width: 44, height: 24, borderRadius: 12, background: formatState.markdownShortcuts ? c.accent : 'transparent', border: `1px solid ${formatState.markdownShortcuts ? c.accent : c.border}`, cursor: 'pointer', position: 'relative', transition: 'all 0.2s', flexShrink: 0 }}>
                     <div style={{ position: 'absolute', top: 2, left: formatState.markdownShortcuts ? 22 : 2, width: 18, height: 18, borderRadius: '50%', background: formatState.markdownShortcuts ? c.surface : c.border, transition: 'left 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -773,9 +776,9 @@ ${content.split('\n\n').map(para => {
                 </div>
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: `1px solid ${c.borderFaint}` }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flex: 1, paddingRight: 16 }}>
-                    <span style={{ fontFamily: uiFont, fontSize: '0.85rem', color: c.text }}>Double-space inserts period</span>
-                    <span style={{ fontFamily: uiFont, fontSize: '0.65rem', color: c.textFaint, lineHeight: 1.3 }}>Double tap the space bar after text to insert a period. When disabled, Prose follows your device settings.</span>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flex: 1, paddingRight: 12 }}>
+                    <span style={{ fontFamily: uiFont, fontSize: '0.78rem', color: c.text, lineHeight: 1.35 }}>{t(lang, 'doubleSpacePeriod') || 'Double-space inserts period'}</span>
+                    <span style={{ fontFamily: uiFont, fontSize: '0.65rem', color: c.textFaint, lineHeight: 1.3 }}>{t(lang, 'doubleSpacePeriodDesc') || 'Double tap the space bar after text to insert a period. When disabled, Prose follows your device settings.'}</span>
                   </div>
                   <button onClick={() => onFormatChange({ doubleSpacePeriod: !formatState.doubleSpacePeriod })}
                     style={{ width: 44, height: 24, borderRadius: 12, background: formatState.doubleSpacePeriod ? c.accent : 'transparent', border: `1px solid ${formatState.doubleSpacePeriod ? c.accent : c.border}`, cursor: 'pointer', position: 'relative', transition: 'all 0.2s', flexShrink: 0 }}>
@@ -786,7 +789,7 @@ ${content.split('\n\n').map(para => {
                 </div>
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: `1px solid ${c.borderFaint}` }}>
-                  <span style={{ fontFamily: uiFont, fontSize: '0.85rem', color: c.text }}>Toggle headings</span>
+                  <span style={{ fontFamily: uiFont, fontSize: '0.78rem', color: c.text, flex: 1, paddingRight: 12, textAlign: 'left', lineHeight: 1.35 }}>{t(lang, 'toggleHeadings') || 'Toggle headings'}</span>
                   <button onClick={() => onFormatChange({ toggleHeadings: !formatState.toggleHeadings })}
                     style={{ width: 44, height: 24, borderRadius: 12, background: formatState.toggleHeadings ? c.accent : 'transparent', border: `1px solid ${formatState.toggleHeadings ? c.accent : c.border}`, cursor: 'pointer', position: 'relative', transition: 'all 0.2s', flexShrink: 0 }}>
                     <div style={{ position: 'absolute', top: 2, left: formatState.toggleHeadings ? 22 : 2, width: 18, height: 18, borderRadius: '50%', background: formatState.toggleHeadings ? c.surface : c.border, transition: 'left 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -795,28 +798,28 @@ ${content.split('\n\n').map(para => {
                   </button>
                 </div>
 
-                <Accordion title="Dashes" uiFont={uiFont} c={c}>
+                <Accordion title={t(lang, 'dashes') || 'Dashes'} uiFont={uiFont} c={c}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 12, paddingTop: 8 }}>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }}>
-                      <input type="radio" name="dashesMode" value="disabled" checked={formatState.dashesMode === 'disabled'} onChange={() => onFormatChange({ dashesMode: 'disabled' })} style={{ accentColor: c.accent }} />
-                      <span style={{ fontFamily: uiFont, fontSize: '0.85rem', color: c.text }}>Disabled</span>
+                    <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer' }}>
+                      <input type="radio" name="dashesMode" value="disabled" checked={formatState.dashesMode === 'disabled'} onChange={() => onFormatChange({ dashesMode: 'disabled' })} style={{ accentColor: c.accent, marginTop: 2 }} />
+                      <span style={{ fontFamily: uiFont, fontSize: '0.78rem', color: c.text, lineHeight: 1.35 }}>{t(lang, 'disabled') || 'Disabled'}</span>
                     </label>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }}>
-                      <input type="radio" name="dashesMode" value="em" checked={formatState.dashesMode === 'em'} onChange={() => onFormatChange({ dashesMode: 'em' })} style={{ accentColor: c.accent }} />
-                      <span style={{ fontFamily: uiFont, fontSize: '0.85rem', color: c.text }}>[ - - ] for em dash</span>
+                    <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer' }}>
+                      <input type="radio" name="dashesMode" value="em" checked={formatState.dashesMode === 'em'} onChange={() => onFormatChange({ dashesMode: 'em' })} style={{ accentColor: c.accent, marginTop: 2 }} />
+                      <span style={{ fontFamily: uiFont, fontSize: '0.78rem', color: c.text, lineHeight: 1.35 }}>{t(lang, 'emDashOption') || '[ - - ] for em dash'}</span>
                     </label>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }}>
-                      <input type="radio" name="dashesMode" value="en-em" checked={formatState.dashesMode === 'en-em'} onChange={() => onFormatChange({ dashesMode: 'en-em' })} style={{ accentColor: c.accent }} />
-                      <span style={{ fontFamily: uiFont, fontSize: '0.85rem', color: c.text }}>[ - - ] for en dash, [ - - - ] for em dash</span>
+                    <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer' }}>
+                      <input type="radio" name="dashesMode" value="en-em" checked={formatState.dashesMode === 'en-em'} onChange={() => onFormatChange({ dashesMode: 'en-em' })} style={{ accentColor: c.accent, marginTop: 2 }} />
+                      <span style={{ fontFamily: uiFont, fontSize: '0.78rem', color: c.text, lineHeight: 1.35 }}>{t(lang, 'enEmDashOption') || '[ - - ] for en dash, [ - - - ] for em dash'}</span>
                     </label>
                   </div>
                 </Accordion>
               </div>
             </Accordion>
 
-            <Accordion title="Column" uiFont={uiFont} c={c}>
+            <Accordion title={t(lang, 'column') || 'Column'} uiFont={uiFont} c={c}>
               <div>
-                {label('Max width')}
+                {label(t(lang, 'maxWidth') || 'Max width')}
                 {numInput(formatState.maxW, 300, 1200, 10, 'px', v => onFormatChange({ maxW: v }))}
               </div>
             </Accordion>
@@ -860,7 +863,7 @@ ${content.split('\n\n').map(para => {
             <Accordion title={t(lang, 'pageFormat')} uiFont={uiFont} c={c}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 <div>
-                  <div style={{ fontFamily: uiFont, fontSize: '0.66rem', color: c.textFaint, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>{t(lang, 'paperSize')}</div>
+                  <div style={{ fontFamily: uiFont, fontSize: '0.64rem', fontWeight: 700, color: c.textFaint, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>{t(lang, 'paperSize')}</div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
                     {(['A4', 'Letter', 'Legal', 'A5', 'Tabloid', 'pageless'] as const).map(size => (
                       <button key={size} onClick={() => onPageFormatChange({ ...pageFormat, paperSize: size, mode: size === 'pageless' ? 'pageless' : 'pages' })}
@@ -879,16 +882,17 @@ ${content.split('\n\n').map(para => {
                 </div>
                 {pageFormat.paperSize !== 'pageless' && (
                   <div>
-                    <div style={{ fontFamily: uiFont, fontSize: '0.66rem', color: c.textFaint, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>{t(lang, 'orientation')}</div>
+                    <div style={{ fontFamily: uiFont, fontSize: '0.64rem', fontWeight: 700, color: c.textFaint, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>{t(lang, 'orientation')}</div>
                     <div style={{ display: 'flex', gap: 6 }}>
                       {(['portrait', 'landscape'] as const).map(o => (
                         <button key={o} onClick={() => onPageFormatChange({ ...pageFormat, orientation: o })}
                           style={{
-                            flex: 1, padding: '5px 0', borderRadius: 5, cursor: 'pointer',
+                            flex: 1, padding: '6px 4px', borderRadius: 6, cursor: 'pointer',
                             border: `1.5px solid ${pageFormat.orientation === o ? c.accent : c.border}`,
                             background: pageFormat.orientation === o ? c.accentLight : 'transparent',
                             color: pageFormat.orientation === o ? c.accent : c.textMuted,
                             fontFamily: uiFont, fontSize: '0.72rem', transition: 'all 0.12s',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', whiteSpace: 'nowrap'
                           }}
                         >
                           {o === 'portrait' ? t(lang, 'portrait') : t(lang, 'landscape')}
@@ -909,7 +913,7 @@ ${content.split('\n\n').map(para => {
                   borderRadius: 8, cursor: 'pointer', fontFamily: uiFont, fontSize: '0.9rem', color: c.text
                 }}
               >
-                Spell check
+                {t(lang, 'spellCheck')}
                 <span style={{ color: c.textMuted }}>&rarr;</span>
               </button>
             </div>
@@ -940,7 +944,7 @@ ${content.split('\n\n').map(para => {
 
             <div>
               <div style={{ fontFamily: uiFont, fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: c.textFaint, marginBottom: 6 }}>
-                Universal Import
+                {t(lang, 'universalImport') || 'Universal Import'}
               </div>
               <button
                 onClick={() => importFileInputRef.current?.click()}
@@ -960,7 +964,7 @@ ${content.split('\n\n').map(para => {
 
             <div>
               <div style={{ fontFamily: uiFont, fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: c.textFaint, marginBottom: 6, marginTop: 4 }}>
-                Universal Export
+                {t(lang, 'universalExport') || 'Universal Export'}
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <button onClick={handleCopy}
@@ -1124,45 +1128,45 @@ ${content.split('\n\n').map(para => {
             )}
 
             {/* Presets & Mode Selector */}
-            <div style={{ display: 'flex', gap: 4, marginBottom: 16, background: c.isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)', padding: 3, borderRadius: 8, width: '100%', justifyContent: 'center' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 4, marginBottom: 16, background: c.isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)', padding: 4, borderRadius: 8, width: '100%' }}>
               <button
                 onClick={() => handleSelectPreset('pomodoro')}
                 style={{
-                  flex: 1, padding: '5px 6px', borderRadius: 6, border: 'none', cursor: 'pointer',
+                  padding: '6px 2px', borderRadius: 6, border: 'none', cursor: 'pointer',
                   background: timerMode === 'pomodoro' ? c.surface : 'transparent',
                   color: timerMode === 'pomodoro' ? c.accent : c.textMuted,
-                  fontFamily: uiFont, fontSize: '0.7rem', fontWeight: timerMode === 'pomodoro' ? 700 : 500,
+                  fontFamily: uiFont, fontSize: '0.68rem', fontWeight: timerMode === 'pomodoro' ? 700 : 500,
                   boxShadow: timerMode === 'pomodoro' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
-                  transition: 'all 0.15s'
+                  transition: 'all 0.15s', textAlign: 'center', lineHeight: 1.2, display: 'flex', alignItems: 'center', justifyContent: 'center'
                 }}
               >
-                Pomodoro (25m)
+                {t(lang, 'pomodoro25m') || 'Pomodoro (25m)'}
               </button>
               <button
                 onClick={() => handleSelectPreset('deepwork')}
                 style={{
-                  flex: 1, padding: '5px 6px', borderRadius: 6, border: 'none', cursor: 'pointer',
+                  padding: '6px 2px', borderRadius: 6, border: 'none', cursor: 'pointer',
                   background: timerMode === 'deepwork' ? c.surface : 'transparent',
                   color: timerMode === 'deepwork' ? c.accent : c.textMuted,
-                  fontFamily: uiFont, fontSize: '0.7rem', fontWeight: timerMode === 'deepwork' ? 700 : 500,
+                  fontFamily: uiFont, fontSize: '0.68rem', fontWeight: timerMode === 'deepwork' ? 700 : 500,
                   boxShadow: timerMode === 'deepwork' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
-                  transition: 'all 0.15s'
+                  transition: 'all 0.15s', textAlign: 'center', lineHeight: 1.2, display: 'flex', alignItems: 'center', justifyContent: 'center'
                 }}
               >
-                Deep Work (50m)
+                {t(lang, 'deepWork50m') || 'Deep Work (50m)'}
               </button>
               <button
                 onClick={() => handleSelectPreset('stopwatch')}
                 style={{
-                  flex: 1, padding: '5px 6px', borderRadius: 6, border: 'none', cursor: 'pointer',
+                  padding: '6px 2px', borderRadius: 6, border: 'none', cursor: 'pointer',
                   background: timerMode === 'stopwatch' ? c.surface : 'transparent',
                   color: timerMode === 'stopwatch' ? c.accent : c.textMuted,
-                  fontFamily: uiFont, fontSize: '0.7rem', fontWeight: timerMode === 'stopwatch' ? 700 : 500,
+                  fontFamily: uiFont, fontSize: '0.68rem', fontWeight: timerMode === 'stopwatch' ? 700 : 500,
                   boxShadow: timerMode === 'stopwatch' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
-                  transition: 'all 0.15s'
+                  transition: 'all 0.15s', textAlign: 'center', lineHeight: 1.2, display: 'flex', alignItems: 'center', justifyContent: 'center'
                 }}
               >
-                Stopwatch
+                {t(lang, 'stopwatch') || 'Stopwatch'}
               </button>
             </div>
 
@@ -1193,7 +1197,7 @@ ${content.split('\n\n').map(para => {
             {timerDone ? (
               <div style={{ textAlign: 'center', marginBottom: 16 }}>
                 <p style={{ fontFamily: uiFont, fontSize: '0.85rem', color: c.textMuted, marginBottom: 12 }}>
-                  ✨ Focus session completed! Stats updated.
+                  {t(lang, 'focusCompleted') || '✨ Focus session completed! Stats updated.'}
                 </p>
                 <button onClick={onTimerReset}
                   style={{
@@ -1203,7 +1207,7 @@ ${content.split('\n\n').map(para => {
                     cursor: 'pointer',
                   }}
                 >
-                  Reset Timer
+                  {t(lang, 'resetTimer') || 'Reset Timer'}
                 </button>
               </div>
             ) : (
@@ -1221,7 +1225,7 @@ ${content.split('\n\n').map(para => {
                     onMouseEnter={e => (e.currentTarget.style.opacity = '0.84')}
                     onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
                   >
-                    {timerOn ? 'Pause' : 'Start Focus'}
+                    {timerOn ? (t(lang, 'pause') || 'Pause') : (t(lang, 'startFocus') || 'Start Focus')}
                   </button>
                   <button onClick={onTimerReset}
                     style={{
@@ -1258,7 +1262,7 @@ ${content.split('\n\n').map(para => {
 
                 {timerOn && (
                   <p style={{ fontFamily: uiFont, fontSize: '0.72rem', color: c.accent, textAlign: 'center', marginBottom: 10 }}>
-                    🛡️ Flow Shield active (protecting your focus stream)
+                    {t(lang, 'flowShieldActive') || '🛡️ Flow Shield active'}
                   </p>
                 )}
               </>
@@ -1270,19 +1274,19 @@ ${content.split('\n\n').map(para => {
               display: 'flex', flexDirection: 'column', gap: 6
             }}>
               <span style={{ fontFamily: uiFont, fontSize: '0.68rem', fontWeight: 700, textTransform: 'uppercase', color: c.textFaint, letterSpacing: '0.08em' }}>
-                Daily Focus Dashboard
+                {t(lang, 'dailyFocusDashboard') || 'Daily Focus Dashboard'}
               </span>
               <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
                 <div style={{ flex: 1, background: c.isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', padding: '8px 10px', borderRadius: 8, border: `1px solid ${c.borderFaint}` }}>
-                  <div style={{ fontFamily: uiFont, fontSize: '0.65rem', color: c.textMuted }}>Total Time</div>
+                  <div style={{ fontFamily: uiFont, fontSize: '0.65rem', color: c.textMuted }}>{t(lang, 'totalTime') || 'Total Time'}</div>
                   <div style={{ fontFamily: monoFont, fontSize: '0.95rem', fontWeight: 700, color: c.text, marginTop: 2 }}>
                     {Math.floor(dailyStats.totalMinutes / 60)}h {dailyStats.totalMinutes % 60}m
                   </div>
                 </div>
                 <div style={{ flex: 1, background: c.isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', padding: '8px 10px', borderRadius: 8, border: `1px solid ${c.borderFaint}` }}>
-                  <div style={{ fontFamily: uiFont, fontSize: '0.65rem', color: c.textMuted }}>Sessions</div>
+                  <div style={{ fontFamily: uiFont, fontSize: '0.65rem', color: c.textMuted }}>{t(lang, 'sessions') || 'Sessions'}</div>
                   <div style={{ fontFamily: monoFont, fontSize: '0.95rem', fontWeight: 700, color: c.accent, marginTop: 2 }}>
-                    {dailyStats.sessionsCount} completed
+                    {dailyStats.sessionsCount} {t(lang, 'completed') || 'completed'}
                   </div>
                 </div>
               </div>
@@ -1296,7 +1300,7 @@ ${content.split('\n\n').map(para => {
                 fontFamily: uiFont, fontSize: '0.7rem', color: c.textMuted, textDecoration: 'underline',
               }}
             >
-              Minimize to Bottom Bar (2px)
+              {t(lang, 'minimizeToBottomBar') || 'Minimize to Bottom Bar'}
             </button>
           </div>
         )}
@@ -1325,12 +1329,12 @@ ${content.split('\n\n').map(para => {
                 onClick={onTimerToggle}
                 style={{ background: c.accent, color: '#fff', border: 'none', padding: '2px 8px', borderRadius: 10, fontSize: '0.7rem', cursor: 'pointer', fontWeight: 600 }}
               >
-                {timerOn ? 'Pause' : 'Play'}
+                {timerOn ? (t(lang, 'pause') || 'Pause') : (t(lang, 'play') || 'Play')}
               </button>
               <button
                 onClick={() => setIsMinimized(false)}
                 style={{ background: 'none', border: 'none', color: c.textMuted, cursor: 'pointer', fontSize: '0.8rem' }}
-                title="Restore timer panel"
+                title={t(lang, 'restoreTimer') || 'Restore timer panel'}
               >
                 ✕
               </button>
@@ -1353,7 +1357,7 @@ ${content.split('\n\n').map(para => {
             </div>
             {/* Import */}
             <div>
-              <SectionLabel label="Import" uiFont={uiFont} c={c} />
+              <SectionLabel label={t(lang, 'universalImport') || 'Import'} uiFont={uiFont} c={c} />
               <div
                 onClick={() => {
                   const inp = document.createElement('input')
@@ -1433,11 +1437,11 @@ ${content.split('\n\n').map(para => {
         {panel === 'fonts' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div>
-              <SectionLabel label="Font roles" uiFont={uiFont} c={c} />
+              <SectionLabel label={t(lang, 'fontRoles') || 'Font roles'} uiFont={uiFont} c={c} />
               {([
-                { role: 'body' as const, label: 'Body', value: bodyFont },
-                { role: 'heading' as const, label: 'Heading', value: headingFont },
-                { role: 'ui' as const, label: 'UI', value: uiFont2 },
+                { role: 'body' as const, label: t(lang, 'body') || 'Body', value: bodyFont },
+                { role: 'heading' as const, label: t(lang, 'heading') || 'Heading', value: headingFont },
+                { role: 'ui' as const, label: t(lang, 'ui') || 'UI', value: uiFont2 },
               ]).map(({ role, label: lbl, value }) => (
                 <div key={role} style={{ marginBottom: 10 }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
@@ -1590,7 +1594,7 @@ ${content.split('\n\n').map(para => {
                 }}
               >
                 <div style={{ fontFamily: uiFont, fontSize: '0.74rem', color: c.textMuted, lineHeight: 1.5 }}>
-                  Drop font file here<br />
+                  {t(lang, 'dropFontHere')}<br />
                   <span style={{ fontSize: '0.66rem', color: c.textFaint }}>{t(lang, 'clickToBrowse')}</span>
                 </div>
               </div>
@@ -1677,23 +1681,24 @@ ${content.split('\n\n').map(para => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
             <div>
               <SectionLabel label={t(lang, 'language')} uiFont={uiFont} c={c} />
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 6 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 8 }}>
                 {(Object.keys(LANG_LABELS) as Lang[]).map(l => (
                   <button
                     key={l}
                     onClick={() => onLangChange(l)}
                     className="truncate whitespace-nowrap"
                     style={{
-                      padding: '6px 8px', borderRadius: 6, cursor: 'pointer',
+                      padding: '7px 10px', borderRadius: 8, cursor: 'pointer',
                       border: `1px solid ${lang === l ? c.accent : c.border}`,
                       background: lang === l ? c.accentLight : 'transparent',
                       color: lang === l ? c.accent : c.textMuted,
-                      fontFamily: uiFont, fontSize: '0.72rem', fontWeight: lang === l ? 600 : 400,
-                      textAlign: 'center',
-                      transition: 'all 0.12s',
+                      fontFamily: uiFont, fontSize: '0.75rem', fontWeight: lang === l ? 600 : 400,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                      transition: 'all 0.12s', width: '100%'
                     }}
                   >
-                    {LANG_FLAGS[l] ? `${LANG_FLAGS[l]} ` : ''}{LANG_LABELS[l]}
+                    <span>{LANG_FLAGS[l] || ''}</span>
+                    <span>{LANG_LABELS[l]}</span>
                   </button>
                 ))}
               </div>

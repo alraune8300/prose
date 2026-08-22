@@ -6,7 +6,7 @@ import {
   AlignLeft, AlignCenter, AlignRight,
   Eraser, Plus, Minus,
   Link2, Bookmark, BookOpen, Quote,
-  Split
+  Split, X
 } from 'lucide-react';
 import type { Editor } from '@tiptap/react';
 import type { ThemeColors } from './types';
@@ -52,6 +52,10 @@ function Toolbar({
 }: Props) {
   const [, forceUpdate] = useState({});
   const [showGoogleFonts, setShowGoogleFonts] = useState(false);
+  const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
+  const [linkInputValue, setLinkInputValue] = useState('https://');
+  const [isFootnoteModalOpen, setIsFootnoteModalOpen] = useState(false);
+  const [footnoteInputValue, setFootnoteInputValue] = useState('1');
 
   useEffect(() => {
     if (editor) {
@@ -211,10 +215,8 @@ function Toolbar({
             editor.chain().focus().unsetLink().run();
           } else {
             const previousUrl = editor.getAttributes('link').href;
-            const url = window.prompt(lang === 'vi' ? 'Nhập đường dẫn URL (Hyperlink):' : 'Enter hyperlink URL:', previousUrl || 'https://');
-            if (url) {
-              editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
-            }
+            setLinkInputValue(previousUrl || 'https://');
+            setIsLinkModalOpen(true);
           }
         }} 
         icon={<Link2 size={15} />} 
@@ -223,10 +225,8 @@ function Toolbar({
       />
       <ToolBtn 
         onClick={() => {
-          const fnNum = prompt(lang === 'vi' ? 'Nhập số hoặc nhãn chú thích (ví dụ 1, 2, note):' : 'Enter footnote number/label (e.g. 1, 2, note):', '1');
-          if (fnNum) {
-            window.dispatchEvent(new CustomEvent('kgv-insert-footnote', { detail: { id: fnNum } }));
-          }
+          setFootnoteInputValue('1');
+          setIsFootnoteModalOpen(true);
         }} 
         icon={<Bookmark size={15} />} 
         label={lang === 'vi' ? 'Chèn chú thích neo lề [^n]' : 'Insert margin footnote [^n]'} 
@@ -304,6 +304,201 @@ function Toolbar({
             </button>
           </div>
         </>
+      )}
+
+      {/* Link Insertion Modal */}
+      {isLinkModalOpen && createPortal(
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-200">
+          <div 
+            className="w-full max-w-md rounded-2xl border shadow-2xl overflow-hidden p-6 relative"
+            style={{ 
+              backgroundColor: theme.surface, 
+              borderColor: theme.border, 
+              color: theme.text,
+              fontFamily: `'${uiFont}', sans-serif`
+            }}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl" style={{ backgroundColor: `${theme.accent}15`, color: theme.accent }}>
+                  <Link2 size={18} />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-sm" style={{ color: theme.text }}>
+                    {t.insertHyperlink}
+                  </h3>
+                  <p className="text-xs opacity-60" style={{ color: theme.text }}>
+                    {t.enterWebAddress}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsLinkModalOpen(false)}
+                className="p-1.5 rounded-lg opacity-70 hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+                style={{ color: theme.text }}
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="space-y-3 mb-6">
+              <div>
+                <label className="block text-xs font-medium mb-1.5 opacity-80" style={{ color: theme.text }}>
+                  {t.targetUrl}
+                </label>
+                <div className="relative">
+                  <input
+                    type="url"
+                    autoFocus
+                    value={linkInputValue}
+                    onChange={(e) => setLinkInputValue(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        if (linkInputValue.trim()) {
+                          editor.chain().focus().extendMarkRange('link').setLink({ href: linkInputValue.trim() }).run();
+                          setIsLinkModalOpen(false);
+                        }
+                      } else if (e.key === 'Escape') {
+                        setIsLinkModalOpen(false);
+                      }
+                    }}
+                    placeholder="https://example.com"
+                    className="w-full text-xs px-3.5 py-2.5 rounded-xl border outline-none transition-all font-mono"
+                    style={{
+                      backgroundColor: theme.isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.02)',
+                      borderColor: theme.border,
+                      color: theme.text,
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2.5 pt-3 border-t" style={{ borderColor: theme.border }}>
+              <button
+                type="button"
+                onClick={() => setIsLinkModalOpen(false)}
+                className="px-4 py-2 rounded-xl text-xs font-medium transition-colors hover:bg-black/5 dark:hover:bg-white/10"
+                style={{ color: theme.text }}
+              >
+                {t.cancel}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (linkInputValue.trim()) {
+                    editor.chain().focus().extendMarkRange('link').setLink({ href: linkInputValue.trim() }).run();
+                    setIsLinkModalOpen(false);
+                  }
+                }}
+                className="px-4 py-2 rounded-xl text-xs font-medium text-white shadow-xs transition-transform active:scale-95"
+                style={{ backgroundColor: theme.accent }}
+              >
+                {t.applyLink}
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Footnote Insertion Modal */}
+      {isFootnoteModalOpen && createPortal(
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-200">
+          <div 
+            className="w-full max-w-md rounded-2xl border shadow-2xl overflow-hidden p-6 relative"
+            style={{ 
+              backgroundColor: theme.surface, 
+              borderColor: theme.border, 
+              color: theme.text,
+              fontFamily: `'${uiFont}', sans-serif`
+            }}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl" style={{ backgroundColor: `${theme.accent}15`, color: theme.accent }}>
+                  <Bookmark size={18} />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-sm" style={{ color: theme.text }}>
+                    {t.insertMarginFootnote}
+                  </h3>
+                  <p className="text-xs opacity-60" style={{ color: theme.text }}>
+                    {t.createNoteLabel}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsFootnoteModalOpen(false)}
+                className="p-1.5 rounded-lg opacity-70 hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+                style={{ color: theme.text }}
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="space-y-3 mb-6">
+              <div>
+                <label className="block text-xs font-medium mb-1.5 opacity-80" style={{ color: theme.text }}>
+                  {t.footnoteNumberLabel}
+                </label>
+                <input
+                  type="text"
+                  autoFocus
+                  value={footnoteInputValue}
+                  onChange={(e) => setFootnoteInputValue(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      if (footnoteInputValue.trim()) {
+                        window.dispatchEvent(new CustomEvent('kgv-insert-footnote', { detail: { id: footnoteInputValue.trim() } }));
+                        setIsFootnoteModalOpen(false);
+                      }
+                    } else if (e.key === 'Escape') {
+                      setIsFootnoteModalOpen(false);
+                    }
+                  }}
+                  placeholder="1"
+                  className="w-full text-xs px-3.5 py-2.5 rounded-xl border outline-none transition-all font-mono"
+                  style={{
+                    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.02)',
+                    borderColor: theme.border,
+                    color: theme.text,
+                  }}
+                />
+                <p className="text-[11px] opacity-60 mt-1.5 italic" style={{ color: theme.text }}>
+                  {t.footnoteModalTip}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2.5 pt-3 border-t" style={{ borderColor: theme.border }}>
+              <button
+                type="button"
+                onClick={() => setIsFootnoteModalOpen(false)}
+                className="px-4 py-2 rounded-xl text-xs font-medium transition-colors hover:bg-black/5 dark:hover:bg-white/10"
+                style={{ color: theme.text }}
+              >
+                {t.cancel}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (footnoteInputValue.trim()) {
+                    window.dispatchEvent(new CustomEvent('kgv-insert-footnote', { detail: { id: footnoteInputValue.trim() } }));
+                    setIsFootnoteModalOpen(false);
+                  }
+                }}
+                className="px-4 py-2 rounded-xl text-xs font-medium text-white shadow-xs transition-transform active:scale-95"
+                style={{ backgroundColor: theme.accent }}
+              >
+                {t.insertFootnoteAction}
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
       )}
     </div>
   );

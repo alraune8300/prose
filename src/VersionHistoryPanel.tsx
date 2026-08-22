@@ -165,7 +165,7 @@ export default function VersionHistoryPanel({
               {selectedVersionId === v.id && (
                 <div className="mt-2 mb-4 p-4 rounded-lg border shadow-inner animate-fade-in-up" style={{ backgroundColor: theme.bg, borderColor: theme.borderFaint }}>
                   <div className="flex items-center justify-between mb-3 pb-3 border-b" style={{ borderColor: theme.borderFaint }}>
-                    <h5 className="text-xs font-semibold tracking-wider uppercase opacity-60" style={{ color: theme.text }}>Preview</h5>
+                    <h5 className="text-xs font-semibold tracking-wider uppercase opacity-60" style={{ color: theme.text }}>{t(lang, 'preview') || 'Preview'}</h5>
                     <button
                       onClick={() => onRestore(v.content, v.title || activePage?.title || 'Restored')}
                       className="px-3 py-1.5 text-xs rounded text-white font-medium flex items-center gap-1.5 transition-transform active:scale-95"

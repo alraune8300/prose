@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { BookOpen, Plus, Trash2, Copy, Check, Download, Upload, Search, FileText, ExternalLink } from 'lucide-react';
 import type { ThemeColors } from './types';
-import type { Lang } from './i18n';
-import { t } from './i18n';
+import { Lang, t } from './i18n';
 import { CitationSource, CitationStyle, parseBibtex, exportToBibtex, formatBibliographyEntry } from './citationsEngine';
 import { CustomSelect } from './CustomSelect';
 
@@ -128,7 +127,7 @@ export default function CitationsPanel({
         <div className="flex items-center gap-2">
           <BookOpen size={16} style={{ color: theme.accent }} />
           <span className="font-semibold text-sm" style={{ color: theme.text }}>
-            {lang === 'vi' ? 'Thư viện Trích dẫn' : 'Citation Desk'}
+            {t(lang, 'citationDesk') || 'Citation Desk'}
           </span>
           <span className="text-[10px] px-1.5 py-0.5 rounded-full font-mono" style={{ backgroundColor: theme.accentLight, color: theme.accent }}>
             {sources.length}
@@ -137,18 +136,18 @@ export default function CitationsPanel({
         <div className="flex items-center gap-1.5">
           <button
             onClick={() => setShowAddModal(true)}
-            className="p-1.5 rounded-lg transition-colors flex items-center gap-1 text-xs font-medium"
+            className="p-1.5 rounded-lg transition-colors flex items-center gap-1 text-xs font-medium cursor-pointer"
             style={{ backgroundColor: theme.accent, color: '#ffffff' }}
-            title={lang === 'vi' ? 'Thêm tài liệu' : 'Add Source'}
+            title={t(lang, 'addSource') || 'Add Source'}
           >
             <Plus size={14} />
-            <span className="hidden sm:inline">{lang === 'vi' ? 'Thêm' : 'Add'}</span>
+            <span className="hidden sm:inline">{t(lang, 'add') || 'Add'}</span>
           </button>
           <button
             onClick={handleExportBibtex}
-            className="p-1.5 rounded-lg border transition-colors"
+            className="p-1.5 rounded-lg border transition-colors cursor-pointer"
             style={{ borderColor: theme.border, color: theme.textMuted }}
-            title="Export .bib"
+            title={t(lang, 'exportBibtex') || 'Export .bib'}
           >
             <Download size={14} />
           </button>
@@ -158,7 +157,7 @@ export default function CitationsPanel({
       {/* Style Selector & Search */}
       <div className="p-3 border-b space-y-2.5" style={{ borderColor: theme.border, backgroundColor: theme.background }}>
         <div className="flex items-center justify-between text-xs">
-          <span style={{ color: theme.textMuted }}>{lang === 'vi' ? 'Chuẩn trích dẫn:' : 'Citation Style:'}</span>
+          <span style={{ color: theme.textMuted }}>{t(lang, 'citationStyle') || 'Citation Style:'}</span>
           <CustomSelect
             value={currentStyle}
             onChange={(val) => onChangeStyle(val as CitationStyle)}
@@ -182,7 +181,7 @@ export default function CitationsPanel({
           <Search size={14} className="absolute left-2.5 top-2.5" style={{ color: theme.textFaint }} />
           <input
             type="text"
-            placeholder={lang === 'vi' ? 'Tìm tài liệu...' : 'Search library...'}
+            placeholder={t(lang, 'searchLibrary') || 'Search library...'}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-8 pr-3 py-1.5 rounded-lg border text-xs outline-none"
@@ -197,7 +196,7 @@ export default function CitationsPanel({
           <div className="text-center py-12 px-4 space-y-2" style={{ color: theme.textFaint }}>
             <FileText size={32} className="mx-auto opacity-40" />
             <p className="text-xs font-medium">
-              {searchQuery ? (lang === 'vi' ? 'Không tìm thấy tài liệu' : 'No sources found') : (lang === 'vi' ? 'Thư viện trống. Hãy thêm tài liệu hoặc nhập file BibTeX.' : 'Empty library. Add a source or import BibTeX.')}
+              {searchQuery ? (t(lang, 'noSourcesFound') || 'No sources found') : (t(lang, 'emptyLibrary') || 'Empty library. Add a source or import BibTeX.')}
             </p>
           </div>
         ) : (
@@ -224,27 +223,27 @@ export default function CitationsPanel({
                   <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
                       onClick={() => handleCopyKey(s.key)}
-                      className="p-1 rounded-md border transition-colors"
+                      className="p-1 rounded-md border transition-colors cursor-pointer"
                       style={{ borderColor: theme.border, color: copiedKey === s.key ? '#10b981' : theme.textMuted }}
-                      title={lang === 'vi' ? 'Sao chép mã trích dẫn' : 'Copy citation code'}
+                      title={t(lang, 'copyCitationCode') || 'Copy citation code'}
                     >
                       {copiedKey === s.key ? <Check size={13} className="text-emerald-500" /> : <Copy size={13} />}
                     </button>
                     {onInsertCitationMarker && (
                       <button
                         onClick={() => onInsertCitationMarker(s.key)}
-                        className="px-1.5 py-0.5 rounded text-[10px] font-medium text-white transition-colors"
+                        className="px-1.5 py-0.5 rounded text-[10px] font-medium text-white transition-colors cursor-pointer"
                         style={{ backgroundColor: theme.accent }}
-                        title={lang === 'vi' ? 'Chèn vào bài viết' : 'Insert into editor'}
+                        title={t(lang, 'insertIntoEditor') || 'Insert into editor'}
                       >
                         + Insert
                       </button>
                     )}
                     <button
                       onClick={() => handleDelete(s.id)}
-                      className="p-1 rounded-md border hover:bg-rose-500/10 hover:text-rose-500 transition-colors"
+                      className="p-1 rounded-md border hover:bg-rose-500/10 hover:text-rose-500 transition-colors cursor-pointer"
                       style={{ borderColor: theme.border, color: theme.textFaint }}
-                      title={lang === 'vi' ? 'Xóa' : 'Delete'}
+                      title={t(lang, 'delete') || 'Delete'}
                     >
                       <Trash2 size={13} />
                     </button>
@@ -277,12 +276,12 @@ export default function CitationsPanel({
               <div className="flex items-center gap-2">
                 <BookOpen size={18} style={{ color: theme.accent }} />
                 <h3 className="font-semibold text-sm" style={{ color: theme.text }}>
-                  {lang === 'vi' ? 'Thêm Tài liệu Tham khảo' : 'Add Reference Source'}
+                  {t(lang, 'addReferenceSource') || 'Add Reference Source'}
                 </h3>
               </div>
               <button
                 onClick={() => setShowAddModal(false)}
-                className="text-xs px-2 py-1 rounded-lg border"
+                className="text-xs px-2 py-1 rounded-lg border cursor-pointer"
                 style={{ borderColor: theme.border, color: theme.textMuted }}
               >
                 ✕
@@ -294,18 +293,18 @@ export default function CitationsPanel({
               <button
                 type="button"
                 onClick={() => setActiveTab('library')}
-                className={`flex-1 py-1.5 rounded-md transition-all ${activeTab === 'library' ? 'shadow-xs font-semibold' : ''}`}
+                className={`flex-1 py-1.5 rounded-md transition-all cursor-pointer ${activeTab === 'library' ? 'shadow-xs font-semibold' : ''}`}
                 style={{ backgroundColor: activeTab === 'library' ? theme.surface : 'transparent', color: activeTab === 'library' ? theme.accent : theme.textMuted }}
               >
-                {lang === 'vi' ? 'Nhập Thủ công' : 'Manual Entry'}
+                {t(lang, 'manualEntry') || 'Manual Entry'}
               </button>
               <button
                 type="button"
                 onClick={() => setActiveTab('import')}
-                className={`flex-1 py-1.5 rounded-md transition-all ${activeTab === 'import' ? 'shadow-xs font-semibold' : ''}`}
+                className={`flex-1 py-1.5 rounded-md transition-all cursor-pointer ${activeTab === 'import' ? 'shadow-xs font-semibold' : ''}`}
                 style={{ backgroundColor: activeTab === 'import' ? theme.surface : 'transparent', color: activeTab === 'import' ? theme.accent : theme.textMuted }}
               >
-                {lang === 'vi' ? 'Nhập BibTeX (.bib)' : 'BibTeX / File'}
+                {t(lang, 'bibtexFile') || 'BibTeX / File'}
               </button>
             </div>
 
@@ -313,7 +312,7 @@ export default function CitationsPanel({
               <form onSubmit={handleAddManual} className="space-y-3">
                 <div>
                   <label className="block text-[11px] font-medium mb-1" style={{ color: theme.textMuted }}>
-                    {lang === 'vi' ? 'Tác giả (VD: John Doe)' : 'Author (e.g. John Doe)'}
+                    {t(lang, 'authorPrompt') || 'Author (e.g. John Doe)'}
                   </label>
                   <input
                     type="text"
@@ -327,7 +326,7 @@ export default function CitationsPanel({
 
                 <div>
                   <label className="block text-[11px] font-medium mb-1" style={{ color: theme.textMuted }}>
-                    {lang === 'vi' ? 'Tiêu đề bài báo / sách *' : 'Title *'}
+                    {t(lang, 'titlePrompt') || 'Title *'}
                   </label>
                   <input
                     type="text"
@@ -343,7 +342,7 @@ export default function CitationsPanel({
                 <div className="grid grid-cols-2 gap-2">
                   <div>
                     <label className="block text-[11px] font-medium mb-1" style={{ color: theme.textMuted }}>
-                      {lang === 'vi' ? 'Năm xuất bản' : 'Year'}
+                      {t(lang, 'yearPrompt') || 'Year'}
                     </label>
                     <input
                       type="text"
@@ -356,7 +355,7 @@ export default function CitationsPanel({
                   </div>
                   <div>
                     <label className="block text-[11px] font-medium mb-1" style={{ color: theme.textMuted }}>
-                      {lang === 'vi' ? 'Tạp chí / Nhà XB' : 'Journal / Publisher'}
+                      {t(lang, 'journalPrompt') || 'Journal / Publisher'}
                     </label>
                     <input
                       type="text"
@@ -371,7 +370,7 @@ export default function CitationsPanel({
 
                 <div>
                   <label className="block text-[11px] font-medium mb-1" style={{ color: theme.textMuted }}>
-                    DOI (tuỳ chọn)
+                    {t(lang, 'doiOptional') || 'DOI (optional)'}
                   </label>
                   <input
                     type="text"
@@ -387,17 +386,17 @@ export default function CitationsPanel({
                   <button
                     type="button"
                     onClick={() => setShowAddModal(false)}
-                    className="px-3 py-1.5 rounded-lg border text-xs font-medium"
+                    className="px-3 py-1.5 rounded-lg border text-xs font-medium cursor-pointer"
                     style={{ borderColor: theme.border, color: theme.textMuted }}
                   >
-                    {lang === 'vi' ? 'Hủy' : 'Cancel'}
+                    {t(lang, 'cancel') || 'Cancel'}
                   </button>
                   <button
                     type="submit"
-                    className="px-4 py-1.5 rounded-lg text-xs font-medium text-white shadow-xs"
+                    className="px-4 py-1.5 rounded-lg text-xs font-medium text-white shadow-xs cursor-pointer"
                     style={{ backgroundColor: theme.accent }}
                   >
-                    {lang === 'vi' ? 'Thêm vào Thư viện' : 'Add to Library'}
+                    {t(lang, 'addToLibrary') || 'Add to Library'}
                   </button>
                 </div>
               </form>
@@ -405,7 +404,7 @@ export default function CitationsPanel({
               <div className="space-y-3">
                 <div>
                   <label className="block text-[11px] font-medium mb-1" style={{ color: theme.textMuted }}>
-                    {lang === 'vi' ? 'Tải lên tệp .bib' : 'Upload .bib File'}
+                    {t(lang, 'uploadBibFile') || 'Upload .bib File'}
                   </label>
                   <label
                     className="flex flex-col items-center justify-center p-4 border-2 border-dashed rounded-xl cursor-pointer transition-colors hover:border-blue-500"
@@ -413,7 +412,7 @@ export default function CitationsPanel({
                   >
                     <Upload size={20} style={{ color: theme.accent }} className="mb-1" />
                     <span className="text-xs font-medium" style={{ color: theme.text }}>
-                      {lang === 'vi' ? 'Chọn tệp .bib từ máy' : 'Choose .bib file'}
+                      {t(lang, 'chooseBibFile') || 'Choose .bib file'}
                     </span>
                     <input type="file" accept=".bib" onChange={handleFileUpload} className="hidden" />
                   </label>
@@ -421,13 +420,13 @@ export default function CitationsPanel({
 
                 <div className="relative flex py-2 items-center">
                   <div className="flex-grow border-t" style={{ borderColor: theme.border }}></div>
-                  <span className="flex-shrink mx-4 text-[10px] uppercase font-mono" style={{ color: theme.textFaint }}>or paste bibtex</span>
+                  <span className="flex-shrink mx-4 text-[10px] uppercase font-mono" style={{ color: theme.textFaint }}>{t(lang, 'orPasteBibtex') || 'or paste bibtex'}</span>
                   <div className="flex-grow border-t" style={{ borderColor: theme.border }}></div>
                 </div>
 
                 <div>
                   <label className="block text-[11px] font-medium mb-1" style={{ color: theme.textMuted }}>
-                    BibTeX Content
+                    {t(lang, 'bibtexContent') || 'BibTeX Content'}
                   </label>
                   <textarea
                     rows={5}
@@ -443,18 +442,18 @@ export default function CitationsPanel({
                   <button
                     type="button"
                     onClick={() => setShowAddModal(false)}
-                    className="px-3 py-1.5 rounded-lg border text-xs font-medium"
+                    className="px-3 py-1.5 rounded-lg border text-xs font-medium cursor-pointer"
                     style={{ borderColor: theme.border, color: theme.textMuted }}
                   >
-                    {lang === 'vi' ? 'Hủy' : 'Cancel'}
+                    {t(lang, 'cancel') || 'Cancel'}
                   </button>
                   <button
                     type="button"
                     onClick={handleImportBibtexText}
-                    className="px-4 py-1.5 rounded-lg text-xs font-medium text-white shadow-xs"
+                    className="px-4 py-1.5 rounded-lg text-xs font-medium text-white shadow-xs cursor-pointer"
                     style={{ backgroundColor: theme.accent }}
                   >
-                    {lang === 'vi' ? 'Nhập BibTeX' : 'Import BibTeX'}
+                    {t(lang, 'importBibtex') || 'Import BibTeX'}
                   </button>
                 </div>
               </div>

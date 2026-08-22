@@ -471,7 +471,7 @@ const renderFolder = (folder: Folder, depth = 0) => {
           {onGoHome && (
             <button
               onClick={onGoHome}
-              title="Return to Welcome Screen"
+              title={t(lang, 'returnToWelcome') || 'Return to Welcome Screen'}
               style={{ background: 'none', border: 'none', cursor: 'pointer', color: c.textMuted, padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', width: 18, height: 18, flexShrink: 0 }}
             >
               <Home size={18} />
@@ -480,7 +480,7 @@ const renderFolder = (folder: Folder, depth = 0) => {
           <div 
             style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', flex: 1, overflow: 'hidden' }}
             onClick={() => setShowProjSearch(v => !v)}
-            title="Switch Project"
+            title={t(lang, 'switchProject') || 'Switch Project'}
           >
             <div style={{ position: 'relative', width: 18, height: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               <FolderIcon size={18} style={{ color: c.accent, fill: c.accent, opacity: 0.2, position: 'absolute' }} />
@@ -534,7 +534,7 @@ const renderFolder = (folder: Folder, depth = 0) => {
                 <div style={{ flex: 1 }} />
                 <button
                   type="button"
-                  title="Rename Project"
+                  title={t(lang, 'renameProject') || 'Rename Project'}
                   onClick={() => { setRenamingProjId(activeProjectId); setProjRenameVal(activeProject?.title || '') }}
                   style={{ background: 'none', border: 'none', cursor: 'pointer', color: c.textFaint, padding: '3px' }}
                 >
@@ -543,7 +543,7 @@ const renderFolder = (folder: Folder, depth = 0) => {
                 {projectsProp.length > 1 && (
                   <button
                     type="button"
-                    title="Delete Project"
+                    title={t(lang, 'deleteProject') || 'Delete Project'}
                     onClick={() => { if (window.confirm('Delete project?')) onDeleteProject(activeProjectId) }}
                     style={{ background: 'none', border: 'none', cursor: 'pointer', color: c.textFaint, padding: '3px' }}
                   >
@@ -571,9 +571,9 @@ const renderFolder = (folder: Folder, depth = 0) => {
             )}
           </div>
           <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
-            <button onClick={onNewProject} style={{ flex: 1, padding: '6px', background: c.accentLight, color: c.accent, borderRadius: 6, fontSize: '0.75rem', fontWeight: 500, border: 'none', cursor: 'pointer' }}>+ New Project</button>
+            <button onClick={onNewProject} style={{ flex: 1, padding: '6px', background: c.accentLight, color: c.accent, borderRadius: 6, fontSize: '0.75rem', fontWeight: 500, border: 'none', cursor: 'pointer' }}>+ {t(lang, 'newProject') || 'New Project'}</button>
             <button onClick={handleLeftPanelImport} style={{ flex: 1, padding: '6px', background: c.bg, color: c.text, border: `1px solid ${c.borderFaint}`, borderRadius: 6, fontSize: '0.75rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
-              <Upload size={12} /> Import
+              <Upload size={12} /> {t(lang, 'importFile') || 'Import'}
             </button>
           </div>
         </div>
@@ -588,7 +588,7 @@ const renderFolder = (folder: Folder, depth = 0) => {
           style={{ backgroundColor: (props.leftSidebarMainTab || 'files') === 'files' ? c.accentLight : 'transparent', color: (props.leftSidebarMainTab || 'files') === 'files' ? c.accent : c.textMuted }}
         >
           <FileText size={13} />
-          <span>Files</span>
+          <span>{t(lang, 'files') || 'Files'}</span>
         </button>
         <button
           type="button"
@@ -597,7 +597,7 @@ const renderFolder = (folder: Folder, depth = 0) => {
           style={{ backgroundColor: props.leftSidebarMainTab === 'footnotes' ? c.accentLight : 'transparent', color: props.leftSidebarMainTab === 'footnotes' ? c.accent : c.textMuted }}
         >
           <Bookmark size={13} />
-          <span>Footnotes</span>
+          <span>{t(lang, 'footnotes') || 'Footnotes'}</span>
         </button>
         <button
           type="button"
@@ -606,7 +606,7 @@ const renderFolder = (folder: Folder, depth = 0) => {
           style={{ backgroundColor: props.leftSidebarMainTab === 'citations' ? c.accentLight : 'transparent', color: props.leftSidebarMainTab === 'citations' ? c.accent : c.textMuted }}
         >
           <BookOpen size={13} />
-          <span>Citations</span>
+          <span>{t(lang, 'citations') || 'Citations'}</span>
         </button>
       </div>
 

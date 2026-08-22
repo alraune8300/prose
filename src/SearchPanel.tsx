@@ -46,7 +46,7 @@ export default function SearchPanel({ c, uiFont, lang, }: SearchPanelProps) {
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
           <Search size={16} color={c.textFaint} />
           <span style={{ fontFamily: uiFont, fontSize: '0.9rem', color: c.text }}>{t(lang, 'find')}</span>
-          <span style={{ fontFamily: uiFont, fontSize: '0.75rem', color: c.textFaint, marginLeft: 'auto' }}>
+          <span style={{ fontFamily: uiFont, fontSize: '0.75rem', color: c.textFaint, marginLeft: 'auto', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '120px', textAlign: 'right' }}>
             {findText ? (resultsCount > 0 ? (resultsCount === 1 ? t(lang, 'resultCount').replace('{count}', '1') : t(lang, 'resultsCount').replace('{count}', String(resultsCount))) : t(lang, 'noResults')) : ''}
           </span>
         </div>
@@ -130,10 +130,10 @@ export default function SearchPanel({ c, uiFont, lang, }: SearchPanelProps) {
             window.dispatchEvent(new CustomEvent('kgv-search-replace', { detail: { find: findText, replace: replaceText, matchCase, wholeWord, regex, all: false } }));
           }}
           style={{
-            flex: 1, padding: '10px 0', borderRadius: 12,
+            flex: 1, padding: '8px 4px', borderRadius: 10,
             background: c.surface, border: `1px solid ${c.borderFaint}`,
-            color: c.textMuted, fontFamily: uiFont, fontSize: '0.9rem',
-            cursor: 'pointer', fontWeight: 500,
+            color: c.textMuted, fontFamily: uiFont, fontSize: '0.8rem',
+            cursor: 'pointer', fontWeight: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', lineHeight: 1.25
           }}
         >
           {t(lang, 'replace')}
@@ -143,10 +143,10 @@ export default function SearchPanel({ c, uiFont, lang, }: SearchPanelProps) {
             window.dispatchEvent(new CustomEvent('kgv-search-replace', { detail: { find: findText, replace: replaceText, matchCase, wholeWord, regex, all: true } }));
           }}
           style={{
-            flex: 1, padding: '10px 0', borderRadius: 12,
+            flex: 1, padding: '8px 4px', borderRadius: 10,
             background: c.surface, border: `1px solid ${c.borderFaint}`,
-            color: c.textMuted, fontFamily: uiFont, fontSize: '0.9rem',
-            cursor: 'pointer', fontWeight: 500,
+            color: c.textMuted, fontFamily: uiFont, fontSize: '0.8rem',
+            cursor: 'pointer', fontWeight: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', lineHeight: 1.25
           }}
         >
           {t(lang, 'replaceAll')}
@@ -158,10 +158,10 @@ export default function SearchPanel({ c, uiFont, lang, }: SearchPanelProps) {
             window.dispatchEvent(new CustomEvent('kgv-search-replace', { detail: { find: findText, replace: '', matchCase, wholeWord, regex, all: false, isDelete: true } }));
           }}
           style={{
-            flex: 1, padding: '10px 0', borderRadius: 12,
+            flex: 1, padding: '8px 4px', borderRadius: 10,
             background: '#ef444420', border: `1px solid #ef444450`,
-            color: '#ef4444', fontFamily: uiFont, fontSize: '0.9rem',
-            cursor: 'pointer', fontWeight: 500,
+            color: '#ef4444', fontFamily: uiFont, fontSize: '0.8rem',
+            cursor: 'pointer', fontWeight: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', lineHeight: 1.25
           }}
         >
           {t(lang, 'delete')}
@@ -171,10 +171,10 @@ export default function SearchPanel({ c, uiFont, lang, }: SearchPanelProps) {
             window.dispatchEvent(new CustomEvent('kgv-search-replace', { detail: { find: findText, replace: '', matchCase, wholeWord, regex, all: true, isDelete: true } }));
           }}
           style={{
-            flex: 1, padding: '10px 0', borderRadius: 12,
+            flex: 1, padding: '8px 4px', borderRadius: 10,
             background: '#ef444420', border: `1px solid #ef444450`,
-            color: '#ef4444', fontFamily: uiFont, fontSize: '0.9rem',
-            cursor: 'pointer', fontWeight: 500,
+            color: '#ef4444', fontFamily: uiFont, fontSize: '0.8rem',
+            cursor: 'pointer', fontWeight: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', lineHeight: 1.25
           }}
         >
           {t(lang, 'deleteAll')}
@@ -183,11 +183,11 @@ export default function SearchPanel({ c, uiFont, lang, }: SearchPanelProps) {
 
       <div style={{ marginTop: 12 }}>
         <SectionLabel label={t(lang, 'searchOptions')} />
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginTop: 16 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginTop: 14 }}>
           <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}>
-            <span style={{ fontFamily: uiFont, fontSize: '0.9rem', color: c.textMuted }}>{t(lang, 'matchCase')}</span>
+            <span style={{ fontFamily: uiFont, fontSize: '0.82rem', color: c.textMuted, flex: 1, paddingRight: 10, textAlign: 'left', lineHeight: 1.35 }}>{t(lang, 'matchCase')}</span>
             <div style={{
-              width: 44, height: 24, borderRadius: 12,
+              width: 44, height: 24, borderRadius: 12, flexShrink: 0,
               background: matchCase ? c.accent : 'transparent',
               border: `1px solid ${matchCase ? c.accent : c.borderFaint}`,
               position: 'relative', transition: 'all 0.2s',
@@ -202,9 +202,9 @@ export default function SearchPanel({ c, uiFont, lang, }: SearchPanelProps) {
             <input type="checkbox" checked={matchCase} onChange={e => setMatchCase(e.target.checked)} style={{ display: 'none' }} />
           </label>
           <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}>
-            <span style={{ fontFamily: uiFont, fontSize: '0.9rem', color: c.textMuted }}>{t(lang, 'wholeWordsOnly')}</span>
+            <span style={{ fontFamily: uiFont, fontSize: '0.82rem', color: c.textMuted, flex: 1, paddingRight: 10, textAlign: 'left', lineHeight: 1.35 }}>{t(lang, 'wholeWordsOnly')}</span>
             <div style={{
-              width: 44, height: 24, borderRadius: 12,
+              width: 44, height: 24, borderRadius: 12, flexShrink: 0,
               background: wholeWord ? c.accent : 'transparent',
               border: `1px solid ${wholeWord ? c.accent : c.borderFaint}`,
               position: 'relative', transition: 'all 0.2s',
@@ -219,9 +219,9 @@ export default function SearchPanel({ c, uiFont, lang, }: SearchPanelProps) {
             <input type="checkbox" checked={wholeWord} onChange={e => setWholeWord(e.target.checked)} style={{ display: 'none' }} />
           </label>
           <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}>
-            <span style={{ fontFamily: uiFont, fontSize: '0.9rem', color: c.textMuted }}>{t(lang, 'useRegex')}</span>
+            <span style={{ fontFamily: uiFont, fontSize: '0.82rem', color: c.textMuted, flex: 1, paddingRight: 10, textAlign: 'left', lineHeight: 1.35 }}>{t(lang, 'useRegex')}</span>
             <div style={{
-              width: 44, height: 24, borderRadius: 12,
+              width: 44, height: 24, borderRadius: 12, flexShrink: 0,
               background: regex ? c.accent : 'transparent',
               border: `1px solid ${regex ? c.accent : c.borderFaint}`,
               position: 'relative', transition: 'all 0.2s',

@@ -358,8 +358,8 @@ export default function FlashcardStudio({
             <Brain size={22} />
           </div>
           <div>
-            <h1 className="text-base font-semibold tracking-tight">Flashcard Studio & Spaced Repetition</h1>
-            <p className="text-xs opacity-70">Transform document blocks into smart 3D SRS flashcards</p>
+            <h1 className="text-base font-semibold tracking-tight">{t(lang, 'flashcardStudioAndSRS') || 'Flashcard Studio & Spaced Repetition'}</h1>
+            <p className="text-xs opacity-70">{t(lang, 'flashcardStudioDesc') || 'Transform document blocks into smart 3D SRS flashcards'}</p>
           </div>
         </div>
 
