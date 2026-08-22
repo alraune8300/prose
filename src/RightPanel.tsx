@@ -207,14 +207,111 @@ function RightPanel(props: Record<string, unknown>) {
   const title: string = (props.title as string) || (activeDoc?.title as string) || 'Untitled'
   const availableFontNames: string[] = (props.availableFontNames as string[]) || ['Merriweather', 'Lora', 'Playfair Display', 'EB Garamond', 'Libre Baskerville', 'Source Sans 3', 'Inter', 'DM Sans', 'JetBrains Mono']
 
-  const [timerSet, setTimerSet] = useState(25)
-  const [timerLeft, setTimerLeft] = useState(25 * 60)
-  const [timerOn, setTimerOn] = useState(false)
-  const [timerDone, setTimerDone] = useState(false)
+  const [timerMode, setTimerMode] = useState<'pomodoro' | 'deepwork' | 'stopwatch' | 'custom'>('pomodoro');
+  const [timerSet, setTimerSet] = useState(25);
+  const [timerLeft, setTimerLeft] = useState(25 * 60);
+  const [timerOn, setTimerOn] = useState(false);
+  const [timerDone, setTimerDone] = useState(false);
+  const [isMinimized, setIsMinimized] = useState(false);
+  const [flowToast, setFlowToast] = useState<string | null>(null);
 
-  const onTimerSetChange = (props.onTimerSetChange as ((v: number) => void)) || ((v: number) => { setTimerSet(v); setTimerLeft(v * 60); setTimerDone(false) })
-  const onTimerToggle = (props.onTimerToggle as (() => void)) || (() => setTimerOn(v => !v))
-  const onTimerReset = (props.onTimerReset as (() => void)) || (() => { setTimerLeft(timerSet * 60); setTimerOn(false); setTimerDone(false) })
+  // Daily focus stats persistence in localStorage
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const [dailyStats, setDailyStats] = useState<{ date: string; totalMinutes: number; sessionsCount: number }>(() => {
+    try {
+      const saved = localStorage.getItem('kgv_focus_stats_v2');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.date === todayStr) return parsed;
+      }
+    } catch (e) { console.error(e); }
+    return { date: todayStr, totalMinutes: 0, sessionsCount: 0 };
+  });
+
+  const lastTypingTimeRef = useRef<number>(0);
+  const typingCountRef = useRef<number>(0);
+
+  // Keyboard listener for Flow Shield
+  useEffect(() => {
+    const handleKeyDown = () => {
+      lastTypingTimeRef.current = Date.now();
+      typingCountRef.current += 1;
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  // Timer interval ticker
+  useEffect(() => {
+    if (!timerOn) return;
+    const interval = setInterval(() => {
+      if (timerMode === 'stopwatch') {
+        setTimerLeft(prev => prev + 1);
+      } else {
+        setTimerLeft(prev => {
+          if (prev > 1) return prev - 1;
+          // Reached 00:00
+          const timeSinceLastTyping = Date.now() - lastTypingTimeRef.current;
+          const isTypingInFlow = lastTypingTimeRef.current > 0 && timeSinceLastTyping < 25000 && typingCountRef.current > 2;
+
+          if (isTypingInFlow) {
+            // Flow Shield triggered! Extend +1:45 (105 seconds)
+            setFlowToast("🛡️ Flow Shield activated: Extended +1:45 (Flow)");
+            setTimeout(() => setFlowToast(null), 5000);
+            return 105;
+          } else {
+            // Normal completion
+            setTimerDone(true);
+            setTimerOn(false);
+            const sessionMins = timerMode === 'deepwork' ? 50 : timerMode === 'pomodoro' ? 25 : timerSet;
+            setDailyStats(curr => {
+              const updated = {
+                date: todayStr,
+                totalMinutes: curr.totalMinutes + sessionMins,
+                sessionsCount: curr.sessionsCount + 1,
+              };
+              try {
+                localStorage.setItem('kgv_focus_stats_v2', JSON.stringify(updated));
+              } catch (e) { console.error(e); }
+              return updated;
+            });
+            return 0;
+          }
+        });
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [timerOn, timerMode, timerSet, todayStr]);
+
+  const handleSelectPreset = (mode: 'pomodoro' | 'deepwork' | 'stopwatch') => {
+    setTimerMode(mode);
+    setTimerDone(false);
+    setTimerOn(false);
+    if (mode === 'pomodoro') {
+      setTimerSet(25);
+      setTimerLeft(25 * 60);
+    } else if (mode === 'deepwork') {
+      setTimerSet(50);
+      setTimerLeft(50 * 60);
+    } else if (mode === 'stopwatch') {
+      setTimerSet(0);
+      setTimerLeft(0);
+    }
+  };
+
+  const onTimerSetChange = (v: number) => {
+    setTimerMode('custom');
+    setTimerSet(v);
+    setTimerLeft(v * 60);
+    setTimerDone(false);
+  };
+
+  const onTimerToggle = () => setTimerOn(v => !v);
+  const onTimerReset = () => {
+    setTimerLeft(timerMode === 'stopwatch' ? 0 : timerSet * 60);
+    setTimerOn(false);
+    setTimerDone(false);
+  };
 
   const [hue, setHue] = useState(210)
   const onHueChange = (props.onHueChange as ((h: number) => void)) || ((h: number) => setHue(h))
@@ -269,8 +366,6 @@ function RightPanel(props: Record<string, unknown>) {
     if (e.target) e.target.value = ''
   }
 
-  const timerMin = Math.floor(timerLeft / 60)
-  const timerSec = timerLeft % 60
   const timerProgress = timerSet > 0 ? (timerSet * 60 - timerLeft) / (timerSet * 60) : 0
   const R = 52
   const CIRC = 2 * Math.PI * R
@@ -1016,9 +1111,63 @@ ${content.split('\n\n').map(para => {
 
         {/* TIMER PANEL */}
         {panel === 'timer' && (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 8 }}>
-            {/* Ring */}
-            <div style={{ position: 'relative', width: 134, height: 134, marginBottom: 20 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 4, width: '100%' }}>
+            {/* Flow Shield Toast */}
+            {flowToast && (
+              <div style={{
+                background: c.accentLight, border: `1px solid ${c.accent}`, color: c.accent,
+                padding: '6px 10px', borderRadius: 8, fontSize: '0.74rem', fontWeight: 600,
+                marginBottom: 12, textAlign: 'center', width: '100%', animation: 'fadeIn 0.3s ease'
+              }}>
+                {flowToast}
+              </div>
+            )}
+
+            {/* Presets & Mode Selector */}
+            <div style={{ display: 'flex', gap: 4, marginBottom: 16, background: c.isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)', padding: 3, borderRadius: 8, width: '100%', justifyContent: 'center' }}>
+              <button
+                onClick={() => handleSelectPreset('pomodoro')}
+                style={{
+                  flex: 1, padding: '5px 6px', borderRadius: 6, border: 'none', cursor: 'pointer',
+                  background: timerMode === 'pomodoro' ? c.surface : 'transparent',
+                  color: timerMode === 'pomodoro' ? c.accent : c.textMuted,
+                  fontFamily: uiFont, fontSize: '0.7rem', fontWeight: timerMode === 'pomodoro' ? 700 : 500,
+                  boxShadow: timerMode === 'pomodoro' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+                  transition: 'all 0.15s'
+                }}
+              >
+                Pomodoro (25m)
+              </button>
+              <button
+                onClick={() => handleSelectPreset('deepwork')}
+                style={{
+                  flex: 1, padding: '5px 6px', borderRadius: 6, border: 'none', cursor: 'pointer',
+                  background: timerMode === 'deepwork' ? c.surface : 'transparent',
+                  color: timerMode === 'deepwork' ? c.accent : c.textMuted,
+                  fontFamily: uiFont, fontSize: '0.7rem', fontWeight: timerMode === 'deepwork' ? 700 : 500,
+                  boxShadow: timerMode === 'deepwork' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+                  transition: 'all 0.15s'
+                }}
+              >
+                Deep Work (50m)
+              </button>
+              <button
+                onClick={() => handleSelectPreset('stopwatch')}
+                style={{
+                  flex: 1, padding: '5px 6px', borderRadius: 6, border: 'none', cursor: 'pointer',
+                  background: timerMode === 'stopwatch' ? c.surface : 'transparent',
+                  color: timerMode === 'stopwatch' ? c.accent : c.textMuted,
+                  fontFamily: uiFont, fontSize: '0.7rem', fontWeight: timerMode === 'stopwatch' ? 700 : 500,
+                  boxShadow: timerMode === 'stopwatch' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+                  transition: 'all 0.15s'
+                }}
+              >
+                Stopwatch
+              </button>
+            </div>
+
+            {/* Ring / Clock Display */}
+            <div style={{ position: 'relative', width: 134, height: 134, marginBottom: 16 }}>
               <svg width={134} height={134} style={{ transform: 'rotate(-90deg)' }}>
                 <circle cx={67} cy={67} r={R} fill="none" stroke={c.borderFaint} strokeWidth={6} />
                 <circle
@@ -1026,7 +1175,7 @@ ${content.split('\n\n').map(para => {
                   stroke={timerDone ? '#4caf72' : c.accent}
                   strokeWidth={6} strokeLinecap="round"
                   strokeDasharray={CIRC}
-                  strokeDashoffset={CIRC * (1 - (timerDone ? 1 : timerProgress))}
+                  strokeDashoffset={timerMode === 'stopwatch' ? 0 : CIRC * (1 - (timerDone ? 1 : timerProgress))}
                   style={{ transition: 'stroke-dashoffset 0.9s ease, stroke 0.4s' }}
                 />
               </svg>
@@ -1035,16 +1184,16 @@ ${content.split('\n\n').map(para => {
                   <span style={{ fontFamily: uiFont, fontSize: '0.9rem', color: '#4caf72', fontWeight: 600 }}>{t(lang, 'done')}</span>
                 ) : (
                   <span style={{ fontFamily: monoFont, fontSize: '1.38rem', fontWeight: 500, color: c.text, letterSpacing: '0.02em' }}>
-                    {String(timerMin).padStart(2, '0')}:{String(timerSec).padStart(2, '0')}
+                    {String(Math.floor(timerLeft / 60)).padStart(2, '0')}:{String(timerLeft % 60).padStart(2, '0')}
                   </span>
                 )}
               </div>
             </div>
 
             {timerDone ? (
-              <div style={{ textAlign: 'center' }}>
-                <p style={{ fontFamily: `'Lora', serif`, fontSize: '0.9rem', color: c.textMuted, marginBottom: 12, fontStyle: 'italic' }}>
-                  Session complete.
+              <div style={{ textAlign: 'center', marginBottom: 16 }}>
+                <p style={{ fontFamily: uiFont, fontSize: '0.85rem', color: c.textMuted, marginBottom: 12 }}>
+                  ✨ Focus session completed! Stats updated.
                 </p>
                 <button onClick={onTimerReset}
                   style={{
@@ -1054,24 +1203,25 @@ ${content.split('\n\n').map(para => {
                     cursor: 'pointer',
                   }}
                 >
-                  Reset
+                  Reset Timer
                 </button>
               </div>
             ) : (
               <>
-                <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 16 }}>
+                <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 14 }}>
                   <button onClick={onTimerToggle}
                     style={{
-                      width: 44, height: 44, borderRadius: '50%',
+                      padding: '8px 24px', borderRadius: 20,
                       background: c.accent, color: c.isDark ? c.bg : 'white', border: 'none',
-                      fontSize: '1rem', cursor: 'pointer',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontFamily: uiFont, fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', gap: 6,
+                      boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
                       transition: 'opacity 0.15s',
                     }}
                     onMouseEnter={e => (e.currentTarget.style.opacity = '0.84')}
                     onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
                   >
-                    {timerOn ? 'Pause' : 'Play'}
+                    {timerOn ? 'Pause' : 'Start Focus'}
                   </button>
                   <button onClick={onTimerReset}
                     style={{
@@ -1083,34 +1233,109 @@ ${content.split('\n\n').map(para => {
                     }}
                     onMouseEnter={e => (e.currentTarget.style.borderColor = c.accentMid)}
                     onMouseLeave={e => (e.currentTarget.style.borderColor = c.border)}
+                    title="Reset timer"
                   >
                     ↺
                   </button>
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                  <span style={{ fontFamily: uiFont, fontSize: '0.76rem', color: c.textMuted }}>{t(lang, 'duration')}</span>
-                  <input
-                    type="number" min={1} max={120} value={timerSet}
-                    onChange={e => onTimerSetChange(Math.max(1, Math.min(120, Number(e.target.value))))}
-                    style={{
-                      width: 52, padding: '4px 7px', borderRadius: 6,
-                      border: `1px solid ${c.border}`,
-                      fontFamily: monoFont, fontSize: '0.82rem', color: c.text,
-                      background: c.surface, textAlign: 'center', outline: 'none',
-                    }}
-                  />
-                  <span style={{ fontFamily: uiFont, fontSize: '0.76rem', color: c.textMuted }}>{t(lang, 'min')}</span>
-                </div>
+                {timerMode !== 'stopwatch' && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+                    <span style={{ fontFamily: uiFont, fontSize: '0.76rem', color: c.textMuted }}>{t(lang, 'duration')}</span>
+                    <input
+                      type="number" min={1} max={180} value={timerSet}
+                      onChange={e => onTimerSetChange(Math.max(1, Math.min(180, Number(e.target.value))))}
+                      style={{
+                        width: 52, padding: '4px 7px', borderRadius: 6,
+                        border: `1px solid ${c.border}`,
+                        fontFamily: monoFont, fontSize: '0.82rem', color: c.text,
+                        background: c.surface, textAlign: 'center', outline: 'none',
+                      }}
+                    />
+                    <span style={{ fontFamily: uiFont, fontSize: '0.76rem', color: c.textMuted }}>{t(lang, 'min')}</span>
+                  </div>
+                )}
 
                 {timerOn && (
-                  <p style={{ fontFamily: uiFont, fontSize: '0.72rem', color: c.accent, textAlign: 'center' }}>
-                    Focus session in progress
+                  <p style={{ fontFamily: uiFont, fontSize: '0.72rem', color: c.accent, textAlign: 'center', marginBottom: 10 }}>
+                    🛡️ Flow Shield active (protecting your focus stream)
                   </p>
                 )}
               </>
             )}
+
+            {/* Daily Focus Dashboard */}
+            <div style={{
+              width: '100%', marginTop: 'auto', paddingTop: 12, borderTop: `1px solid ${c.borderFaint}`,
+              display: 'flex', flexDirection: 'column', gap: 6
+            }}>
+              <span style={{ fontFamily: uiFont, fontSize: '0.68rem', fontWeight: 700, textTransform: 'uppercase', color: c.textFaint, letterSpacing: '0.08em' }}>
+                Daily Focus Dashboard
+              </span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
+                <div style={{ flex: 1, background: c.isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', padding: '8px 10px', borderRadius: 8, border: `1px solid ${c.borderFaint}` }}>
+                  <div style={{ fontFamily: uiFont, fontSize: '0.65rem', color: c.textMuted }}>Total Time</div>
+                  <div style={{ fontFamily: monoFont, fontSize: '0.95rem', fontWeight: 700, color: c.text, marginTop: 2 }}>
+                    {Math.floor(dailyStats.totalMinutes / 60)}h {dailyStats.totalMinutes % 60}m
+                  </div>
+                </div>
+                <div style={{ flex: 1, background: c.isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)', padding: '8px 10px', borderRadius: 8, border: `1px solid ${c.borderFaint}` }}>
+                  <div style={{ fontFamily: uiFont, fontSize: '0.65rem', color: c.textMuted }}>Sessions</div>
+                  <div style={{ fontFamily: monoFont, fontSize: '0.95rem', fontWeight: 700, color: c.accent, marginTop: 2 }}>
+                    {dailyStats.sessionsCount} completed
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Minimize to Slim Bar button */}
+            <button
+              onClick={() => setIsMinimized(true)}
+              style={{
+                marginTop: 10, background: 'none', border: 'none', cursor: 'pointer',
+                fontFamily: uiFont, fontSize: '0.7rem', color: c.textMuted, textDecoration: 'underline',
+              }}
+            >
+              Minimize to Bottom Bar (2px)
+            </button>
           </div>
+        )}
+
+        {/* Minimized Slim Bar Widget */}
+        {isMinimized && (
+          <>
+            <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, height: 3, background: c.borderFaint, zIndex: 9999 }}>
+              <div style={{
+                height: '100%', background: c.accent, width: `${timerMode === 'stopwatch' ? 100 : (timerProgress * 100)}%`,
+                transition: 'width 0.5s linear'
+              }} />
+            </div>
+            <div style={{
+              position: 'fixed', bottom: 12, right: 12, zIndex: 9999,
+              background: c.surface, border: `1px solid ${c.border}`, borderRadius: 20,
+              padding: '6px 14px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+              display: 'flex', alignItems: 'center', gap: 10, fontFamily: uiFont, fontSize: '0.78rem',
+              color: c.text
+            }}>
+              <span style={{ fontWeight: 600, color: c.accent }}>⏱️</span>
+              <span style={{ fontFamily: monoFont, fontWeight: 600 }}>
+                {String(Math.floor(timerLeft / 60)).padStart(2, '0')}:{String(timerLeft % 60).padStart(2, '0')}
+              </span>
+              <button
+                onClick={onTimerToggle}
+                style={{ background: c.accent, color: '#fff', border: 'none', padding: '2px 8px', borderRadius: 10, fontSize: '0.7rem', cursor: 'pointer', fontWeight: 600 }}
+              >
+                {timerOn ? 'Pause' : 'Play'}
+              </button>
+              <button
+                onClick={() => setIsMinimized(false)}
+                style={{ background: 'none', border: 'none', color: c.textMuted, cursor: 'pointer', fontSize: '0.8rem' }}
+                title="Restore timer panel"
+              >
+                ✕
+              </button>
+            </div>
+          </>
         )}
 
         {/* IMPORT/EXPORT PANEL */}
