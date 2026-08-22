@@ -1,6 +1,9 @@
 export type Lang = 'en' | 'vi' | 'fr' | 'de' | 'it' | 'es' | 'ko' | 'zh' | 'ja'
 
 interface Strings {
+  previewMode?: string
+  focusMode?: string
+  blockView?: string
   goodMorning: string
   goodAfternoon: string
   goodEvening: string
@@ -299,6 +302,10 @@ interface Strings {
   smartQuotes: string
   smartDashes: string
   smartFractions: string
+  characters?: string
+  readingTime?: string
+  blockViewDesc?: string
+  exitBlockView?: string
 }
 
 export const translations: { en: Strings } & Record<Lang, Partial<Strings>> = {
@@ -404,7 +411,10 @@ export const translations: { en: Strings } & Record<Lang, Partial<Strings>> = {
     reset: 'Reset',
     focusTimer: 'Focus timer',
     preview2: 'Preview',
-    pageOf: 'of',
+    previewMode: 'Preview Mode',
+    focusMode: 'Focus Mode',
+    blockView: 'Block View',
+pageOf: 'of',
     readTime: 'min read',
     print: 'Print',
     close: 'Close',
@@ -607,6 +617,11 @@ export const translations: { en: Strings } & Record<Lang, Partial<Strings>> = {
     smartQuotes: 'Smart quotes (“ ” ‘ ’)',
     smartDashes: 'Smart dashes (-- to —)',
     smartFractions: 'Fractions (1/2 to ½)',
+    blockView: 'Block View',
+    blockViewDesc: 'Drag to reorder. Click text to edit. Format with toolbar.',
+    exitBlockView: 'Exit Block View',
+    characters: 'Characters',
+    readingTime: 'Reading time',
   },
   vi: {
     goodMorning: 'Chào buổi sáng',
@@ -710,7 +725,10 @@ export const translations: { en: Strings } & Record<Lang, Partial<Strings>> = {
     reset: 'Đặt lại',
     focusTimer: 'Hẹn giờ tập trung',
     preview2: 'Xem trước',
-    pageOf: 'trong',
+    previewMode: 'Chế độ xem trước',
+    focusMode: 'Chế độ tập trung',
+    blockView: 'Góc nhìn khối',
+pageOf: 'trong',
     readTime: 'phút đọc',
     print: 'In',
     close: 'Đóng',
@@ -913,6 +931,11 @@ export const translations: { en: Strings } & Record<Lang, Partial<Strings>> = {
     smartQuotes: 'Dấu ngoặc kép thông minh (“ ” ‘ ’)',
     smartDashes: 'Dấu gạch ngang thông minh (-- thành —)',
     smartFractions: 'Phân số tự động (1/2 thành ½)',
+    blockView: 'Chế độ khối',
+    blockViewDesc: 'Kéo thả để sắp xếp lại. Nhấp vào chữ để chỉnh sửa. Định dạng bằng thanh công cụ.',
+    exitBlockView: 'Thoát chế độ khối',
+    characters: 'Ký tự',
+    readingTime: 'Thời gian đọc',
   },
   fr: {
     goodMorning: 'Bonjour',
@@ -1013,7 +1036,10 @@ exitFocusMode: 'Quitter le mode focus',    exitPreviewMode: 'Quitter l\'aperçu'
     reset: 'Réinitialiser',
     focusTimer: 'Minuteur de concentration',
     preview2: 'Aperçu',
-    pageOf: 'de',
+    previewMode: 'Mode Aperçu',
+    focusMode: 'Mode Focus',
+    blockView: 'Vue en Bloc',
+pageOf: 'de',
     readTime: 'min de lecture',
     print: 'Imprimer',
     close: 'Fermer',
@@ -1177,6 +1203,11 @@ exitFocusMode: 'Quitter le mode focus',    exitPreviewMode: 'Quitter l\'aperçu'
     smartQuotes: 'Guillemets typographiques (“ ” ‘ ’)',
     smartDashes: 'Tirets cadratins (-- en —)',
     smartFractions: 'Fractions automatiques (1/2 en ½)',
+    blockView: 'Vue par blocs',
+    blockViewDesc: 'Glisser pour réorganiser. Cliquer pour modifier. Formater avec la barre.',
+    exitBlockView: 'Quitter la vue par blocs',
+    characters: 'Caractères',
+    readingTime: 'Temps de lecture',
   },
   de: {
     goodMorning: 'Guten Morgen',
@@ -1278,7 +1309,10 @@ exitFocusMode: 'Quitter le mode focus',    exitPreviewMode: 'Quitter l\'aperçu'
     reset: 'Zurücksetzen',
     focusTimer: 'Fokus-Timer',
     preview2: 'Vorschau',
-    pageOf: 'von',
+    previewMode: 'Vorschaumodus',
+    focusMode: 'Fokusmodus',
+    blockView: 'Blockansicht',
+pageOf: 'von',
     readTime: 'Min. Lesezeit',
     print: 'Drucken',
     close: 'Schließen',
@@ -1442,6 +1476,11 @@ exitFocusMode: 'Quitter le mode focus',    exitPreviewMode: 'Quitter l\'aperçu'
     smartQuotes: 'Typografische Anführungszeichen (“ ” ‘ ’)',
     smartDashes: 'Gedankenstriche (-- zu —)',
     smartFractions: 'Brüche automatisch (1/2 zu ½)',
+    blockView: 'Block-Ansicht',
+    blockViewDesc: 'Ziehen zum Neuanordnen. Text zum Bearbeiten anklicken. Formatieren mit der Symbolleiste.',
+    exitBlockView: 'Block-Ansicht verlassen',
+    characters: 'Zeichen',
+    readingTime: 'Lesezeit',
   },
   it: {
     goodMorning: 'Buongiorno',
@@ -1543,7 +1582,10 @@ exitFocusMode: 'Quitter le mode focus',    exitPreviewMode: 'Quitter l\'aperçu'
     reset: 'Ripristina',
     focusTimer: 'Timer concentrazione',
     preview2: 'Anteprima',
-    pageOf: 'di',
+    previewMode: 'Modalità Anteprima',
+    focusMode: 'Modalità Focus',
+    blockView: 'Vista a Blocchi',
+pageOf: 'di',
     readTime: 'min di lettura',
     print: 'Stampa',
     close: 'Chiudi',
@@ -1707,6 +1749,11 @@ exitFocusMode: 'Quitter le mode focus',    exitPreviewMode: 'Quitter l\'aperçu'
     smartQuotes: 'Virgolette intelligenti (“ ” ‘ ’)',
     smartDashes: 'Trattini intelligenti (-- in —)',
     smartFractions: 'Frazioni automatiche (1/2 in ½)',
+    blockView: 'Vista a blocchi',
+    blockViewDesc: 'Trascina per riordinare. Clicca sul testo per modificare. Formatta con la barra.',
+    exitBlockView: 'Esci dalla vista a blocchi',
+    characters: 'Caratteri',
+    readingTime: 'Tempo di lettura',
   },
   es: {
     goodMorning: 'Buenos días',
@@ -1808,7 +1855,10 @@ exitFocusMode: 'Quitter le mode focus',    exitPreviewMode: 'Quitter l\'aperçu'
     reset: 'Restablecer',
     focusTimer: 'Temporizador de concentración',
     preview2: 'Vista previa',
-    pageOf: 'de',
+    previewMode: 'Modo Vista Previa',
+    focusMode: 'Modo Concentración',
+    blockView: 'Vista de Bloques',
+pageOf: 'de',
     readTime: 'min de lectura',
     print: 'Imprimir',
     close: 'Cerrar',
@@ -1972,6 +2022,11 @@ exitFocusMode: 'Quitter le mode focus',    exitPreviewMode: 'Quitter l\'aperçu'
     smartQuotes: 'Comillas tipográficas (“ ” ‘ ’)',
     smartDashes: 'Guiones tipográficos (-- a —)',
     smartFractions: 'Fracciones automáticas (1/2 a ½)',
+    blockView: 'Vista de bloques',
+    blockViewDesc: 'Arrastrar para reordenar. Clic para editar texto. Formatear con la barra de herramientas.',
+    exitBlockView: 'Salir de la vista de bloques',
+    characters: 'Caracteres',
+    readingTime: 'Tiempo de lectura',
   },
   ko: {
     goodMorning: '좋은 아침이에요',
@@ -2073,7 +2128,10 @@ exitFocusMode: 'Quitter le mode focus',    exitPreviewMode: 'Quitter l\'aperçu'
     reset: '재설정',
     focusTimer: '집중 타이머',
     preview2: '미리보기',
-    pageOf: '/',
+    previewMode: '미리보기 모드',
+    focusMode: '집중 모드',
+    blockView: '블록 뷰',
+pageOf: '/',
     readTime: '분 읽기',
     print: '인쇄',
     close: '닫기',
@@ -2237,6 +2295,11 @@ exitFocusMode: 'Quitter le mode focus',    exitPreviewMode: 'Quitter l\'aperçu'
     smartQuotes: '스마트 따옴표 (“ ” ‘ ’)',
     smartDashes: '스마트 대시 (-- to —)',
     smartFractions: '분수 자동 변환 (1/2 to ½)',
+    blockView: '블록 뷰',
+    blockViewDesc: '드래그하여 재정렬. 텍스트를 클릭하여 편집. 툴바로 서식 지정.',
+    exitBlockView: '블록 뷰 종료',
+    characters: '글자 수',
+    readingTime: '읽기 시간',
   },
   zh: {
     goodMorning: '早上好',
@@ -2338,7 +2401,10 @@ exitFocusMode: 'Quitter le mode focus',    exitPreviewMode: 'Quitter l\'aperçu'
     reset: '重置',
     focusTimer: '专注计时器',
     preview2: '预览',
-    pageOf: '/',
+    previewMode: '预览模式',
+    focusMode: '专注模式',
+    blockView: '块视图',
+pageOf: '/',
     readTime: '分钟阅读',
     print: '打印',
     close: '关闭',
@@ -2502,6 +2568,11 @@ exitFocusMode: 'Quitter le mode focus',    exitPreviewMode: 'Quitter l\'aperçu'
     smartQuotes: '智能弯引号 (“ ” ‘ ’)',
     smartDashes: '智能破折号 (-- 转 —)',
     smartFractions: '自动分数 (1/2 转 ½)',
+    blockView: '块视图',
+    blockViewDesc: '拖拽以重新排序。点击文本进行编辑。使用工具栏格式化。',
+    exitBlockView: '退出块视图',
+    characters: '字符数',
+    readingTime: '阅读时间',
   },
   ja: {
     goodMorning: 'おはようございます',
@@ -2603,7 +2674,10 @@ exitFocusMode: 'Quitter le mode focus',    exitPreviewMode: 'Quitter l\'aperçu'
     reset: 'リセット',
     focusTimer: '集中タイマー',
     preview2: 'プレビュー',
-    pageOf: '/',
+    previewMode: 'プレビューモード',
+    focusMode: '集中モード',
+    blockView: 'ブロックビュー',
+pageOf: '/',
     readTime: '分で読める',
     print: '印刷',
     close: '閉じる',
@@ -2767,6 +2841,11 @@ exitFocusMode: 'Quitter le mode focus',    exitPreviewMode: 'Quitter l\'aperçu'
     smartQuotes: 'スマート引用符 (“ ” ‘ ’)',
     smartDashes: 'スマートダッシュ (-- を — に)',
     smartFractions: '自動分数 (1/2 を ½ に)',
+    blockView: 'ブロック表示',
+    blockViewDesc: 'ドラッグして並べ替え。クリックして編集。ツールバーで書式設定。',
+    exitBlockView: 'ブロック表示を終了',
+    characters: '文字数',
+    readingTime: '読了時間',
   },
 }
 

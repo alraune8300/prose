@@ -154,6 +154,7 @@ export default function App() {
   const [typewriterMode, setTypewriterMode] = useState(false);
   const [blockViewOpen, setBlockViewOpen] = useState(false);
   const [githubModalOpen, setGithubModalOpen] = useState(false);
+  const [activeBlockEditor, setActiveBlockEditor] = useState<TiptapEditorType | null>(null);
   const [rightPanelTab, setRightPanelTab] = useState<string>('settings');
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [zoomPercent, setZoomPercent] = useState<number>(100);
@@ -1637,22 +1638,23 @@ export default function App() {
         {/* Floating Panel Toggles */}
         {!isFocusMode && !isPreviewMode && (
           <>
-            <button
-              onClick={() => setSidebarOpen(v => !v)}
-              className="absolute top-4 z-50 p-2 rounded-lg transition-all hover:opacity-80 active:scale-95 shadow-sm backdrop-blur-md"
-              style={{
-                left: '16px',
-                backgroundColor: sidebarOpen ? theme.accentLight : theme.surface,
-                color: sidebarOpen ? theme.accent : theme.text,
-                border: `1px solid ${sidebarOpen ? theme.accent : theme.border}`
-              }}
-              title={sidebarOpen ? (t.collapse || 'Collapse Sidebar') : (t.openSidebar || 'Open Sidebar')}
-            >
-              <PanelLeft size={18} />
-            </button>
+            {!sidebarOpen && (
+              <button
+                onClick={() => setSidebarOpen(true)}
+                className="absolute top-4 left-4 z-50 p-2 rounded-lg transition-all hover:opacity-80 active:scale-95 shadow-sm backdrop-blur-md"
+                style={{
+                  backgroundColor: theme.surface,
+                  color: theme.text,
+                  border: `1px solid ${theme.border}`
+                }}
+                title={t.openSidebar || 'Open Sidebar'}
+              >
+                <PanelLeft size={18} />
+              </button>
+            )}
 
             <div className="absolute top-4 right-16 z-50 flex items-center gap-2 pr-2">
-              <WordCountDropdown wordCount={wordCount} charCount={charCount} readMin={Math.ceil(wordCount / 200)} theme={theme} uiFont={uiFont} />
+              <WordCountDropdown wordCount={wordCount} charCount={charCount} readMin={Math.ceil(wordCount / 200)} theme={theme} uiFont={uiFont} lang={lang} />
               <button
                 onClick={handleToggleFocusMode}
                 className="p-1.5 rounded transition-all hover:opacity-80 active:scale-95"
@@ -1669,7 +1671,7 @@ export default function App() {
                 style={{
                   color: isPreviewMode ? theme.accent : theme.text,
                 }}
-                title={t.preview || 'Preview Mode'}
+                title={t.previewMode || 'Preview Mode'}
               >
                 <Coffee size={16} />
               </button>
@@ -1721,35 +1723,52 @@ export default function App() {
 
         {/* Document Title Header (Editable in standard mode, stylized book header in Preview mode) */}
         {!isFocusMode && !isPreviewMode && (
-          <div className="max-w-2xl mx-auto w-full px-6 md:px-8 pt-14 md:pt-16 transition-all duration-300 flex items-center justify-between">
-            <input
-              value={activePage?.title || ''}
-              onChange={(e) => {
-                updateActivePage({ title: e.target.value });
-                if (activeProjectId) {
-                  handleRenameProject(activeProjectId, e.target.value);
-                }
+          <div 
+            className="relative z-30 w-full flex flex-col items-center select-none shrink-0"
+            style={{ backgroundColor: theme.bg }}
+          >
+            <div className="max-w-2xl mx-auto w-full px-6 md:px-8 pt-10 md:pt-12 pb-2 transition-all duration-300 flex items-center justify-between">
+              <input
+                value={activePage?.title || ''}
+                onChange={(e) => {
+                  updateActivePage({ title: e.target.value });
+                  if (activeProjectId) {
+                    handleRenameProject(activeProjectId, e.target.value);
+                  }
+                }}
+                placeholder={t.titlePlaceholder}
+                className="flex-1 bg-transparent outline-none border-none text-2xl md:text-3xl font-normal min-w-0 text-center"
+                style={{ fontFamily: `'${docFont}', Georgia, serif`, color: theme.text }}
+              />
+              {activePage?.isDraft && activePage?.originalPageId && (
+                <button
+                  onClick={handleCommitDraft}
+                  className="ml-4 px-3 py-1.5 rounded-md text-sm font-medium transition-colors"
+                  style={{ backgroundColor: theme.accent, color: theme.isDark ? theme.bg : '#fff' }}
+                  title="Update original document with these changes"
+                >
+                  Commit to Original
+                </button>
+              )}
+            </div>
+
+            {/* Soft subtle boundary blur & gradient between title and scrolling elements underneath */}
+            <div
+              className="absolute bottom-0 left-0 right-0 h-10 translate-y-full pointer-events-none z-20"
+              style={{
+                background: `linear-gradient(to bottom, ${theme.bg} 0%, ${theme.bg}cc 40%, transparent 100%)`,
+                backdropFilter: 'blur(8px)',
+                WebkitBackdropFilter: 'blur(8px)',
+                maskImage: 'linear-gradient(to bottom, black 0%, black 35%, transparent 100%)',
+                WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 35%, transparent 100%)',
               }}
-              placeholder={t.titlePlaceholder}
-              className="flex-1 bg-transparent outline-none border-none text-2xl md:text-3xl font-normal min-w-0"
-              style={{ fontFamily: `'${docFont}', Georgia, serif`, color: theme.text }}
             />
-            {activePage?.isDraft && activePage?.originalPageId && (
-              <button
-                onClick={handleCommitDraft}
-                className="ml-4 px-3 py-1.5 rounded-md text-sm font-medium transition-colors"
-                style={{ backgroundColor: theme.accent, color: theme.isDark ? theme.bg : '#fff' }}
-                title="Update original document with these changes"
-              >
-                Commit to Original
-              </button>
-            )}
           </div>
         )}
 
         {!isFocusMode && !isPreviewMode && editorInstance && (
           <Toolbar
-            editor={editorInstance as TiptapEditorType}
+            editor={(activeBlockEditor || editorInstance) as TiptapEditorType}
             theme={theme}
             uiFont={uiFont}
             t={t}
@@ -1758,7 +1777,8 @@ export default function App() {
             selectedSize={formatState.fontSize || fontSize}
             availableFonts={availableFonts}
             onFontChange={(fam) => {
-              (editorInstance as TiptapEditorType)?.chain().focus().setFontFamily(fam).run();
+              const currentEditor = (activeBlockEditor || editorInstance) as TiptapEditorType;
+              currentEditor?.chain().focus().setFontFamily(fam).run();
             }}
             onFontAssign={(role, fontName) => {
               if (role === 'body') handleSelectDocFont(fontName);
@@ -1766,10 +1786,10 @@ export default function App() {
               else if (role === 'mono') handleSelectMonoFont(fontName);
               else if (role === 'ui') handleSelectUiFont(fontName);
             }}
-            onUndo={() => (editorInstance as TiptapEditorType)?.chain().focus().undo().run()}
-            onRedo={() => (editorInstance as TiptapEditorType)?.chain().focus().redo().run()}
-            canUndo={Boolean(!editorInstance?.isDestroyed && (editorInstance as unknown as { can: () => { undo: () => boolean, redo: () => boolean } })?.can?.()?.undo?.())}
-            canRedo={Boolean(!editorInstance?.isDestroyed && (editorInstance as unknown as { can: () => { undo: () => boolean, redo: () => boolean } })?.can?.()?.redo?.())}
+            onUndo={() => ((activeBlockEditor || editorInstance) as TiptapEditorType)?.chain().focus().undo().run()}
+            onRedo={() => ((activeBlockEditor || editorInstance) as TiptapEditorType)?.chain().focus().redo().run()}
+            canUndo={Boolean(!((activeBlockEditor || editorInstance)?.isDestroyed) && ((activeBlockEditor || editorInstance) as unknown as { can: () => { undo: () => boolean, redo: () => boolean } })?.can?.()?.undo?.())}
+            canRedo={Boolean(!((activeBlockEditor || editorInstance)?.isDestroyed) && ((activeBlockEditor || editorInstance) as unknown as { can: () => { undo: () => boolean, redo: () => boolean } })?.can?.()?.redo?.())}
             zoomPercent={zoomPercent}
             zoomInput={zoomInput}
             onZoomIn={() => setZoomPercent(prev => Math.min(250, prev + 10))}
@@ -1786,10 +1806,10 @@ export default function App() {
         )}
 
         {/* Floating Paper Sheet Container & Dynamic Page Format Wrapper with momentum scroll & GPU locking */}
-        <div className={`flex-1 overflow-y-auto kgv-scroll kgv-momentum-scroll kgv-hardware-accelerated transition-all duration-300 ease-in-out flex flex-col items-center pb-36 px-3 sm:px-6 ${
+        <div className={`flex-1 overflow-y-auto kgv-scroll kgv-momentum-scroll kgv-hardware-accelerated transition-all duration-300 ease-in-out flex flex-col items-center pb-36 px-3 sm:px-6 relative ${
           (isFocusMode || isPreviewMode) 
             ? 'pt-12 sm:pt-16 md:pt-20' 
-            : 'pt-3 sm:pt-4 md:pt-5'
+            : 'pt-2 sm:pt-3 md:pt-4'
         }`}>
           <div className="w-full flex flex-col items-center transition-all duration-200" style={{ zoom: zoomPercent / 100 }}>
           {(() => {
@@ -1847,7 +1867,7 @@ export default function App() {
             if (blockViewOpen) {
               return (
                 <div
-                  className="flex-1 flex flex-col w-full relative transition-all duration-300 ease-in-out kgv-hardware-accelerated h-full w-full max-w-4xl px-4 md:px-8 pt-4 pb-24 md:pt-8 md:pb-32"
+                  className="flex-1 flex flex-col w-full relative transition-all duration-300 ease-in-out kgv-hardware-accelerated h-full w-full max-w-3xl px-4 md:px-6 pt-2 pb-24 md:pt-4 md:pb-32"
                   style={{ backgroundColor: 'transparent' }}
                 >
                   {editorInstance && (
@@ -1857,6 +1877,11 @@ export default function App() {
                       theme={theme}
                       lang={lang}
                       uiFont={uiFont}
+                      docFont={docFont}
+                      headingFont={headingFont}
+                      fontSize={fontSize}
+                      formatState={formatState}
+                      setActiveBlockEditor={setActiveBlockEditor}
                     />
                   )}
                   {/* Keep the Editor mounted but hidden so the state is preserved */}
@@ -2046,7 +2071,7 @@ export default function App() {
               renamePage(activePageId, title);
             }
           }}
-          editor={editorInstance}
+          editor={(activeBlockEditor || editorInstance) as TiptapEditorType}
           formatState={formatState}
           onFormatChange={handleFormatChange}
           pageFormat={pageFormat}
@@ -2181,7 +2206,7 @@ export default function App() {
           >
             <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-800/90 text-slate-200 text-xs font-medium border border-slate-700/50 shrink-0">
               {isPreviewMode ? <Eye size={13} className="text-slate-300" /> : <Maximize2 size={13} className="text-slate-300" />}
-              <span>{isFocusMode ? (t.focusMode || 'Tập trung') : (t.preview || 'Xem trước')}</span>
+              <span>{isFocusMode ? (t.focusMode || 'Focus Mode') : (t.previewMode || 'Preview Mode')}</span>
             </div>
 
             <div className="w-px h-3.5 bg-slate-700/60 shrink-0 mx-0.5" />

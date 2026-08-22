@@ -79,14 +79,7 @@ function Editor({
   }, []);
 
   const editor = useEditor({
-    extensions: [
-      StarterKit.configure({ heading: { levels: [1, 2, 3] }, horizontalRule: {} }),
-      SmartFormatting,
-      SpellcheckExtension,
-      SearchHighlightExtension,
-      TextStyle, FontFamily, FontSize, LineHeight, TextTransform, FontFeatures, LetterSpacing, WordSpacing, Superscript, Subscript, IndentExtension, ResizableImage,
-      TextAlign.configure({ types: ['heading', 'paragraph'] }),
-    ],
+    extensions: getEditorExtensions(),
     content: content || '',
     autofocus: 'end',
     onCreate: ({ editor }) => {
@@ -437,3 +430,12 @@ function Editor({
 }
 
 export default React.memo(Editor);
+
+export const getEditorExtensions = () => [
+  StarterKit.configure({ heading: { levels: [1, 2, 3] }, horizontalRule: {} }),
+  SmartFormatting,
+  SpellcheckExtension,
+  SearchHighlightExtension,
+  TextStyle, FontFamily, FontSize, LineHeight, TextTransform, FontFeatures, LetterSpacing, WordSpacing, Superscript, Subscript, IndentExtension, ResizableImage,
+  TextAlign.configure({ types: ['heading', 'paragraph'] }),
+];

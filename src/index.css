@@ -88,6 +88,44 @@ body {
   text-decoration: underline;
 }
 
+/* === Block Organizer Mini Editor — Tinh gọn, co giãn theo văn bản === */
+.kgv-block-editor,
+.ProseMirror.kgv-block-editor {
+  outline: none !important;
+  min-height: 24px;
+}
+.kgv-block-editor h1,
+.kgv-block-editor h2,
+.kgv-block-editor h3,
+.kgv-block-editor p,
+.kgv-block-editor blockquote {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+.kgv-block-editor h1 {
+  font-size: 1.35rem !important;
+  line-height: 1.35 !important;
+  font-weight: 700 !important;
+}
+.kgv-block-editor h2 {
+  font-size: 1.18rem !important;
+  line-height: 1.4 !important;
+  font-weight: 600 !important;
+}
+.kgv-block-editor h3 {
+  font-size: 1.05rem !important;
+  line-height: 1.45 !important;
+  font-weight: 600 !important;
+}
+.kgv-block-editor p {
+  font-size: 1rem !important;
+  line-height: 1.55 !important;
+}
+.kgv-block-editor blockquote {
+  margin: 0 !important;
+  padding-left: 0.75rem !important;
+}
+
 /* Bôi đen chữ khi chọn màu nhấn */
 .kgv-editor::selection {
   background: rgba(37, 99, 235, 0.2);

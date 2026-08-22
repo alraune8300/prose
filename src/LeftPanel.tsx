@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Page, Folder, SyncStatus, Project } from './types'
 import { Lang, t as i18nT } from './i18n'
-import { Home, Folder as FolderIcon, Edit2, FileText, Trash2, ChevronDown, RotateCcw, X, MoreHorizontal, Upload, Plus } from 'lucide-react'
+import { Home, Folder as FolderIcon, Edit2, FileText, Trash2, ChevronDown, RotateCcw, X, MoreHorizontal, Upload, Plus, PanelLeftClose } from 'lucide-react'
 import { importJsonBackupFile } from './fileHandlers'
 
 function timeSince(date: Date, lang: Lang): string {
@@ -69,6 +69,7 @@ function LeftPanel(props: Record<string, unknown>) {
   const onRenameProject = (props.onRenameProject || (() => {})) as (id: string, name: string) => void
   const onDeleteProject = (props.onDeleteProject || (() => {})) as (id: string) => void
   const onGoHome = props.onGoHome as (() => void) | undefined
+  const onCloseSidebar = (props.onCloseSidebar || props.onClose) as (() => void) | undefined
 
   const docsProp = props.docs as Array<Record<string, unknown>> | undefined
   const rawPages = activeProject
@@ -462,13 +463,13 @@ const renderFolder = (folder: Folder, depth = 0) => {
       }}
     >
       {/* Header */}
-      <div style={{ padding: '16px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, borderBottom: `1px solid ${c.borderFaint}` }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, height: 24 }}>
+      <div style={{ padding: '16px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, borderBottom: `1px solid ${c.borderFaint}`, gap: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, height: 24, minWidth: 0, overflow: 'hidden' }}>
           {onGoHome && (
             <button
               onClick={onGoHome}
               title="Return to Welcome Screen"
-              style={{ background: 'none', border: 'none', cursor: 'pointer', color: c.textMuted, padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', width: 18, height: 18 }}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: c.textMuted, padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', width: 18, height: 18, flexShrink: 0 }}
             >
               <Home size={18} />
             </button>
@@ -488,6 +489,23 @@ const renderFolder = (folder: Folder, depth = 0) => {
           </div>
         </div>
 
+        {onCloseSidebar && (
+          <button
+            type="button"
+            onClick={onCloseSidebar}
+            title={t(lang, 'collapse') || 'Collapse'}
+            style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: 'transparent', border: 'none', color: c.textMuted,
+              cursor: 'pointer', padding: 4, borderRadius: 6, transition: 'all 0.15s',
+              flexShrink: 0,
+            }}
+            onMouseEnter={e => { e.currentTarget.style.color = c.text; e.currentTarget.style.background = c.isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)' }}
+            onMouseLeave={e => { e.currentTarget.style.color = c.textMuted; e.currentTarget.style.background = 'transparent' }}
+          >
+            <PanelLeftClose size={17} />
+          </button>
+        )}
       </div>
       {/* Project Switcher Dropdown (Conditional) */}
       {showProjSearch && (

@@ -57,8 +57,8 @@ export function executeSearchReplace(editor: import("@tiptap/react").Editor, det
              const charBefore = extendFrom > 0 ? doc.textBetween(extendFrom - 1, extendFrom) : '';
              const charAfter = extendTo < doc.content.size ? doc.textBetween(extendTo, extendTo + 1) : '';
              
-             const isPunctAfter = /^[.,;:!?\)]$/.test(charAfter);
-             const isPunctBefore = /^[\({\[]$/.test(charBefore);
+             const isPunctAfter = /^[.,;:!?)]$/.test(charAfter);
+             const isPunctBefore = /^[({[]$/.test(charBefore);
              
              let replacement = '';
              if (totalSpaces > 0) {
@@ -99,8 +99,8 @@ export function executeSearchReplace(editor: import("@tiptap/react").Editor, det
              const charBefore = extendFrom > 0 ? doc.textBetween(extendFrom - 1, extendFrom) : '';
              const charAfter = extendTo < doc.content.size ? doc.textBetween(extendTo, extendTo + 1) : '';
              
-             const isPunctAfter = /^[.,;:!?\)]$/.test(charAfter);
-             const isPunctBefore = /^[\({\[]$/.test(charBefore);
+             const isPunctAfter = /^[.,;:!?)]$/.test(charAfter);
+             const isPunctBefore = /^[({[]$/.test(charBefore);
              
              let replacement = '';
              if (totalSpaces > 0) {

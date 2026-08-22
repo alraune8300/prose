@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
-import { X, GripVertical, Type, Heading1, Heading2, Heading3, List, Quote, Copy, Trash2, ArrowRightLeft } from 'lucide-react';
-import { type Editor as TiptapEditorType } from '@tiptap/react';
+import { X, GripVertical, Type, Heading1, Heading2, Heading3, Quote, Copy, Trash2, ArrowRightLeft } from 'lucide-react';
+import { type Editor as TiptapEditorType, useEditor, EditorContent, JSONContent } from '@tiptap/react';
+import type { Node as ProsemirrorNode } from 'prosemirror-model';
+import { getEditorExtensions } from './Editor';
 import { ThemeColors } from './types';
 import { t, Lang } from './i18n';
 
@@ -12,7 +14,7 @@ interface BlockItem {
   text: string;
   offset: number;
   size: number;
-  node: any;
+  node: ProsemirrorNode;
 }
 
 interface BlockOrganizerPanelProps {
@@ -21,78 +23,104 @@ interface BlockOrganizerPanelProps {
   theme: ThemeColors;
   lang: Lang;
   uiFont: string;
+  docFont?: string;
+  headingFont?: string;
+  fontSize?: number;
+  formatState?: Record<string, unknown>;
+  setActiveBlockEditor?: (editor: TiptapEditorType | null) => void;
 }
 
-const BlockTextarea = ({ block, editor, theme, uiFont }: { block: BlockItem, editor: TiptapEditorType, theme: ThemeColors, uiFont: string }) => {
-  const [val, setVal] = useState(block.text === '[Empty]' ? '' : block.text);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+const BlockMiniEditor = ({
+  block,
+  theme,
+  docFont,
+  headingFont,
+  fontSize,
+  formatState,
+  setActiveBlockEditor,
+  onBlockContentChange,
+}: {
+  block: BlockItem;
+  theme: ThemeColors;
+  docFont?: string;
+  headingFont?: string;
+  fontSize?: number;
+  formatState?: Record<string, unknown>;
+  setActiveBlockEditor?: (editor: TiptapEditorType | null) => void;
+  onBlockContentChange: (blockId: string, json: JSONContent) => void;
+}) => {
+  const miniEditor = useEditor({
+    extensions: getEditorExtensions(),
+    content: { type: 'doc', content: [block.node.toJSON()] },
+    editorProps: {
+      attributes: {
+        class: 'kgv-block-editor outline-none w-full min-h-[22px]',
+      },
+    },
+    onCreate: ({ editor }) => {
+      onBlockContentChange(block.id, editor.getJSON());
+    },
+    onUpdate: ({ editor }) => {
+      onBlockContentChange(block.id, editor.getJSON());
+    },
+    onFocus: ({ editor }) => {
+      if (setActiveBlockEditor) setActiveBlockEditor(editor as TiptapEditorType);
+    },
+    onSelectionUpdate: ({ editor }) => {
+      if (setActiveBlockEditor) setActiveBlockEditor(editor as TiptapEditorType);
+    },
+    onTransaction: ({ editor }) => {
+      if (setActiveBlockEditor) setActiveBlockEditor(editor as TiptapEditorType);
+    },
+  });
 
-  const resize = useCallback(() => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px';
-    }
-  }, []);
-
-  useEffect(() => {
-    if (document.activeElement !== textareaRef.current) {
-      setVal(block.text === '[Empty]' ? '' : block.text);
-    }
-    setTimeout(resize, 0);
-  }, [block.text, resize]);
-
-  const handleBlur = () => {
-    const currentText = block.text === '[Empty]' ? '' : block.text;
-    if (val !== currentText) {
-      const offset = block.offset;
-      const nodeSize = block.size;
-      
-      editor.chain()
-        .setTextSelection({ from: offset + 1, to: offset + nodeSize - 1 })
-        .insertContent(val)
-        .run();
-    }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    setTimeout(resize, 0);
-  };
+  const isHeading = block.type.startsWith('heading');
+  const fontFamily = isHeading ? (headingFont || docFont || 'inherit') : (docFont || 'inherit');
+  const baseSize = fontSize || 16;
 
   return (
-    <textarea
-      ref={textareaRef}
-      value={val}
-      onChange={(e) => {
-        setVal(e.target.value);
-        resize();
+    <div
+      onClick={() => {
+        if (miniEditor && !miniEditor.isFocused) {
+          miniEditor.commands.focus();
+        }
       }}
-      onBlur={handleBlur}
-      onKeyDown={handleKeyDown}
-      placeholder="Empty block..."
       style={{
         width: '100%',
-        background: 'transparent',
-        border: 'none',
-        resize: 'none',
+        fontFamily: fontFamily,
+        fontSize: `${baseSize}px`,
+        color: theme.text,
+        lineHeight: typeof formatState?.lineH === 'number' ? formatState.lineH : 1.5,
+        letterSpacing: typeof formatState?.letterSpacing === 'number' ? `${formatState.letterSpacing}px` : 'normal',
+        wordSpacing: typeof formatState?.wordSpacing === 'number' ? `${formatState.wordSpacing}px` : 'normal',
         outline: 'none',
-        fontFamily: uiFont,
-        fontSize: '0.95rem',
-        color: val === '' ? theme.textFaint : theme.text,
-        lineHeight: 1.5,
-        padding: 0,
-        margin: 0,
-        overflow: 'hidden',
       }}
-    />
+    >
+      <EditorContent editor={miniEditor} />
+    </div>
   );
 };
 
-export default function BlockOrganizerPanel({ editor, onClose, theme, lang, uiFont }: BlockOrganizerPanelProps) {
+export default function BlockOrganizerPanel({
+  editor,
+  onClose,
+  theme,
+  lang,
+  uiFont,
+  docFont,
+  headingFont,
+  fontSize,
+  formatState,
+  setActiveBlockEditor,
+}: BlockOrganizerPanelProps) {
   const [blocks, setBlocks] = useState<BlockItem[]>([]);
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
+  const blockContentMapRef = useRef<Record<string, JSONContent[]>>({});
+  const syncTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isSyncingRef = useRef(false);
 
   const extractBlocks = useCallback(() => {
-    if (!editor) return;
+    if (!editor || editor.isDestroyed) return;
     const newBlocks: BlockItem[] = [];
     let i = 0;
     editor.state.doc.forEach((node, offset) => {
@@ -103,37 +131,85 @@ export default function BlockOrganizerPanel({ editor, onClose, theme, lang, uiFo
       }
       if (!text.trim()) text = '[Empty]';
 
+      const blockId = `block-${i}-${offset}`;
       newBlocks.push({
-        id: `block-${i}-${offset}`,
+        id: blockId,
         index: i,
         type,
         text,
         offset,
         size: node.nodeSize,
-        node
+        node,
       });
+      blockContentMapRef.current[blockId] = [node.toJSON()];
       i++;
     });
-    setBlocks(newBlocks.map((b, idx) => ({ ...b, id: `block-${idx}` })));
+    setBlocks(newBlocks);
   }, [editor]);
+
+  const flushToMainEditor = useCallback(() => {
+    if (!editor || editor.isDestroyed) return;
+    const fullDocContent: JSONContent[] = [];
+    for (const b of blocks) {
+      const content = blockContentMapRef.current[b.id];
+      if (content && Array.isArray(content) && content.length > 0) {
+        fullDocContent.push(...content);
+      } else if (b.node) {
+        fullDocContent.push(b.node.toJSON());
+      }
+    }
+    if (fullDocContent.length > 0) {
+      isSyncingRef.current = true;
+      editor.commands.setContent({ type: 'doc', content: fullDocContent });
+      setTimeout(() => {
+        isSyncingRef.current = false;
+      }, 80);
+    }
+  }, [blocks, editor]);
+
+  const handleBlockContentChange = useCallback((blockId: string, json: JSONContent) => {
+    if (json && json.content) {
+      blockContentMapRef.current[blockId] = json.content;
+    }
+    if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
+    syncTimeoutRef.current = setTimeout(() => {
+      flushToMainEditor();
+    }, 200);
+  }, [flushToMainEditor]);
 
   useEffect(() => {
     extractBlocks();
     if (editor) {
-      editor.on('update', extractBlocks);
+      const handleUpdate = () => {
+        if (isSyncingRef.current) return;
+        extractBlocks();
+      };
+      editor.on('update', handleUpdate);
       return () => {
-        editor.off('update', extractBlocks);
+        editor.off('update', handleUpdate);
       };
     }
   }, [editor, extractBlocks]);
 
+  const handleClose = useCallback(() => {
+    if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
+    flushToMainEditor();
+    if (setActiveBlockEditor) setActiveBlockEditor(null);
+    onClose();
+  }, [flushToMainEditor, onClose, setActiveBlockEditor]);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') handleClose();
     };
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onClose]);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
+      flushToMainEditor();
+      if (setActiveBlockEditor) setActiveBlockEditor(null);
+    };
+  }, [handleClose, flushToMainEditor, setActiveBlockEditor]);
 
   const onDragEnd = (result: DropResult) => {
     if (!result.destination || !editor) return;
@@ -141,9 +217,11 @@ export default function BlockOrganizerPanel({ editor, onClose, theme, lang, uiFo
     const endIndex = result.destination.index;
     if (startIndex === endIndex) return;
 
+    flushToMainEditor();
+
     const state = editor.state;
     const tr = state.tr;
-    const nodes: any[] = [];
+    const nodes: { node: ProsemirrorNode; offset: number; size: number }[] = [];
     state.doc.forEach((node, offset) => {
       nodes.push({ node, offset, size: node.nodeSize });
     });
@@ -160,6 +238,7 @@ export default function BlockOrganizerPanel({ editor, onClose, theme, lang, uiFo
 
   const handleDuplicate = (block: BlockItem) => {
     if (!editor) return;
+    flushToMainEditor();
     const tr = editor.state.tr;
     tr.insert(block.offset + block.size, block.node);
     editor.view.dispatch(tr);
@@ -168,6 +247,7 @@ export default function BlockOrganizerPanel({ editor, onClose, theme, lang, uiFo
 
   const handleDelete = (block: BlockItem) => {
     if (!editor) return;
+    flushToMainEditor();
     const tr = editor.state.tr;
     tr.delete(block.offset, block.offset + block.size);
     editor.view.dispatch(tr);
@@ -176,9 +256,10 @@ export default function BlockOrganizerPanel({ editor, onClose, theme, lang, uiFo
 
   const handleTurnInto = (block: BlockItem, type: string) => {
     if (!editor) return;
+    flushToMainEditor();
     const pos = block.offset + 1;
     const chain = editor.chain().setTextSelection(pos);
-    
+
     switch (type) {
       case 'paragraph': chain.setParagraph().run(); break;
       case 'heading1': chain.toggleHeading({ level: 1 }).run(); break;
@@ -187,19 +268,6 @@ export default function BlockOrganizerPanel({ editor, onClose, theme, lang, uiFo
       case 'blockquote': chain.toggleBlockquote().run(); break;
     }
     setActiveMenu(null);
-  };
-
-  const getIconForType = (type: string, color: string) => {
-    const props = { size: 14, color };
-    switch (type) {
-      case 'heading1': return <Heading1 {...props} />;
-      case 'heading2': return <Heading2 {...props} />;
-      case 'heading3': return <Heading3 {...props} />;
-      case 'blockquote': return <Quote {...props} />;
-      case 'bulletList':
-      case 'orderedList': return <List {...props} />;
-      default: return <Type {...props} />;
-    }
   };
 
   const getLabelForType = (type: string) => {
@@ -220,43 +288,50 @@ export default function BlockOrganizerPanel({ editor, onClose, theme, lang, uiFo
         width: '100%',
         maxWidth: '800px',
         margin: '0 auto',
-        height: '100%',
         display: 'flex',
         flexDirection: 'column',
       }}
     >
-      <div style={{ padding: '24px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div style={{ padding: '16px 8px 20px 8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <span style={{ fontFamily: uiFont, fontSize: '1.25rem', fontWeight: 600, color: theme.text }}>
-            {t(lang, 'blockView') || 'Block Organizer'}
+          <span style={{ fontFamily: uiFont, fontSize: '1.15rem', fontWeight: 600, color: theme.text }}>
+            {t(lang, 'blockView') || 'Block View'}
           </span>
-          <span style={{ fontFamily: uiFont, fontSize: '0.85rem', color: theme.textMuted, marginTop: '4px' }}>
-            Drag to reorder. Click text to edit. Change types or delete blocks.
+          <span style={{ fontFamily: uiFont, fontSize: '0.82rem', color: theme.textMuted, marginTop: '2px' }}>
+            {t(lang, 'blockViewDesc') || 'Drag to reorder. Click text to edit. Format with toolbar.'}
           </span>
         </div>
         <button
-          onClick={onClose}
-          style={{ 
-            background: theme.surface, border: `1px solid ${theme.borderFaint}`, 
-            borderRadius: '8px', padding: '8px 12px', cursor: 'pointer', 
-            color: theme.text, display: 'flex', alignItems: 'center', gap: '8px',
-            fontFamily: uiFont, fontSize: '0.9rem', fontWeight: 500,
-            boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+          onClick={handleClose}
+          style={{
+            background: theme.surface,
+            border: `1px solid ${theme.borderFaint}`,
+            borderRadius: '8px',
+            padding: '6px 12px',
+            cursor: 'pointer',
+            color: theme.text,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            fontFamily: uiFont,
+            fontSize: '0.85rem',
+            fontWeight: 500,
+            boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
           }}
           className="hover:opacity-80 transition-opacity"
         >
-          <X size={16} /> Exit Block View
+          <X size={15} /> {t(lang, 'exitBlockView') || 'Exit Block View'}
         </button>
       </div>
 
-      <div style={{ flex: 1, overflowY: 'auto', padding: '16px', paddingBottom: '120px' }}>
+      <div style={{ width: '100%', paddingBottom: '120px' }}>
         <DragDropContext onDragEnd={onDragEnd}>
           <Droppable droppableId="blocks-list">
             {(provided) => (
               <div
                 {...provided.droppableProps}
                 ref={provided.innerRef}
-                style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}
+                style={{ display: 'flex', flexDirection: 'column', gap: '10px', width: '100%' }}
               >
                 {blocks.map((block, index) => (
                   <Draggable key={block.id} draggableId={block.id} index={index}>
@@ -268,114 +343,177 @@ export default function BlockOrganizerPanel({ editor, onClose, theme, lang, uiFo
                           ...provided.draggableProps.style,
                           background: snapshot.isDragging ? theme.accentLight : theme.surface,
                           border: `1px solid ${snapshot.isDragging ? theme.accent : theme.border}`,
-                          borderRadius: '12px',
-                          padding: '16px',
+                          borderRadius: '10px',
+                          padding: '10px 14px',
                           display: 'flex',
-                          alignItems: 'flex-start',
-                          gap: '12px',
-                          boxShadow: snapshot.isDragging ? '0 8px 24px rgba(0,0,0,0.12)' : '0 2px 6px rgba(0,0,0,0.04)',
+                          flexDirection: 'column',
+                          width: '100%',
+                          boxSizing: 'border-box',
+                          gap: '6px',
+                          boxShadow: snapshot.isDragging ? '0 8px 24px rgba(0,0,0,0.12)' : '0 1px 3px rgba(0,0,0,0.03)',
                           opacity: snapshot.isDragging ? 0.9 : 1,
                           position: 'relative',
                           transition: snapshot.isDragging ? 'none' : 'box-shadow 0.2s, border-color 0.2s',
                         }}
                         className="hover:border-opacity-80 hover:shadow-md group"
                       >
+                        {/* Header bar: Grip + Type Badge + Actions */}
                         <div
-                          {...provided.dragHandleProps}
                           style={{
-                            color: theme.textMuted,
-                            cursor: 'grab',
-                            padding: '4px',
-                            background: theme.panel,
-                            borderRadius: '6px',
-                            border: `1px solid ${theme.borderFaint}`
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            width: '100%',
+                            gap: '12px',
+                            userSelect: 'none',
                           }}
-                          className="hover:text-blue-500 transition-colors mt-1"
                         >
-                          <GripVertical size={18} />
-                        </div>
-                        
-                        <div style={{ flex: 1, minWidth: 0, paddingRight: '80px' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                            <div style={{ 
-                              display: 'flex', alignItems: 'center', gap: '4px', 
-                              background: theme.panel, padding: '2px 8px', borderRadius: '12px',
-                              border: `1px solid ${theme.borderFaint}`
-                            }}>
-                              {getIconForType(block.type, theme.textMuted)}
-                              <span style={{ fontFamily: uiFont, fontSize: '0.7rem', color: theme.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <div
+                              {...provided.dragHandleProps}
+                              style={{
+                                color: theme.textMuted,
+                                cursor: 'grab',
+                                padding: '2px 4px',
+                                background: theme.panel,
+                                borderRadius: '4px',
+                                border: `1px solid ${theme.borderFaint}`,
+                                display: 'flex',
+                                alignItems: 'center',
+                              }}
+                              className="hover:text-blue-500 transition-colors"
+                              title="Drag to reorder"
+                            >
+                              <GripVertical size={13} />
+                            </div>
+
+                            <div
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                                background: theme.panel,
+                                padding: '1px 6px',
+                                borderRadius: '8px',
+                                border: `1px solid ${theme.borderFaint}`,
+                              }}
+                            >
+                              <span
+                                style={{
+                                  fontFamily: uiFont,
+                                  fontSize: '0.68rem',
+                                  color: theme.textMuted,
+                                  textTransform: 'uppercase',
+                                  letterSpacing: '0.04em',
+                                  fontWeight: 600,
+                                }}
+                              >
                                 {getLabelForType(block.type)}
                               </span>
                             </div>
                           </div>
-                          
-                          <BlockTextarea block={block} editor={editor} theme={theme} uiFont={uiFont} />
+
+                          {/* Quick Actions */}
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '2px', position: 'relative' }}>
+                            <button
+                              onClick={() => handleDuplicate(block)}
+                              title="Duplicate Block"
+                              style={{
+                                background: 'transparent',
+                                border: 'none',
+                                color: theme.textMuted,
+                                cursor: 'pointer',
+                                padding: '4px',
+                                borderRadius: '4px',
+                                display: 'flex',
+                                alignItems: 'center',
+                              }}
+                              className="hover:bg-black/5 dark:hover:bg-white/10 transition-colors opacity-40 group-hover:opacity-100 focus:opacity-100"
+                            >
+                              <Copy size={13} />
+                            </button>
+
+                            <button
+                              onClick={() => handleDelete(block)}
+                              title="Delete Block"
+                              style={{
+                                background: 'transparent',
+                                border: 'none',
+                                color: theme.textMuted,
+                                cursor: 'pointer',
+                                padding: '4px',
+                                borderRadius: '4px',
+                                display: 'flex',
+                                alignItems: 'center',
+                              }}
+                              className="hover:bg-red-500/10 hover:text-red-500 transition-colors opacity-40 group-hover:opacity-100 focus:opacity-100"
+                            >
+                              <Trash2 size={13} />
+                            </button>
+
+                            <button
+                              onClick={() => setActiveMenu(activeMenu === block.id ? null : block.id)}
+                              title="Turn into / Options"
+                              style={{
+                                background: 'transparent',
+                                border: 'none',
+                                color: theme.textMuted,
+                                cursor: 'pointer',
+                                padding: '4px',
+                                borderRadius: '4px',
+                                display: 'flex',
+                                alignItems: 'center',
+                              }}
+                              className="hover:bg-black/5 dark:hover:bg-white/10 transition-colors opacity-40 group-hover:opacity-100 focus:opacity-100"
+                            >
+                              <ArrowRightLeft size={13} />
+                            </button>
+
+                            {activeMenu === block.id && (
+                              <div
+                                style={{
+                                  position: 'absolute',
+                                  top: '100%',
+                                  right: 0,
+                                  marginTop: '4px',
+                                  background: theme.surface,
+                                  border: `1px solid ${theme.borderFaint}`,
+                                  borderRadius: '8px',
+                                  boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+                                  zIndex: 50,
+                                  minWidth: '160px',
+                                  overflow: 'hidden',
+                                  fontFamily: uiFont,
+                                }}
+                              >
+                                <div style={{ padding: '8px', borderBottom: `1px solid ${theme.borderFaint}` }}>
+                                  <div style={{ fontSize: '0.7rem', color: theme.textFaint, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px', paddingLeft: '8px' }}>Turn Into</div>
+                                  <button onClick={() => handleTurnInto(block, 'paragraph')} style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '6px 8px', background: 'none', border: 'none', color: theme.text, cursor: 'pointer', borderRadius: '4px', fontSize: '0.85rem' }} className="hover:bg-black/5 dark:hover:bg-white/10"><Type size={14} /> Paragraph</button>
+                                  <button onClick={() => handleTurnInto(block, 'heading1')} style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '6px 8px', background: 'none', border: 'none', color: theme.text, cursor: 'pointer', borderRadius: '4px', fontSize: '0.85rem' }} className="hover:bg-black/5 dark:hover:bg-white/10"><Heading1 size={14} /> Heading 1</button>
+                                  <button onClick={() => handleTurnInto(block, 'heading2')} style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '6px 8px', background: 'none', border: 'none', color: theme.text, cursor: 'pointer', borderRadius: '4px', fontSize: '0.85rem' }} className="hover:bg-black/5 dark:hover:bg-white/10"><Heading2 size={14} /> Heading 2</button>
+                                  <button onClick={() => handleTurnInto(block, 'heading3')} style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '6px 8px', background: 'none', border: 'none', color: theme.text, cursor: 'pointer', borderRadius: '4px', fontSize: '0.85rem' }} className="hover:bg-black/5 dark:hover:bg-white/10"><Heading3 size={14} /> Heading 3</button>
+                                  <button onClick={() => handleTurnInto(block, 'blockquote')} style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '6px 8px', background: 'none', border: 'none', color: theme.text, cursor: 'pointer', borderRadius: '4px', fontSize: '0.85rem' }} className="hover:bg-black/5 dark:hover:bg-white/10"><Quote size={14} /> Quote</button>
+                                </div>
+                                <div style={{ padding: '8px' }}>
+                                  <button onClick={() => handleDuplicate(block)} style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '6px 8px', background: 'none', border: 'none', color: theme.text, cursor: 'pointer', borderRadius: '4px', fontSize: '0.85rem' }} className="hover:bg-black/5 dark:hover:bg-white/10"><Copy size={14} /> Duplicate</button>
+                                </div>
+                              </div>
+                            )}
+                          </div>
                         </div>
 
-                        {/* Action Menu Toggle & Delete */}
-                        <div style={{ position: 'absolute', top: '16px', right: '16px', display: 'flex', gap: '4px' }}>
-                          <button
-                            onClick={() => handleDelete(block)}
-                            title="Delete Block"
-                            style={{
-                              background: 'transparent',
-                              border: 'none',
-                              color: theme.textMuted,
-                              cursor: 'pointer',
-                              padding: '6px',
-                              borderRadius: '6px'
-                            }}
-                            className="hover:bg-red-500/10 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-
-                          <button
-                            onClick={() => setActiveMenu(activeMenu === block.id ? null : block.id)}
-                            title="Block Options"
-                            style={{
-                              background: 'transparent',
-                              border: 'none',
-                              color: theme.textMuted,
-                              cursor: 'pointer',
-                              padding: '6px',
-                              borderRadius: '6px'
-                            }}
-                            className="hover:bg-black/5 dark:hover:bg-white/10 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
-                          >
-                            <ArrowRightLeft size={16} />
-                          </button>
-
-                          {activeMenu === block.id && (
-                            <div
-                              style={{
-                                position: 'absolute',
-                                top: '100%',
-                                right: 0,
-                                marginTop: '4px',
-                                background: theme.surface,
-                                border: `1px solid ${theme.borderFaint}`,
-                                borderRadius: '8px',
-                                boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
-                                zIndex: 50,
-                                minWidth: '160px',
-                                overflow: 'hidden',
-                                fontFamily: uiFont,
-                              }}
-                            >
-                              <div style={{ padding: '8px', borderBottom: `1px solid ${theme.borderFaint}` }}>
-                                <div style={{ fontSize: '0.7rem', color: theme.textFaint, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px', paddingLeft: '8px' }}>Turn Into</div>
-                                <button onClick={() => handleTurnInto(block, 'paragraph')} style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '6px 8px', background: 'none', border: 'none', color: theme.text, cursor: 'pointer', borderRadius: '4px', fontSize: '0.85rem' }} className="hover:bg-black/5 dark:hover:bg-white/10"><Type size={14} /> Paragraph</button>
-                                <button onClick={() => handleTurnInto(block, 'heading1')} style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '6px 8px', background: 'none', border: 'none', color: theme.text, cursor: 'pointer', borderRadius: '4px', fontSize: '0.85rem' }} className="hover:bg-black/5 dark:hover:bg-white/10"><Heading1 size={14} /> Heading 1</button>
-                                <button onClick={() => handleTurnInto(block, 'heading2')} style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '6px 8px', background: 'none', border: 'none', color: theme.text, cursor: 'pointer', borderRadius: '4px', fontSize: '0.85rem' }} className="hover:bg-black/5 dark:hover:bg-white/10"><Heading2 size={14} /> Heading 2</button>
-                                <button onClick={() => handleTurnInto(block, 'heading3')} style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '6px 8px', background: 'none', border: 'none', color: theme.text, cursor: 'pointer', borderRadius: '4px', fontSize: '0.85rem' }} className="hover:bg-black/5 dark:hover:bg-white/10"><Heading3 size={14} /> Heading 3</button>
-                                <button onClick={() => handleTurnInto(block, 'blockquote')} style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '6px 8px', background: 'none', border: 'none', color: theme.text, cursor: 'pointer', borderRadius: '4px', fontSize: '0.85rem' }} className="hover:bg-black/5 dark:hover:bg-white/10"><Quote size={14} /> Quote</button>
-                              </div>
-                              <div style={{ padding: '8px' }}>
-                                <button onClick={() => handleDuplicate(block)} style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '6px 8px', background: 'none', border: 'none', color: theme.text, cursor: 'pointer', borderRadius: '4px', fontSize: '0.85rem' }} className="hover:bg-black/5 dark:hover:bg-white/10"><Copy size={14} /> Duplicate</button>
-                              </div>
-                            </div>
-                          )}
+                        {/* Block Content */}
+                        <div style={{ width: '100%', minWidth: '160px' }}>
+                          <BlockMiniEditor
+                            block={block}
+                            theme={theme}
+                            docFont={docFont}
+                            headingFont={headingFont}
+                            fontSize={fontSize}
+                            formatState={formatState}
+                            setActiveBlockEditor={setActiveBlockEditor}
+                            onBlockContentChange={handleBlockContentChange}
+                          />
                         </div>
                       </div>
                     )}
@@ -387,10 +525,10 @@ export default function BlockOrganizerPanel({ editor, onClose, theme, lang, uiFo
           </Droppable>
         </DragDropContext>
       </div>
-      
+
       {/* Click outside overlay for menu */}
       {activeMenu && (
-        <div 
+        <div
           onClick={() => setActiveMenu(null)}
           style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 40 }}
         />
@@ -398,3 +536,5 @@ export default function BlockOrganizerPanel({ editor, onClose, theme, lang, uiFo
     </div>
   );
 }
+
+
