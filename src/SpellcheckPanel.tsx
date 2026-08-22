@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Info } from 'lucide-react';
 import { Lang, LANG_LABELS, LANG_FLAGS, t } from './i18n';
 import nspell from 'nspell';
+import { CustomSelect } from './CustomSelect';
 
 interface SpellcheckPanelProps {
   c: Record<string, string>;
@@ -101,23 +102,30 @@ export default function SpellcheckPanel({ c, uiFont, headingFont, lang, }: Spell
       {enabled && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <label style={{ fontFamily: uiFont, fontSize: '0.85rem', color: c.textMuted }}>{t(lang, 'spellLanguage')}</label>
-          <div style={{ position: 'relative' }}>
-            <select 
-              value={spellLang} 
-              onChange={(e) => setSpellLang(e.target.value as Lang)}
-              style={{ 
-                width: '100%', padding: '8px 12px', borderRadius: 8, border: `1px solid ${c.borderFaint}`,
+          <div style={{ position: 'relative', zIndex: 50 }}>
+            <CustomSelect
+              value={spellLang}
+              onChange={(val) => setSpellLang(val as Lang)}
+              options={(Object.keys(LANG_LABELS) as Lang[]).map(l => ({
+                value: l,
+                label: `${LANG_FLAGS[l]} ${LANG_LABELS[l]}`
+              }))}
+              theme={c as any}
+              buttonStyle={{ 
+                 width: '100%', padding: '8px 12px', borderRadius: 8, border: `1px solid ${c.borderFaint}`,
                 background: 'transparent', color: c.text, fontFamily: uiFont, fontSize: '0.9rem',
-                outline: 'none', cursor: 'pointer', appearance: 'none'
+                outline: 'none', cursor: 'pointer',
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center'
               }}
-            >
-              {(Object.keys(LANG_LABELS) as Lang[]).map(l => (
-                <option key={l} value={l} style={{ color: '#000' }}>{LANG_FLAGS[l]} {LANG_LABELS[l]}</option>
-              ))}
-            </select>
-            <div style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: c.textMuted }}>
-              ▼
-            </div>
+              renderButtonContent={(opt) => (
+                <>
+                  <span>{opt?.label}</span>
+                  <svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' style={{ fill: c.textMuted }}>
+                    <path d='M0 0l5 6 5-6z'/>
+                  </svg>
+                </>
+              )}
+            />
           </div>
         </div>
       )}
