@@ -18,7 +18,6 @@ import { SpellcheckExtension, spellcheckKey } from './SpellcheckExtension';
 import { SearchHighlightExtension, searchHighlightKey } from './SearchHighlightExtension';
 import { SmartFormatting } from './SmartFormattingExtension';
 import { CollapsibleHeadingsExtension, toggleHeadingFold, foldAllHeadingsInDoc, unfoldAllHeadingsInDoc } from './CollapsibleHeadingsExtension';
-import TableContextualToolbar from './TableContextualToolbar';
 import { convertTableToList, convertListToTable, getActiveTableInfo } from './tableUtils';
 import { handleSmartEditorPaste, copySelectionAs } from './clipboardEngine';
 import type { ThemeColors, FormatState } from './types';
@@ -128,9 +127,25 @@ function Editor({
          window.dispatchEvent(new CustomEvent('kgv-spellcheck-error', { detail: null }));
       }
     },
-    onTransaction: ({ editor }) => {
+    onTransaction: ({ editor, transaction }) => {
       const inTable = editor.isActive('table');
       window.dispatchEvent(new CustomEvent('kgv-table-active-change', { detail: { inTable } }));
+      
+      // Keep scroll coordinates locked when selections change from external formatting commands
+      // Only apply this logic if the document hasn't changed (e.g., purely a selection change like Ctrl+A)
+      // or if it's explicitly flagged, to avoid layout thrashing (synchronous reflows) on every single keystroke.
+      if (transaction.selectionSet && !transaction.docChanged && !callbacksRef.current.typewriterMode) {
+        const scrollContainer = document.querySelector('.kgv-scroll');
+        if (scrollContainer) {
+          const prevScroll = scrollContainer.scrollTop;
+          requestAnimationFrame(() => {
+            // Restore scroll position to prevent dramatic jumps on selection / Select All
+            if (scrollContainer && Math.abs(scrollContainer.scrollTop - prevScroll) > 15) {
+              scrollContainer.scrollTop = prevScroll;
+            }
+          });
+        }
+      }
     },
     onBlur: ({ editor }) => {
       const html = editor.getHTML();
@@ -153,23 +168,7 @@ function Editor({
         callbacksRef.current.onContentChange(html);
       }, 400);
     },
-    onTransaction: ({ transaction }) => {
-      // Keep scroll coordinates locked when selections change from external formatting commands
-      // Only apply this logic if the document hasn't changed (e.g., purely a selection change like Ctrl+A)
-      // or if it's explicitly flagged, to avoid layout thrashing (synchronous reflows) on every single keystroke.
-      if (transaction.selectionSet && !transaction.docChanged && !callbacksRef.current.typewriterMode) {
-        const scrollContainer = document.querySelector('.kgv-scroll');
-        if (scrollContainer) {
-          const prevScroll = scrollContainer.scrollTop;
-          requestAnimationFrame(() => {
-            // Restore scroll position to prevent dramatic jumps on selection / Select All
-            if (scrollContainer && Math.abs(scrollContainer.scrollTop - prevScroll) > 15) {
-              scrollContainer.scrollTop = prevScroll;
-            }
-          });
-        }
-      }
-    },
+
     editorProps: {
       handleTextInput: (view, from, to, text) => {
         const state = window.__formatState;
@@ -676,7 +675,6 @@ function Editor({
         } as React.CSSProperties}
       >
         <EditorContent editor={editor} />
-        <TableContextualToolbar editor={editor} theme={theme} />
       </div>
     );
   }
@@ -717,8 +715,6 @@ function Editor({
         </div>
       </div>
 
-      {/* Floating Table Toolbar */}
-      <TableContextualToolbar editor={editor} theme={theme} />
     </div>
   );
 }

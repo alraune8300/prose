@@ -6,7 +6,7 @@ import {
   AlignLeft, AlignCenter, AlignRight,
   Eraser, Plus, Minus,
   Link2, Bookmark, BookOpen, Quote,
-  Split, X, GripVertical, Move, Copy, FileText, Code, Check
+  Split, X, Copy, FileText, Code, Check
 } from 'lucide-react';
 import type { Editor } from '@tiptap/react';
 import type { ThemeColors } from './types';
@@ -59,10 +59,6 @@ function Toolbar({
   const [showCopyMenu, setShowCopyMenu] = useState(false);
   const [copiedFormat, setCopiedFormat] = useState<string | null>(null);
 
-  // Draggable Float Menu State
-  const [position, setPosition] = useState<{ x: number; y: number } | null>(null);
-  const isDraggingRef = useRef(false);
-  const dragStartRef = useRef<{ clientX: number; clientY: number; initialX: number; initialY: number }>({ clientX: 0, clientY: 0, initialX: 0, initialY: 0 });
   const toolbarRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -83,40 +79,6 @@ function Toolbar({
       };
     }
   }, [editor, selectedSize]);
-
-  // Touch and Mouse pointer drag logic
-  const handlePointerDown = (e: React.PointerEvent) => {
-    e.preventDefault();
-    isDraggingRef.current = true;
-    (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
-
-    const rect = toolbarRef.current?.getBoundingClientRect();
-    const currentX = rect ? rect.left : window.innerWidth / 2 - 200;
-    const currentY = rect ? rect.top : window.innerHeight - 70;
-
-    dragStartRef.current = {
-      clientX: e.clientX,
-      clientY: e.clientY,
-      initialX: currentX,
-      initialY: currentY,
-    };
-  };
-
-  const handlePointerMove = (e: React.PointerEvent) => {
-    if (!isDraggingRef.current) return;
-    const deltaX = e.clientX - dragStartRef.current.clientX;
-    const deltaY = e.clientY - dragStartRef.current.clientY;
-
-    const newX = Math.max(8, Math.min(window.innerWidth - 100, dragStartRef.current.initialX + deltaX));
-    const newY = Math.max(50, Math.min(window.innerHeight - 50, dragStartRef.current.initialY + deltaY));
-
-    setPosition({ x: newX, y: newY });
-  };
-
-  const handlePointerUp = (e: React.PointerEvent) => {
-    isDraggingRef.current = false;
-    (e.target as HTMLElement).releasePointerCapture?.(e.pointerId);
-  };
 
   const ToolBtn = ({ onClick, icon, label, active }: {
     onClick: () => void; icon: React.ReactNode; label: string; active?: boolean;
@@ -142,12 +104,8 @@ function Toolbar({
   return (
     <div
       ref={toolbarRef}
-      className={`fixed z-40 flex items-center flex-nowrap w-max gap-0.5 px-2.5 py-1.5 select-none rounded-full shadow-2xl border backdrop-blur-md max-w-[calc(100vw-1.5rem)] transition-shadow ${
-        position ? '' : 'bottom-6 left-1/2 -translate-x-1/2'
-      }`}
+      className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center flex-nowrap w-max gap-0.5 px-2.5 py-1.5 select-none rounded-full shadow-2xl border backdrop-blur-md max-w-[calc(100vw-1.5rem)]"
       style={{ 
-        left: position ? `${position.x}px` : undefined,
-        top: position ? `${position.y}px` : undefined,
         backgroundColor: theme.surface ? `${theme.surface}f0` : (theme.isDark ? 'rgba(30,30,30,0.92)' : 'rgba(255,255,255,0.92)'),
         borderColor: theme.border || (theme.isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.1)'),
         color: theme.text,
@@ -155,17 +113,6 @@ function Toolbar({
         boxShadow: theme.isDark ? '0 16px 36px rgba(0,0,0,0.5)' : '0 12px 32px rgba(0,0,0,0.12)',
       }}
     >
-      {/* Draggable Grip */}
-      <div
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onPointerCancel={handlePointerUp}
-        className="flex items-center justify-center p-1 rounded-full cursor-grab active:cursor-grabbing hover:bg-black/5 dark:hover:bg-white/10 opacity-60 hover:opacity-100 transition-opacity touch-none shrink-0"
-        title="Kéo thanh công cụ đến bất kỳ đâu trên màn hình"
-      >
-        <GripVertical size={14} style={{ color: theme.accent || '#3b82f6' }} />
-      </div>
 
       <button
         type="button"
@@ -445,21 +392,6 @@ function Toolbar({
               <Plus size={11} style={{ color: theme.text }} />
             </button>
           </div>
-        </>
-      )}
-
-      {/* Reset Floating Position Button if moved */}
-      {position && (
-        <>
-          <Divider />
-          <button
-            type="button"
-            onClick={() => setPosition(null)}
-            className="p-1 rounded-full text-[10px] opacity-60 hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/10 transition-all cursor-pointer shrink-0"
-            title="Đưa thanh công cụ về vị trí đáy mặc định"
-          >
-            <Move size={12} />
-          </button>
         </>
       )}
 

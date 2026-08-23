@@ -123,17 +123,17 @@ export default function CitationsPanel({
   return (
     <div className="flex flex-col h-full select-none" style={{ fontFamily: uiFont }}>
       {/* Header */}
-      <div className="px-4 py-3 border-b flex items-center justify-between" style={{ borderColor: theme.border, backgroundColor: theme.surface }}>
-        <div className="flex items-center gap-2">
-          <BookOpen size={16} style={{ color: theme.accent }} />
-          <span className="font-semibold text-sm" style={{ color: theme.text }}>
+      <div className="px-4 py-3 border-b flex items-center justify-between gap-2" style={{ borderColor: theme.border, backgroundColor: theme.surface }}>
+        <div className="flex items-center gap-2 min-w-0 flex-1">
+          <BookOpen size={16} className="shrink-0" style={{ color: theme.accent }} />
+          <span className="font-semibold text-sm truncate" style={{ color: theme.text }}>
             {t(lang, 'citationDesk') || 'Citation Desk'}
           </span>
-          <span className="text-[10px] px-1.5 py-0.5 rounded-full font-mono" style={{ backgroundColor: theme.accentLight, color: theme.accent }}>
+          <span className="text-[10px] px-1.5 py-0.5 rounded-full font-mono shrink-0" style={{ backgroundColor: theme.accentLight, color: theme.accent }}>
             {sources.length}
           </span>
         </div>
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1.5 shrink-0">
           <button
             onClick={() => setShowAddModal(true)}
             className="p-1.5 rounded-lg transition-colors flex items-center gap-1 text-xs font-medium cursor-pointer"

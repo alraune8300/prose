@@ -498,7 +498,7 @@ ${content.split('\n\n').map(para => {
 
   const TABS: { key: Exclude<Panel, 'none' | 'preview' | 'importexport'>; icon: string; label: string }[] = [
     { key: 'format', icon: '¶', label: t(lang, 'format') || 'Format' },
-    { key: 'table', icon: '⊞', label: lang === 'vi' ? 'Tạo Bảng' : 'Table' },
+    { key: 'table', icon: '⊞', label: t(lang, 'insertTable') || 'Table' },
     { key: 'export', icon: '↓', label: t(lang, 'export') || 'Export' },
     { key: 'fonts', icon: 'Aa', label: t(lang, 'fonts') || 'Fonts' },
     { key: 'footnotes', icon: '[^]', label: t(lang, 'footnotes') || 'Footnotes' },
@@ -568,7 +568,7 @@ ${content.split('\n\n').map(para => {
             }}>
               <span style={{ fontFamily: uiFont, fontSize: '0.8rem', fontWeight: 700, color: c.text, letterSpacing: '0.02em', flex: 1, paddingRight: 8, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {panel === 'format' ? (t(lang, 'format') || 'Format') :
-                 panel === 'table' ? (lang === 'vi' ? 'Tạo Bảng Biểu' : 'Insert Table') :
+                 panel === 'table' ? (t(lang, 'insertTable') || 'Insert Table') :
                  panel === 'export' ? (t(lang, 'export') || 'Export') :
                  panel === 'footnotes' ? (t(lang, 'footnotes') || 'Footnotes') :
                  panel === 'fonts' ? (t(lang, 'fonts') || 'Fonts') :

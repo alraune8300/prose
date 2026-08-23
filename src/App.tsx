@@ -205,6 +205,7 @@ export default function App() {
           }
           return 'table';
         });
+        setSidebarOpen(true);
       } else {
         setLeftSidebarMainTab((currentTab) => {
           if (currentTab === 'table') {
@@ -684,14 +685,30 @@ export default function App() {
     return fonts;
   }, [customFonts, injectedGoogleFonts, t]);
 
-  const commandActions: CommandItem[] = useMemo(() => [
+  const commandActions: CommandItem[] = useMemo(() => {
+    const cmdT = {
+      insertTable: { vi: 'Tạo bảng biểu (Right Panel)', en: 'Insert Rich Table', fr: 'Insérer un tableau' },
+      insertTableDesc: { vi: 'Mở thanh tạo bảng ma trận', en: 'Open table creation panel', fr: 'Ouvrir le panneau de création de tableau' },
+      deleteTable: { vi: 'Xóa bảng hiện tại', en: 'Delete Table', fr: 'Supprimer le tableau' },
+      deleteTableDesc: { vi: 'Xóa toàn bộ bảng biểu đang được con trỏ tập trung', en: 'Delete currently focused table', fr: 'Supprimer le tableau sélectionné' },
+      foldAll: { vi: 'Gập tất cả khối đề mục', en: 'Fold All Headings', fr: 'Plier tous les titres' },
+      foldAllDesc: { vi: 'Thu gọn tất cả khối nội dung', en: 'Collapse all heading sections', fr: 'Réduire toutes les sections de titre' },
+      unfoldAll: { vi: 'Mở tất cả khối đề mục', en: 'Unfold All Headings', fr: 'Déplier tous les titres' },
+      unfoldAllDesc: { vi: 'Mở rộng lại tất cả khối đề mục', en: 'Expand all collapsed heading sections', fr: 'Développer toutes les sections de titre' },
+      focusMode: { vi: 'Chế độ tập trung (Focus Mode)', en: 'Toggle Focus Mode', fr: 'Mode focus' },
+      focusModeDesc: { vi: 'Ẩn tất cả thanh công cụ', en: 'Hide all UI panels for distraction-free writing', fr: 'Masquer tous les panneaux' },
+    };
+    
+    const getT = (key: keyof typeof cmdT) => (cmdT[key] as Record<string, string>)[lang] || cmdT[key].en;
+
+    return [
     {
       id: 'insert-table',
-      label: lang === 'vi' ? 'Tạo bảng biểu (Right Panel)' : 'Insert Rich Table (Right Panel)',
+      label: getT('insertTable'),
       category: 'Actions & Tools',
       icon: <Table size={16} />,
       shortcut: 'Alt+T',
-      description: lang === 'vi' ? 'Mở thanh tạo bảng ma trận và mẫu bảng ở bên phải' : 'Open table creation panel in right sidebar',
+      description: getT('insertTableDesc'),
       perform: () => {
         setRightPanelTab('table');
         setRightOpen(true);
@@ -699,37 +716,37 @@ export default function App() {
     },
     {
       id: 'delete-table',
-      label: lang === 'vi' ? 'Xóa bảng hiện tại (Delete Table)' : 'Delete Table',
+      label: getT('deleteTable'),
       category: 'Actions & Tools',
       icon: <Trash2 size={16} />,
-      description: lang === 'vi' ? 'Xóa toàn bộ bảng biểu đang được con trỏ tập trung' : 'Delete currently focused table',
+      description: getT('deleteTableDesc'),
       perform: () => window.dispatchEvent(new CustomEvent('kgv-delete-table')),
     },
     {
       id: 'fold-all-headings',
-      label: lang === 'vi' ? 'Gập tất cả khối đề mục' : 'Fold All Headings',
+      label: getT('foldAll'),
       category: 'View & Layout',
       icon: <FoldVertical size={16} />,
       shortcut: 'Ctrl+Shift+[',
-      description: lang === 'vi' ? 'Thu gọn tất cả khối nội dung H1, H2, H3 theo phân cấp' : 'Collapse all heading sections in document',
+      description: getT('foldAllDesc'),
       perform: () => window.dispatchEvent(new CustomEvent('kgv-fold-all-headings')),
     },
     {
       id: 'unfold-all-headings',
-      label: lang === 'vi' ? 'Mở tất cả khối đề mục' : 'Unfold All Headings',
+      label: getT('unfoldAll'),
       category: 'View & Layout',
       icon: <UnfoldVertical size={16} />,
       shortcut: 'Ctrl+Shift+]',
-      description: lang === 'vi' ? 'Mở rộng lại tất cả khối đề mục đã bị thu gọn' : 'Expand all collapsed heading sections',
+      description: getT('unfoldAllDesc'),
       perform: () => window.dispatchEvent(new CustomEvent('kgv-unfold-all-headings')),
     },
     {
       id: 'toggle-focus-mode',
-      label: lang === 'vi' ? 'Chế độ tập trung (Focus Mode)' : 'Toggle Focus Mode',
+      label: getT('focusMode'),
       category: 'View & Layout',
       icon: <Maximize2 size={16} />,
       shortcut: 'F11',
-      description: lang === 'vi' ? 'Ẩn tất cả thanh công cụ để tập trung viết' : 'Hide all UI panels for distraction-free writing',
+      description: getT('focusModeDesc'),
       perform: () => setIsFocusMode(prev => !prev),
     },
     {
@@ -852,7 +869,8 @@ export default function App() {
       description: lang === 'vi' ? 'Lưu trữ và khôi phục dữ liệu qua kho GitHub Gist' : 'Sync workspace with GitHub account',
       perform: () => setGithubModalOpen(true),
     },
-  ], [lang, activePage, theme, docFont, handleInsertNewFootnote]);
+  ];
+  }, [lang, activePage, theme, docFont, handleInsertNewFootnote, t]);
   // Sync document body styles with the current active theme
   useEffect(() => {
     document.body.style.background = theme.bg;
@@ -1983,7 +2001,7 @@ export default function App() {
         className={`
           fixed md:relative top-0 left-0 h-full z-40 flex-shrink-0
           transition-all duration-300 ease-in-out transform shadow-2xl md:shadow-none kgv-adaptive-panel kgv-hardware-accelerated
-          ${sidebarOpen && !isFocusMode && !isPreviewMode ? 'translate-x-0 opacity-100 w-[260px]' : '-translate-x-full opacity-0 w-0 pointer-events-none'}
+          ${sidebarOpen && !isFocusMode && !isPreviewMode ? 'translate-x-0 opacity-100 w-[320px]' : '-translate-x-full opacity-0 w-0 pointer-events-none'}
         `}
       >
         <LeftPanel

@@ -1,19 +1,19 @@
 import React, { useState, useRef } from 'react';
 import {
   Table, Grid, Plus, Minus, Check, Sparkles, LayoutTemplate,
-  Rows, Columns, AlignLeft, AlignCenter, Maximize2
+  Rows, Columns, AlignLeft, AlignCenter, Maximize2, Trash2
 } from 'lucide-react';
 import type { Editor } from '@tiptap/react';
 import type { ThemeColors } from './types';
-import type { Lang } from './i18n';
+import { getDict, type Lang } from './i18n';
 import { getActiveTableInfo } from './tableUtils';
 
 interface TablePreset {
   id: string;
-  name: string;
-  nameVi: string;
-  description: string;
-  descriptionVi: string;
+  nameKey: string;
+  defaultName: string;
+  descKey: string;
+  defaultDesc: string;
   rows: number;
   cols: number;
   withHeader: boolean;
@@ -25,10 +25,10 @@ interface TablePreset {
 const PRESETS: TablePreset[] = [
   {
     id: 'simple-2x2',
-    name: '2×2 Quick Matrix',
-    nameVi: 'Ma trận nhanh 2×2 (So sánh)',
-    description: 'Basic 2x2 grid for SWOT or comparisons',
-    descriptionVi: 'Lưới 2x2 cơ bản để phân loại, SWOT hoặc đối chiếu',
+    nameKey: 'simple2x2',
+    defaultName: '2×2 Quick Matrix',
+    descKey: 'simple2x2Desc',
+    defaultDesc: 'Basic 2x2 grid for SWOT or comparisons',
     rows: 2,
     cols: 2,
     withHeader: true,
@@ -38,10 +38,10 @@ const PRESETS: TablePreset[] = [
   },
   {
     id: 'study-vocab',
-    name: 'Vocabulary / Terminology',
-    nameVi: 'Từ vựng & Thuật ngữ (3 Cột)',
-    description: '3 columns: Term, Definition, Example sentence',
-    descriptionVi: '3 cột: Thuật ngữ, Định nghĩa, Ví dụ & Ghi chú',
+    nameKey: 'vocabTable',
+    defaultName: 'Vocabulary / Terminology (3 Cols)',
+    descKey: 'vocabTableDesc',
+    defaultDesc: '3 columns: Term, Definition, Example sentence',
     rows: 5,
     cols: 3,
     withHeader: true,
@@ -51,10 +51,10 @@ const PRESETS: TablePreset[] = [
   },
   {
     id: 'weekly-plan',
-    name: 'Weekly Schedule (5 Days)',
-    nameVi: 'Lịch biểu kế hoạch tuần (5 ngày)',
-    description: 'Mon to Fri timeline & tasks grid',
-    descriptionVi: 'Kế hoạch 5 cột từ Thứ 2 đến Thứ 6 tinh gọn',
+    nameKey: 'weeklySchedule',
+    defaultName: 'Weekly Schedule (5 Days)',
+    descKey: 'weeklyScheduleDesc',
+    defaultDesc: 'Mon to Fri timeline & tasks grid',
     rows: 4,
     cols: 5,
     withHeader: true,
@@ -64,10 +64,10 @@ const PRESETS: TablePreset[] = [
   },
   {
     id: 'data-summary',
-    name: 'Data & Metrics Table',
-    nameVi: 'Bảng Báo cáo & Số liệu (4 Cột)',
-    description: '4 columns for financial or KPI data',
-    descriptionVi: '4 cột cho thống kê tài chính, KPI hoặc số liệu phân tích',
+    nameKey: 'dataMetrics',
+    defaultName: 'Data & Metrics Table',
+    descKey: 'dataMetricsDesc',
+    defaultDesc: '4 columns for financial or KPI data',
     rows: 4,
     cols: 4,
     withHeader: true,
@@ -77,10 +77,10 @@ const PRESETS: TablePreset[] = [
   },
   {
     id: 'literature-matrix',
-    name: 'Literature Review / Research',
-    nameVi: 'Tổng quan Nghiên cứu & Trích dẫn',
-    description: '5 columns: Author, Year, Methodology, Findings, Notes',
-    descriptionVi: '5 cột: Tác giả, Năm, Phương pháp, Kết quả, Bình luận',
+    nameKey: 'researchMatrix',
+    defaultName: 'Literature Review / Research',
+    descKey: 'researchMatrixDesc',
+    defaultDesc: '5 columns: Author, Year, Methodology, Findings, Notes',
     rows: 4,
     cols: 5,
     withHeader: true,
@@ -101,10 +101,11 @@ interface Props {
 export default function TableCreatePanel({
   editor,
   theme,
-  lang,
+  lang = 'vi',
   uiFont,
   onInsertTable,
 }: Props) {
+  const dict = getDict(lang);
   const [activeTab, setActiveTab] = useState<'grid' | 'custom' | 'templates'>('grid');
   const [hoveredRows, setHoveredRows] = useState(3);
   const [hoveredCols, setHoveredCols] = useState(3);
@@ -115,12 +116,12 @@ export default function TableCreatePanel({
   const [alignment, setAlignment] = useState<'full' | 'center' | 'left'>('full');
   const [cellPadding, setCellPadding] = useState<'compact' | 'normal' | 'relaxed'>('normal');
   const [insertedSuccess, setInsertedSuccess] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const maxGrid = 8;
   const gridContainerRef = useRef<HTMLDivElement>(null);
   const activeTableInfo = getActiveTableInfo(editor);
 
-  // Touch gesture & drag-over calculation for touch screens
   const handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
     if (!gridContainerRef.current) return;
     const touch = e.touches[0];
@@ -162,7 +163,6 @@ export default function TableCreatePanel({
         withHeaderRow: finalHeader,
       }).run();
 
-      // Apply initial styling attributes
       setTimeout(() => {
         const tableEl = document.querySelector('.kgv-editor table:last-of-type') as HTMLElement;
         if (tableEl) {
@@ -181,42 +181,87 @@ export default function TableCreatePanel({
     setTimeout(() => setInsertedSuccess(false), 2000);
   };
 
+  const handleDeleteActiveTable = () => {
+    if (!editor || editor.isDestroyed) return;
+    editor.chain().focus().deleteTable().run();
+    setConfirmDelete(false);
+  };
+
   return (
     <div style={{ fontFamily: uiFont }} className="space-y-4 text-xs">
-      {/* Active Table Status Notification if cursor is already inside a table */}
+      {/* Active Table Status Notification */}
       {activeTableInfo && (
         <div
-          className="p-2.5 rounded-xl border flex items-center justify-between gap-2"
+          className="p-3 rounded-2xl border flex flex-col gap-2"
           style={{
             backgroundColor: theme.accentLight || 'rgba(59, 130, 246, 0.1)',
             borderColor: theme.accent || '#3b82f6',
             color: theme.text,
           }}
         >
-          <div className="flex items-center gap-2 min-w-0">
-            <Table size={14} className="shrink-0" style={{ color: theme.accent }} />
-            <div className="truncate">
-              <span className="font-semibold block truncate">
-                {lang === 'vi' ? 'Đang chọn bảng' : 'Focused Table'}: {activeTableInfo.rowCount}×{activeTableInfo.colCount}
-              </span>
-              <span className="text-[10px] opacity-75">
-                {lang === 'vi' ? `Ô [Hàng ${activeTableInfo.currentRow}, Cột ${activeTableInfo.currentCol}]` : `Cell [Row ${activeTableInfo.currentRow}, Col ${activeTableInfo.currentCol}]`}
-              </span>
+          <div className="flex items-center justify-between gap-2 min-w-0">
+            <div className="flex items-center gap-2 min-w-0">
+              <Table size={14} className="shrink-0" style={{ color: theme.accent }} />
+              <div className="truncate">
+                <span className="font-semibold block truncate">
+                  {dict.selectedCell || (lang === 'vi' ? 'Đang chọn bảng' : 'Focused Table')}: {activeTableInfo.rowCount} × {activeTableInfo.colCount}
+                </span>
+                <span className="text-[10px] opacity-75">
+                  [{dict.rows || 'Row'} {activeTableInfo.currentRow}, {dict.cols || 'Col'} {activeTableInfo.currentCol}]
+                </span>
+              </div>
             </div>
+            <button
+              type="button"
+              onClick={() => {
+                window.dispatchEvent(new CustomEvent('kgv-switch-left-tab', { detail: { tab: 'table' } }));
+              }}
+              className="px-2.5 py-1 rounded-lg text-[10px] font-semibold shrink-0 cursor-pointer shadow-xs transition-all hover:scale-105 active:scale-95"
+              style={{
+                backgroundColor: theme.accent || '#2563eb',
+                color: theme.isDark ? theme.bg : '#ffffff',
+              }}
+            >
+              {dict.tableInspector || (lang === 'vi' ? 'Tùy biến' : 'Inspect')}
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={() => {
-              window.dispatchEvent(new CustomEvent('kgv-switch-left-tab', { detail: { tab: 'table' } }));
-            }}
-            className="px-2.5 py-1 rounded-lg text-[10px] font-semibold shrink-0 cursor-pointer shadow-xs transition-all hover:scale-105 active:scale-95"
-            style={{
-              backgroundColor: theme.accent || '#2563eb',
-              color: theme.isDark ? theme.bg : '#ffffff',
-            }}
-          >
-            {lang === 'vi' ? 'Tùy biến' : 'Inspect'}
-          </button>
+
+          {/* Quick Delete Table Button */}
+          <div className="pt-1.5 border-t flex items-center justify-between gap-2" style={{ borderColor: 'rgba(0,0,0,0.1)' }}>
+            {confirmDelete ? (
+              <div className="flex items-center justify-between w-full gap-2">
+                <span className="text-[11px] font-medium text-red-500">
+                  {dict.confirmDeleteTable || (lang === 'vi' ? 'Xóa hoàn toàn bảng này?' : 'Delete entire table?')}
+                </span>
+                <div className="flex items-center gap-1 shrink-0">
+                  <button
+                    type="button"
+                    onClick={handleDeleteActiveTable}
+                    className="px-2 py-0.5 rounded bg-red-500 text-white font-bold text-[10px] hover:bg-red-600 cursor-pointer active:scale-95"
+                  >
+                    {dict.deleteTable || 'Delete'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setConfirmDelete(false)}
+                    className="px-2 py-0.5 rounded border text-[10px] opacity-75 hover:opacity-100 cursor-pointer active:scale-95"
+                    style={{ borderColor: theme.border }}
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setConfirmDelete(true)}
+                className="w-full py-1 px-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-500 flex items-center justify-center gap-1.5 text-[11px] font-medium cursor-pointer transition-all active:scale-95"
+              >
+                <Trash2 size={12} />
+                <span>{dict.deleteTable || (lang === 'vi' ? 'Xóa bảng hoàn toàn' : 'Delete Table')}</span>
+              </button>
+            )}
+          </div>
         </div>
       )}
 
@@ -240,7 +285,7 @@ export default function TableCreatePanel({
           }}
         >
           <Grid size={12} />
-          <span>{lang === 'vi' ? 'Ma trận' : 'Grid'}</span>
+          <span>{dict.grid || (lang === 'vi' ? 'Ma trận' : 'Grid')}</span>
         </button>
         <button
           type="button"
@@ -254,7 +299,7 @@ export default function TableCreatePanel({
           }}
         >
           <Rows size={12} />
-          <span>{lang === 'vi' ? 'Tùy chỉnh' : 'Custom'}</span>
+          <span>{dict.custom || (lang === 'vi' ? 'Tùy chỉnh' : 'Custom')}</span>
         </button>
         <button
           type="button"
@@ -268,16 +313,16 @@ export default function TableCreatePanel({
           }}
         >
           <LayoutTemplate size={12} />
-          <span>{lang === 'vi' ? 'Mẫu' : 'Templates'}</span>
+          <span>{dict.templates || (lang === 'vi' ? 'Mẫu' : 'Templates')}</span>
         </button>
       </div>
 
-      {/* Tab 1: Interactive Matrix Visual Grid with Touch Swipe support */}
+      {/* Tab 1: Interactive Matrix Visual Grid */}
       {activeTab === 'grid' && (
         <div className="space-y-2.5">
           <div className="flex items-center justify-between px-1">
             <span className="font-medium text-xs opacity-75">
-              {lang === 'vi' ? 'Kích thước lựa chọn:' : 'Selected size:'}
+              {dict.selectedSize || (lang === 'vi' ? 'Kích thước lựa chọn' : 'Selected size')}:
             </span>
             <span
               className="font-mono font-bold text-xs px-2 py-0.5 rounded-md"
@@ -286,7 +331,7 @@ export default function TableCreatePanel({
                 color: theme.accent || '#3b82f6',
               }}
             >
-              {hoveredCols} {lang === 'vi' ? 'Cột' : 'Cols'} × {hoveredRows} {lang === 'vi' ? 'Hàng' : 'Rows'}
+              {hoveredCols} {dict.cols || (lang === 'vi' ? 'Cột' : 'Cols')} × {hoveredRows} {dict.rows || (lang === 'vi' ? 'Hàng' : 'Rows')}
             </span>
           </div>
 
@@ -335,7 +380,7 @@ export default function TableCreatePanel({
           </div>
 
           <div className="text-center text-[11px] opacity-60 font-mono">
-            {lang === 'vi' ? 'Rê chuột / vuốt chạm để chọn kích thước & nhấp chèn' : 'Hover / touch drag to resize & click to insert'}
+            {dict.hoverToResizeClickToInsert || (lang === 'vi' ? 'Rê chuột / vuốt chạm để chọn kích thước & nhấp chèn' : 'Hover / touch drag to resize & click to insert')}
           </div>
         </div>
       )}
@@ -346,7 +391,7 @@ export default function TableCreatePanel({
           <div className="space-y-1.5">
             <label className="text-[11px] font-semibold opacity-80 flex items-center gap-1">
               <Rows size={12} style={{ color: theme.accent }} />
-              <span>{lang === 'vi' ? 'Số hàng (Rows):' : 'Number of rows:'}</span>
+              <span>{dict.rows || (lang === 'vi' ? 'Số hàng (Rows):' : 'Rows:')}:</span>
             </label>
             <div className="flex items-center gap-1.5">
               <button
@@ -384,7 +429,7 @@ export default function TableCreatePanel({
           <div className="space-y-1.5">
             <label className="text-[11px] font-semibold opacity-80 flex items-center gap-1">
               <Columns size={12} style={{ color: theme.accent }} />
-              <span>{lang === 'vi' ? 'Số cột (Columns):' : 'Number of columns:'}</span>
+              <span>{dict.cols || (lang === 'vi' ? 'Số cột (Columns):' : 'Columns:')}:</span>
             </label>
             <div className="flex items-center gap-1.5">
               <button
@@ -441,7 +486,7 @@ export default function TableCreatePanel({
             >
               <div className="flex items-center justify-between">
                 <span className="font-semibold text-xs transition-colors" style={{ color: theme.text }}>
-                  {lang === 'vi' ? preset.nameVi : preset.name}
+                  {preset.defaultName}
                 </span>
                 <span
                   className="font-mono text-[10px] px-1.5 py-0.5 rounded-md font-semibold"
@@ -454,46 +499,38 @@ export default function TableCreatePanel({
                 </span>
               </div>
               <p className="text-[11px] opacity-65 leading-tight">
-                {lang === 'vi' ? preset.descriptionVi : preset.description}
+                {preset.defaultDesc}
               </p>
             </div>
           ))}
         </div>
       )}
 
-      {/* Deep Customization: Table Style, Alignment & Cell Padding */}
+      {/* Customization Options */}
       <div className="pt-3 border-t space-y-3" style={{ borderColor: theme.borderFaint || theme.border }}>
-        {/* Header row toggle */}
+        {/* Header row toggle switch */}
         <div className="flex items-center justify-between">
           <span className="text-[11px] font-semibold opacity-85">
-            {lang === 'vi' ? 'Hàng tiêu đề (Header Row)' : lang === 'fr' ? 'Ligne d\'en-tête' : lang === 'de' ? 'Kopfzeile' : lang === 'it' ? 'Riga d\'intestazione' : lang === 'es' ? 'Fila de encabezado' : lang === 'ko' ? '헤더 행 (Header Row)' : lang === 'zh' ? '表头行 (Header Row)' : lang === 'ja' ? 'ヘッダー行 (Header Row)' : 'Header Row'}
+            {dict.headerRow || 'Header Row'}
           </span>
+          {/* Robust Toggle Switch Button (Nút gạt) */}
           <button
             type="button"
+            role="switch"
+            aria-checked={withHeader}
             onClick={() => setWithHeader(prev => !prev)}
-            className="w-10 h-5.5 rounded-full relative cursor-pointer touch-manipulation transition-colors shrink-0"
+            className="w-11 h-6 rounded-full relative cursor-pointer touch-manipulation transition-colors duration-200 shrink-0 p-0.5"
             style={{
-              backgroundColor: withHeader ? (theme.accent || '#2563eb') : (theme.border || '#9ca3af'),
-              border: `1px solid ${withHeader ? (theme.accent || '#2563eb') : (theme.border || '#9ca3af')}`,
+              backgroundColor: withHeader ? (theme.accent || '#2563eb') : (theme.isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)'),
             }}
           >
             <div
+              className="w-5 h-5 rounded-full bg-white flex items-center justify-center shadow-md transition-transform duration-200 ease-out"
               style={{
-                position: 'absolute',
-                top: '2px',
-                left: withHeader ? '20px' : '2px',
-                width: '16px',
-                height: '16px',
-                borderRadius: '50%',
-                backgroundColor: '#ffffff',
-                transition: 'left 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.25)',
+                transform: withHeader ? 'translateX(20px)' : 'translateX(0px)',
               }}
             >
-              {withHeader && <Check size={10} color={theme.accent || '#2563eb'} strokeWidth={3} />}
+              {withHeader && <Check size={11} color={theme.accent || '#2563eb'} strokeWidth={3} />}
             </div>
           </button>
         </div>
@@ -501,7 +538,7 @@ export default function TableCreatePanel({
         {/* Alignment */}
         <div className="space-y-1.5">
           <span className="text-[11px] font-semibold opacity-85 block">
-            {lang === 'vi' ? 'Căn lề chiều rộng bảng:' : 'Table Alignment:'}
+            {dict.tableAlignment || 'Table Alignment:'}
           </span>
           <div className="grid grid-cols-3 gap-1.5">
             <button
@@ -517,7 +554,7 @@ export default function TableCreatePanel({
               }}
             >
               <AlignLeft size={12} />
-              <span>{lang === 'vi' ? 'Trái' : 'Left'}</span>
+              <span>{dict.left || 'Left'}</span>
             </button>
             <button
               type="button"
@@ -532,7 +569,7 @@ export default function TableCreatePanel({
               }}
             >
               <AlignCenter size={12} />
-              <span>{lang === 'vi' ? 'Giữa' : 'Center'}</span>
+              <span>{dict.center || 'Center'}</span>
             </button>
             <button
               type="button"
@@ -547,7 +584,7 @@ export default function TableCreatePanel({
               }}
             >
               <Maximize2 size={12} />
-              <span>{lang === 'vi' ? 'Toàn bộ' : 'Full'}</span>
+              <span>{dict.fullWidth || dict.full || 'Full'}</span>
             </button>
           </div>
         </div>
@@ -555,7 +592,7 @@ export default function TableCreatePanel({
         {/* Style selection */}
         <div className="space-y-1.5">
           <span className="text-[11px] font-semibold opacity-85 block">
-            {lang === 'vi' ? 'Kiểu khung viền:' : 'Border & Style:'}
+            {dict.borderAndStyle || 'Border & Style:'}
           </span>
           <div className="grid grid-cols-3 gap-1.5">
             <button
@@ -570,7 +607,7 @@ export default function TableCreatePanel({
                 color: styleType === 'grid' ? theme.accent : theme.text,
               }}
             >
-              {lang === 'vi' ? 'Lưới ô' : 'Grid'}
+              {dict.grid || 'Grid'}
             </button>
             <button
               type="button"
@@ -584,7 +621,7 @@ export default function TableCreatePanel({
                 color: styleType === 'minimal' ? theme.accent : theme.text,
               }}
             >
-              {lang === 'vi' ? 'Tối giản' : 'Minimal'}
+              {dict.minimal || 'Minimal'}
             </button>
             <button
               type="button"
@@ -598,7 +635,7 @@ export default function TableCreatePanel({
                 color: styleType === 'striped' ? theme.accent : theme.text,
               }}
             >
-              {lang === 'vi' ? 'Sọc hàng' : 'Striped'}
+              {dict.striped || 'Striped'}
             </button>
           </div>
         </div>
@@ -606,7 +643,7 @@ export default function TableCreatePanel({
         {/* Padding selection */}
         <div className="space-y-1.5">
           <span className="text-[11px] font-semibold opacity-85 block">
-            {lang === 'vi' ? 'Khoảng đệm ô (Cell Padding):' : 'Cell Padding:'}
+            {dict.cellPadding || 'Cell Padding:'}
           </span>
           <div className="grid grid-cols-3 gap-1.5">
             {(['compact', 'normal', 'relaxed'] as const).map((pad) => (
@@ -623,7 +660,7 @@ export default function TableCreatePanel({
                   color: cellPadding === pad ? theme.accent : theme.text,
                 }}
               >
-                {pad === 'compact' ? (lang === 'vi' ? 'Gọn' : 'Compact') : pad === 'normal' ? (lang === 'vi' ? 'Vừa' : 'Normal') : (lang === 'vi' ? 'Rộng' : 'Relaxed')}
+                {pad === 'compact' ? (dict.compact || 'Compact') : pad === 'normal' ? (dict.normal || 'Normal') : (dict.relaxed || 'Relaxed')}
               </button>
             ))}
           </div>
@@ -649,15 +686,13 @@ export default function TableCreatePanel({
         {insertedSuccess ? (
           <>
             <Check size={14} />
-            <span>{lang === 'vi' ? 'Đã chèn bảng thành công!' : 'Table inserted!'}</span>
+            <span>{dict.done || 'Inserted!'}</span>
           </>
         ) : (
           <>
             <Sparkles size={14} />
             <span>
-              {lang === 'vi'
-                ? `+ Chèn Bảng (${activeTab === 'grid' ? hoveredCols : customCols} Cột × ${activeTab === 'grid' ? hoveredRows : customRows} Hàng)`
-                : `+ Insert Table (${activeTab === 'grid' ? hoveredCols : customCols}×${activeTab === 'grid' ? hoveredRows : customRows})`}
+              + {dict.insertTable || 'Insert Table'} ({activeTab === 'grid' ? hoveredCols : customCols}×{activeTab === 'grid' ? hoveredRows : customRows})
             </span>
           </>
         )}

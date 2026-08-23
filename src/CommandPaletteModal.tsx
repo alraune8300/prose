@@ -35,6 +35,26 @@ export default function CommandPaletteModal({
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
+  const tUI = {
+    placeholder: {
+      vi: 'Gõ lệnh hoặc > / / để lọc...',
+      en: 'Type a command or > / / to filter...',
+      fr: 'Tapez une commande ou > / / pour filtrer...',
+    },
+    filter: { vi: 'Lọc:', en: 'Filter:', fr: 'Filtre:' },
+    table: { vi: 'Bảng (Table)', en: 'Table', fr: 'Tableau' },
+    foldAll: { vi: 'Gập Đề Mục', en: 'Fold All', fr: 'Plier tout' },
+    focusMode: { vi: 'Chế độ tập trung', en: 'Focus Mode', fr: 'Mode focus' },
+    splitDiff: { vi: 'So Sánh', en: 'Split Diff', fr: 'Comparer' },
+    noCommands: { vi: 'Không tìm thấy lệnh phù hợp với', en: 'No commands found matching', fr: 'Aucune commande trouvée pour' }
+  };
+
+  const getT = (key: keyof typeof tUI) => {
+    const k = tUI[key];
+    if (!k) return '';
+    return (k as Record<string, string>)[lang] || k.en;
+  };
+
   // Check if query is in Prefix / Command-only mode
   const isCommandOnlyMode = query.startsWith('>') || query.startsWith('/');
   const cleanQuery = isCommandOnlyMode ? query.slice(1).trim().toLowerCase() : query.trim().toLowerCase();
@@ -203,35 +223,39 @@ export default function CommandPaletteModal({
           className="flex items-center gap-1.5 px-3 py-1.5 border-b text-xs overflow-x-auto shrink-0 select-none"
           style={{ borderColor: theme.borderFaint || theme.border, backgroundColor: theme.isDark ? 'rgba(0,0,0,0.15)' : 'rgba(0,0,0,0.02)' }}
         >
-          <span className="text-[10px] uppercase font-mono tracking-wider opacity-40 shrink-0 pr-1">Lọc:</span>
+          <span className="text-[10px] uppercase font-mono tracking-wider opacity-40 shrink-0 pr-1">{getT('filter')}</span>
           {[
-            { label: 'Bảng (Table)', cmd: '> insert table' },
-            { label: 'Gập Đề Mục', cmd: '> fold all' },
-            { label: 'Focus Mode', cmd: '> toggle focus' },
-            { label: 'So Sánh', cmd: '> split diff' },
-          ].map((quick, i) => (
-            <button
-              key={i}
-              onClick={() => {
-                setQuery(quick.cmd);
-                inputRef.current?.focus();
-              }}
-              className="px-2 py-0.5 rounded text-[11px] font-mono border transition-all hover:opacity-100 cursor-pointer shrink-0 opacity-60"
-              style={{
-                borderColor: theme.borderFaint || theme.border,
-                color: theme.text,
-              }}
-            >
-              {quick.label}
-            </button>
-          ))}
+            { label: getT('table'), cmd: '> insert table' },
+            { label: getT('foldAll'), cmd: '> fold all' },
+            { label: getT('focusMode'), cmd: '> toggle focus' },
+            { label: getT('splitDiff'), cmd: '> split diff' },
+          ].map((quick, i) => {
+            const isActive = query === quick.cmd;
+            return (
+              <button
+                key={i}
+                onClick={() => {
+                  setQuery(isActive ? '' : quick.cmd);
+                  inputRef.current?.focus();
+                }}
+                className={`px-2 py-0.5 rounded text-[11px] font-mono border transition-all hover:opacity-100 cursor-pointer shrink-0 ${isActive ? 'opacity-100 font-semibold' : 'opacity-60'}`}
+                style={{
+                  borderColor: isActive ? theme.accent : (theme.borderFaint || theme.border),
+                  backgroundColor: isActive ? theme.accentLight || 'rgba(0,0,0,0.05)' : 'transparent',
+                  color: isActive ? theme.accent : theme.text,
+                }}
+              >
+                {quick.label}
+              </button>
+            );
+          })}
         </div>
 
         {/* Command List Container */}
         <div ref={listRef} className="flex-1 overflow-y-auto p-2 space-y-3">
           {filteredCommands.length === 0 ? (
             <div className="p-8 text-center opacity-40 flex flex-col items-center justify-center gap-2 text-xs">
-              <span>{lang === 'vi' ? 'Không tìm thấy lệnh nào phù hợp' : 'No matching commands found'}</span>
+              <span>{getT('noCommands')}</span>
             </div>
           ) : (
             Object.entries(groupedCommands).map(([category, items]) => (
@@ -259,13 +283,13 @@ export default function CommandPaletteModal({
                         item.perform();
                       }}
                       onMouseEnter={() => setSelectedIndex(currentIndex)}
-                      className={`flex items-center justify-between px-3 py-2 rounded-xl cursor-pointer transition-all duration-100`}
+                      className={`flex items-center justify-between px-3 py-2 rounded-xl cursor-pointer transition-all duration-100 ${isSelected ? 'shadow-sm' : ''}`}
                       style={{
                         backgroundColor: isSelected
-                          ? (theme.isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)')
+                          ? theme.isDark ? 'rgba(255, 255, 255, 0.08)' : theme.accentLight || 'rgba(0,0,0,0.04)'
                           : 'transparent',
                         borderLeft: isSelected
-                          ? `3px solid ${theme.text}`
+                          ? `3px solid ${theme.accent}`
                           : '3px solid transparent',
                       }}
                     >

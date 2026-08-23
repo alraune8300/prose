@@ -458,27 +458,85 @@ const renderFolder = (folder: Folder, depth = 0) => {
 
   return (
     <div
-      onClick={() => setFolderMenuOpenId(null)}
       style={{
-        width: 280, flexShrink: 0, display: 'flex', flexDirection: 'column',
+        width: '100%', flexShrink: 0, display: 'flex', flexDirection: 'row',
         height: '100%', maxHeight: '100%',
         background: c.panel,
-        borderRight: `1px solid ${c.borderFaint}`,
         overflow: 'hidden',
       }}
     >
-      {/* Header */}
+      {/* Vertical tab strip */}
+      <div style={{
+        width: 44, flexShrink: 0, height: '100%',
+        background: c.isDark ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.04)',
+        borderRight: `1px solid ${c.borderFaint}`,
+        display: 'flex', flexDirection: 'column',
+        paddingTop: 12, overflowY: 'auto', gap: 4, alignItems: 'center'
+      }}>
+        {onGoHome && (
+          <button
+            onClick={onGoHome}
+            title={t(lang, 'returnToWelcome') || 'Return to Welcome Screen'}
+            style={{
+              width: 36, height: 36,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              border: 'none', borderRadius: 8,
+              background: 'transparent',
+              color: c.textFaint,
+              cursor: 'pointer', transition: 'all 0.15s',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.color = c.text; e.currentTarget.style.background = c.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)' }}
+            onMouseLeave={e => { e.currentTarget.style.color = c.textFaint; e.currentTarget.style.background = 'transparent' }}
+          >
+            <Home size={18} />
+          </button>
+        )}
+        {onGoHome && <div style={{ width: 24, height: 1, background: c.borderFaint, margin: '4px 0' }} />}
+        {[
+          { key: 'files', icon: FileText, label: t(lang, 'files') || 'Files' },
+          { key: 'footnotes', icon: Bookmark, label: t(lang, 'footnotes') || 'Footnotes' },
+          { key: 'citations', icon: BookOpen, label: t(lang, 'citations') || 'Citations' },
+          { key: 'table', icon: TableIcon, label: lang === 'vi' ? 'Bảng' : 'Table' },
+        ].map(tab => {
+          const active = (props.leftSidebarMainTab || 'files') === tab.key
+          return (
+            <button
+              key={tab.key}
+              title={tab.label}
+              onClick={() => (props.onLeftSidebarMainTabChange as (k: string) => void)?.(tab.key)}
+              style={{
+                width: 36, height: 36,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                border: 'none', borderRadius: 8,
+                background: active ? c.accentLight : 'transparent',
+                color: active ? c.accent : c.textFaint,
+                cursor: 'pointer', transition: 'all 0.15s',
+              }}
+              onMouseEnter={e => {
+                if (!active) { e.currentTarget.style.color = c.text; e.currentTarget.style.background = c.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)' }
+              }}
+              onMouseLeave={e => {
+                if (!active) { e.currentTarget.style.color = c.textFaint; e.currentTarget.style.background = 'transparent' }
+              }}
+            >
+              <tab.icon size={18} />
+            </button>
+          )
+        })}
+      </div>
+
+      <div
+        onClick={() => setFolderMenuOpenId(null)}
+        style={{
+          flex: 1, flexShrink: 0, display: 'flex', flexDirection: 'column',
+          height: '100%', maxHeight: '100%',
+          borderRight: `1px solid ${c.borderFaint}`,
+          overflow: 'hidden', minWidth: 0,
+        }}
+      >
+        {/* Header */}
       <div style={{ padding: '16px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, borderBottom: `1px solid ${c.borderFaint}`, gap: 8 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, height: 24, minWidth: 0, overflow: 'hidden' }}>
-          {onGoHome && (
-            <button
-              onClick={onGoHome}
-              title={t(lang, 'returnToWelcome') || 'Return to Welcome Screen'}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', color: c.textMuted, padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', width: 18, height: 18, flexShrink: 0 }}
-            >
-              <Home size={18} />
-            </button>
-          )}
           <div 
             style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', flex: 1, overflow: 'hidden' }}
             onClick={() => setShowProjSearch(v => !v)}
@@ -581,46 +639,6 @@ const renderFolder = (folder: Folder, depth = 0) => {
         </div>
       )}
 
-      {/* Main Sidebar Tab Switcher */}
-      <div className="flex border-b px-2 py-2 gap-1 shrink-0" style={{ borderColor: c.border, backgroundColor: c.surface }}>
-        <button
-          type="button"
-          onClick={() => (props.onLeftSidebarMainTabChange as unknown as (tab: 'files' | 'footnotes' | 'citations' | 'table') => void)?.('files')}
-          className={`flex-1 py-1.5 px-1.5 rounded-lg text-xs font-medium flex items-center justify-center gap-1 transition-all ${(props.leftSidebarMainTab || 'files') === 'files' ? 'shadow-xs font-semibold' : ''}`}
-          style={{ backgroundColor: (props.leftSidebarMainTab || 'files') === 'files' ? c.accentLight : 'transparent', color: (props.leftSidebarMainTab || 'files') === 'files' ? c.accent : c.textMuted }}
-        >
-          <FileText size={13} />
-          <span className="truncate">{t(lang, 'files') || 'Files'}</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => (props.onLeftSidebarMainTabChange as unknown as (tab: 'files' | 'footnotes' | 'citations' | 'table') => void)?.('footnotes')}
-          className={`flex-1 py-1.5 px-1.5 rounded-lg text-xs font-medium flex items-center justify-center gap-1 transition-all ${props.leftSidebarMainTab === 'footnotes' ? 'shadow-xs font-semibold' : ''}`}
-          style={{ backgroundColor: props.leftSidebarMainTab === 'footnotes' ? c.accentLight : 'transparent', color: props.leftSidebarMainTab === 'footnotes' ? c.accent : c.textMuted }}
-        >
-          <Bookmark size={13} />
-          <span className="truncate">{t(lang, 'footnotes') || 'Footnotes'}</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => (props.onLeftSidebarMainTabChange as unknown as (tab: 'files' | 'footnotes' | 'citations' | 'table') => void)?.('citations')}
-          className={`flex-1 py-1.5 px-1.5 rounded-lg text-xs font-medium flex items-center justify-center gap-1 transition-all ${props.leftSidebarMainTab === 'citations' ? 'shadow-xs font-semibold' : ''}`}
-          style={{ backgroundColor: props.leftSidebarMainTab === 'citations' ? c.accentLight : 'transparent', color: props.leftSidebarMainTab === 'citations' ? c.accent : c.textMuted }}
-        >
-          <BookOpen size={13} />
-          <span className="truncate">{t(lang, 'citations') || 'Citations'}</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => (props.onLeftSidebarMainTabChange as unknown as (tab: 'files' | 'footnotes' | 'citations' | 'table') => void)?.('table')}
-          className={`flex-1 py-1.5 px-1.5 rounded-lg text-xs font-medium flex items-center justify-center gap-1 transition-all ${props.leftSidebarMainTab === 'table' ? 'shadow-xs font-semibold' : ''}`}
-          style={{ backgroundColor: props.leftSidebarMainTab === 'table' ? c.accentLight : 'transparent', color: props.leftSidebarMainTab === 'table' ? c.accent : c.textMuted }}
-          title={lang === 'vi' ? 'Bảng điều khiển Bảng biểu' : 'Table Inspector'}
-        >
-          <TableIcon size={13} />
-          <span className="truncate">{lang === 'vi' ? 'Bảng' : 'Table'}</span>
-        </button>
-      </div>
 
       {/* Main scrollable body */}
       <div style={{ flex: 1, height: '100%', overflowY: 'auto', overflowX: 'hidden', minHeight: 0, display: 'flex', flexDirection: 'column' }}>
@@ -792,6 +810,7 @@ const renderFolder = (folder: Folder, depth = 0) => {
           )}
         </div>
       )}
+    </div>
     </div>
   )
 }
