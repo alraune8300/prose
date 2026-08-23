@@ -2442,65 +2442,25 @@ export default function App() {
               {(() => {
                 const isPreviewOrFocus = isPreviewMode || isFocusMode;
                 const isPageless = pageFormat.paperSize === 'pageless';
-
                 const paperWidth = pageFormat.orientation === 'landscape'
                   ? (PAPER_SIZES_PX[pageFormat.paperSize]?.h || 1123)
                   : (PAPER_SIZES_PX[pageFormat.paperSize]?.w || 794);
                 const paperHeight = pageFormat.orientation === 'landscape'
                   ? (PAPER_SIZES_PX[pageFormat.paperSize]?.w || 794)
                   : (PAPER_SIZES_PX[pageFormat.paperSize]?.h || 1123);
+                const autoFitScale = containerWidth < paperWidth ? (containerWidth / paperWidth) : 1;
+                const marginPx = 72 * 4 / 3; // 96px
 
-                if (isPreviewOrFocus) {
-                  return (
+                return (
+                  <>
                     <div
-                      className="w-full max-w-[640px] md:max-w-[700px] lg:max-w-3xl mt-2 sm:mt-4 mb-20 rounded-2xl md:rounded-3xl p-5 sm:p-8 md:p-12 border shadow-2xl relative transition-all duration-300 kgv-hardware-accelerated kgv-adaptive-paper mx-auto"
-                      style={{
-                        backgroundColor: theme.surface || '#ffffff',
-                        borderColor: theme.border,
-                        color: theme.text,
-                      }}
-                    >
-                      {/* Title Header in Preview / Focus card */}
-                      <div className="text-center mb-6 pt-2">
-                        <h1
-                          className="text-2xl sm:text-3xl font-serif font-semibold tracking-tight"
-                          style={{ fontFamily: `'${docFont}', Georgia, serif`, color: theme.text }}
-                        >
-                          {activePage?.title || 'Untitled Document'}
-                        </h1>
-                        <div className="w-12 h-0.5 mx-auto mt-3 rounded opacity-30" style={{ backgroundColor: theme.text }} />
-                      </div>
-
-                      <Editor
-                        key={activePage?.id || 'empty'}
-                        theme={theme}
-                        docFont={docFont}
-                        fontSize={fontSize}
-                        formatState={formatState}
-                        onEditorReady={setEditorInstance}
-                        t={t}
-                        content={activePage?.content || ''}
-                        onContentChange={handleContentChange}
-                        isFocusMode={isFocusMode}
-                        onToggleFocusMode={handleToggleFocusMode}
-                        isPreviewMode={isPreviewMode}
-                        onTogglePreviewMode={handleTogglePreviewMode}
-                        typewriterMode={typewriterMode}
-                      />
-                    </div>
-                  );
-                }
-
-                if (blockViewOpen) {
-                  return (
-                    <div
-                      className="flex-1 flex flex-col w-full relative transition-all duration-300 ease-in-out kgv-hardware-accelerated h-full w-full max-w-3xl px-4 md:px-6 pt-2 pb-24 md:pt-4 md:pb-32"
+                      className={`flex-1 flex flex-col w-full relative transition-all duration-300 ease-in-out kgv-hardware-accelerated h-full max-w-3xl px-4 md:px-6 pt-2 pb-24 md:pt-4 md:pb-32 ${blockViewOpen ? "flex" : "hidden"}`}
                       style={{ backgroundColor: 'transparent' }}
                     >
-                      {editorInstance && (
+                      {editorInstance && blockViewOpen && (
                         <BlockOrganizerPanel 
-                          editor={editorInstance as TiptapEditorType} 
-                          onClose={() => setBlockViewOpen(false)} 
+                          editor={editorInstance as TiptapEditorType}
+                          onClose={() => setBlockViewOpen(false)}
                           theme={theme}
                           lang={lang}
                           uiFont={uiFont}
@@ -2511,188 +2471,95 @@ export default function App() {
                           setActiveBlockEditor={setActiveBlockEditor}
                         />
                       )}
-                      {/* Keep the Editor mounted but hidden so the state is preserved */}
-                      <div className="hidden">
-                        <Editor
-                          key={activePage?.id || 'empty'}
-                          theme={theme}
-                          docFont={docFont}
-                          fontSize={fontSize}
-                          formatState={formatState}
-                          onEditorReady={setEditorInstance}
-                          t={t}
-                          content={activePage?.content || ''}
-                          onContentChange={handleContentChange}
-                          isFocusMode={isFocusMode}
-                          onToggleFocusMode={handleToggleFocusMode}
-                          isPreviewMode={isPreviewMode}
-                          onTogglePreviewMode={handleTogglePreviewMode}
-                          typewriterMode={typewriterMode}
-                        />
-                      </div>
                     </div>
-                  );
-                }
-                if (isPageless) {
-                  return (
-                    <div
-                      className={`flex-1 flex flex-col w-full relative transition-all duration-300 ease-in-out kgv-hardware-accelerated max-w-4xl px-8 md:px-16 pt-12 pb-24 md:pt-16 md:pb-32 ${blockViewOpen ? "hidden" : ""}`}
-                      style={{
-                        maxWidth: `${formatState.maxW || 800}px`,
-                        backgroundColor: 'transparent',
-                        color: theme.text,
-                      }}
+
+                    <div 
+                      className={`w-full flex-col items-center transition-all duration-300 relative ${blockViewOpen ? "hidden" : "flex"}`}
+                      style={!isPreviewOrFocus && !isPageless ? { width: `${paperWidth}px`, zoom: autoFitScale } : {}}
                     >
-                      <Editor
-                        key={activePage?.id || 'empty'}
-                        theme={theme}
-                        docFont={docFont}
-                        fontSize={fontSize}
-                        formatState={formatState}
-                        onEditorReady={setEditorInstance}
-                        t={t}
-                        content={activePage?.content || ''}
-                        onContentChange={handleContentChange}
-                        isFocusMode={isFocusMode}
-                        onToggleFocusMode={handleToggleFocusMode}
-                        isPreviewMode={isPreviewMode}
-                        onTogglePreviewMode={handleTogglePreviewMode}
-                        typewriterMode={typewriterMode}
-                      />
-                    </div>
-                  );
-                }
-
-                const autoFitScale = containerWidth < paperWidth ? (containerWidth / paperWidth) : 1;
-                const marginPx = 72 * 4 / 3; // 96px
-
-                return (
-                  <div 
-                    className={`document-workspace flex flex-col items-center transition-all duration-300 relative ${blockViewOpen ? "hidden" : ""}`}
-                    style={{ 
-                      width: `${paperWidth}px`, 
-                      zoom: autoFitScale 
-                    }}
-                  >
-                    {/* On-screen continuous physical page container */}
-                    <div className="flex flex-col items-center w-full no-print">
-                      <div
-                        className="paper-page relative rounded-lg shadow-md transition-all duration-200 border"
-                        style={{
-                          '--page-surface': theme.surface || '#ffffff',
-                          width: `${paperWidth}px`,
-                          minHeight: `${paperHeight}px`,
-                          backgroundColor: theme.surface || '#ffffff',
-                          borderColor: theme.border || 'rgba(0,0,0,0.06)',
-                          paddingLeft: `${marginPx}px`,
-                          paddingRight: `${marginPx}px`,
-                          paddingTop: `${marginPx}px`,
-                          paddingBottom: `${marginPx}px`,
-                          boxSizing: 'border-box',
-                          position: 'relative',
-                          backgroundImage: `repeating-linear-gradient(to bottom, transparent, transparent calc(${paperHeight}px - 32px), ${theme.bg} calc(${paperHeight}px - 32px), ${theme.bg} ${paperHeight}px)`,
-                        } as React.CSSProperties}
-                      >
-                        {/* Page Header (Tên tài liệu) */}
+                      <div className={!isPreviewOrFocus && !isPageless ? "flex flex-col items-center w-full no-print" : "w-full"}>
                         <div
-                          className="absolute left-0 w-full text-center flex items-center justify-center text-[10px] uppercase tracking-wider opacity-40 font-semibold pointer-events-none select-none"
-                          style={{
-                            top: '48px',
-                            height: '36px',
-                            color: theme.textMuted,
-                            fontFamily: uiFont,
-                          }}
+                          className={
+                            isPreviewOrFocus
+                              ? "w-full max-w-[640px] md:max-w-[700px] lg:max-w-3xl mt-2 sm:mt-4 mb-20 rounded-2xl md:rounded-3xl p-5 sm:p-8 md:p-12 border shadow-2xl relative transition-all duration-300 kgv-hardware-accelerated kgv-adaptive-paper mx-auto"
+                              : isPageless
+                                ? "flex-1 flex flex-col w-full relative transition-all duration-300 ease-in-out kgv-hardware-accelerated max-w-4xl px-8 md:px-16 pt-12 pb-24 md:pt-16 md:pb-32 mx-auto"
+                                : "paper-page relative rounded-lg shadow-md transition-all duration-200 border"
+                          }
+                          style={
+                            isPreviewOrFocus
+                              ? { backgroundColor: theme.surface || '#ffffff', borderColor: theme.border, color: theme.text }
+                              : isPageless
+                                ? { maxWidth: `${formatState.maxW || 800}px`, backgroundColor: 'transparent', color: theme.text }
+                                : {
+                                    '--page-surface': theme.surface || '#ffffff',
+                                    width: `${paperWidth}px`,
+                                    minHeight: `${paperHeight}px`,
+                                    backgroundColor: theme.surface || '#ffffff',
+                                    borderColor: theme.border || 'rgba(0,0,0,0.06)',
+                                    paddingLeft: `${marginPx}px`,
+                                    paddingRight: `${marginPx}px`,
+                                    paddingTop: `${marginPx}px`,
+                                    paddingBottom: `${marginPx}px`,
+                                    boxSizing: 'border-box',
+                                    position: 'relative',
+                                    backgroundImage: `repeating-linear-gradient(to bottom, transparent, transparent calc(${paperHeight}px - 32px), ${theme.bg} calc(${paperHeight}px - 32px), ${theme.bg} ${paperHeight}px)`,
+                                  }
+                          }
                         >
-                          {activePage?.title || 'Untitled Document'}
-                        </div>
+                          {isPreviewOrFocus && (
+                            <div className="text-center mb-6 pt-2">
+                              <h1
+                                className="text-2xl sm:text-3xl font-serif font-semibold tracking-tight"
+                                style={{ fontFamily: `'${docFont}', Georgia, serif`, color: theme.text }}
+                              >
+                                {activePage?.title || 'Untitled Document'}
+                              </h1>
+                              <div className="w-12 h-0.5 mx-auto mt-3 rounded opacity-30" style={{ backgroundColor: theme.text }} />
+                            </div>
+                          )}
 
-                        {/* Content block: Single Tiptap editor */}
-                        <div className="w-full h-full relative" style={{ color: theme.text }}>
-                          <Editor
-                            key={activePage?.id || 'empty'}
-                            theme={theme}
-                            docFont={docFont}
-                            headingFont={headingFont}
-                            monoFont={monoFont}
-                            fontSize={fontSize}
-                            formatState={formatState}
-                            onEditorReady={setEditorInstance}
-                            t={t}
-                            content={activePage?.content || ''}
-                            onContentChange={handleContentChange}
-                            isFocusMode={isFocusMode}
-                            onToggleFocusMode={handleToggleFocusMode}
-                            isPreviewMode={isPreviewMode}
-                            onTogglePreviewMode={handleTogglePreviewMode}
-                            typewriterMode={typewriterMode}
-                          />
-                        </div>
+                          {!isPreviewOrFocus && !isPageless && (
+                            <div
+                              className="absolute left-0 w-full text-center flex items-center justify-center text-[10px] uppercase tracking-wider opacity-40 font-semibold pointer-events-none select-none"
+                              style={{
+                                top: '48px',
+                                height: '36px',
+                                color: theme.textMuted,
+                                fontFamily: uiFont,
+                              }}
+                            >
+                              {activePage?.title || 'Untitled Document'}
+                            </div>
+                          )}
 
-                        {/* Page Numbering Visual Footer Indicator (Preview/Live Paper Mode) */}
-                        {formatState.pageNumbering?.enabled && (
-                          <div
-                            className={`absolute w-full px-12 flex items-center text-[11px] font-medium opacity-60 pointer-events-none select-none ${
-                              formatState.pageNumbering.position === 'top-right'
-                                ? 'top-10 justify-end'
-                                : formatState.pageNumbering.position === 'bottom-right'
-                                ? 'bottom-6 justify-end'
-                                : 'bottom-6 justify-center'
-                            }`}
-                            style={{
-                              color: theme.textMuted,
-                              fontFamily: uiFont,
-                            }}
-                          >
-                            <span>
-                              {formatState.pageNumbering.style === 'page-of-total'
-                                ? (lang === 'vi' ? 'Trang 1 / 1' : 'Page 1 of 1')
-                                : formatState.pageNumbering.style === 'roman'
-                                ? 'i'
-                                : '1'}
-                            </span>
+                          <div className={!isPreviewOrFocus && !isPageless ? "w-full h-full relative" : "w-full relative"} style={!isPreviewOrFocus && !isPageless ? { color: theme.text } : {}}>
+                            <Editor
+                              key={activePage?.id || 'empty'}
+                              theme={theme}
+                              docFont={docFont}
+                              headingFont={headingFont}
+                              monoFont={monoFont}
+                              fontSize={fontSize}
+                              formatState={formatState}
+                              onEditorReady={setEditorInstance}
+                              t={t}
+                              content={activePage?.content || ''}
+                              onContentChange={handleContentChange}
+                              isFocusMode={isFocusMode}
+                              onToggleFocusMode={handleToggleFocusMode}
+                              isPreviewMode={isPreviewMode}
+                              onTogglePreviewMode={handleTogglePreviewMode}
+                              typewriterMode={typewriterMode}
+                              creativeOptions={creativeOptions}
+                              codexEntities={codexEntities}
+                              editorialHighlight={editorialHighlight}
+                            />
                           </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Print Layout (Only shown when printing) */}
-                    <div className="hidden print:block w-full">
-                      <div
-                        className="relative bg-white text-black"
-                        style={{
-                          width: `${paperWidth}px`,
-                          paddingLeft: `${marginPx}px`,
-                          paddingRight: `${marginPx}px`,
-                          paddingTop: `${marginPx}px`,
-                          paddingBottom: `${marginPx}px`,
-                          boxSizing: 'border-box',
-                        }}
-                      >
-                        <div
-                          className="absolute left-0 w-full text-center flex items-center justify-center text-[10px] uppercase tracking-wider font-semibold"
-                          style={{
-                            top: '48px',
-                            height: '36px',
-                            color: '#555555',
-                            fontFamily: uiFont,
-                          }}
-                        >
-                          {activePage?.title || 'Untitled Document'}
                         </div>
-
-                        <div 
-                          className="ProseMirror kgv-editor text-left"
-                          style={{
-                            color: '#000000',
-                            fontFamily: `'${formatState?.fontFam || docFont}', Georgia, serif`,
-                            fontSize: `${formatState?.fontSize || fontSize || 16}px`,
-                            lineHeight: `${Math.round((formatState?.fontSize || fontSize || 16) * (formatState?.lineH || 1.7))}px`,
-                          }}
-                          dangerouslySetInnerHTML={{ __html: activePage?.content || '<p></p>' }}
-                        />
                       </div>
                     </div>
-                  </div>
+                  </>
                 );
               })()}
               </div>

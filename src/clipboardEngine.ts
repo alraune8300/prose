@@ -241,12 +241,18 @@ export function handleSmartEditorPaste(editor: Editor, event: React.ClipboardEve
   const text = clipboardData.getData('text/plain') || '';
 
   // Tier 1: Check for Table structure (from Excel / Google Sheets / Numbers / HTML / TSV / Markdown Table)
-  const tableMatrix = parseClipboardTable(text, html);
-  if (tableMatrix && tableMatrix.length > 0 && (tableMatrix.length > 1 || (tableMatrix[0] && tableMatrix[0].length > 1))) {
-    const ok = insertParsedTable(editor, tableMatrix);
-    if (ok) {
-      event.preventDefault();
-      return true;
+  // Only intercept if we are inside a table (matrix-fill), OR if there's no HTML (e.g. TSV plain text).
+  // Normal HTML tables pasted outside a table will fall through to Tier 2 (Rich HTML) to preserve inline formatting.
+  const shouldExtractTable = editor.isActive('table') || !html || html.trim() === '';
+
+  if (shouldExtractTable) {
+    const tableMatrix = parseClipboardTable(text, html);
+    if (tableMatrix && tableMatrix.length > 0 && (tableMatrix.length > 1 || (tableMatrix[0] && tableMatrix[0].length > 1))) {
+      const ok = insertParsedTable(editor, tableMatrix);
+      if (ok) {
+        event.preventDefault();
+        return true;
+      }
     }
   }
 

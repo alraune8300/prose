@@ -245,9 +245,17 @@ export default function BlockOrganizerPanel({
       blockContentMapRef.current[blockId] = json.content;
     }
     if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
-    syncTimeoutRef.current = setTimeout(() => {
-      flushToMainEditor();
+    syncTimeoutRef.current = setTimeout(() => { flushToMainEditor();
+      
     }, 200);
+  }, [flushToMainEditor]);
+
+  // Ensure we flush to main editor when the panel is unmounted (e.g. by clicking normal view)
+  useEffect(() => {
+    return () => {
+      if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
+      
+    };
   }, [flushToMainEditor]);
 
   useEffect(() => {
@@ -266,8 +274,8 @@ export default function BlockOrganizerPanel({
 
   const handleClose = useCallback(() => {
     if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
-    flushToMainEditor();
-    if (setActiveBlockEditor) setActiveBlockEditor(null);
+    
+    flushToMainEditor(); if (setActiveBlockEditor) setActiveBlockEditor(null);
     onClose();
   }, [flushToMainEditor, onClose, setActiveBlockEditor]);
 
@@ -279,7 +287,7 @@ export default function BlockOrganizerPanel({
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
-      flushToMainEditor();
+      
       if (setActiveBlockEditor) setActiveBlockEditor(null);
     };
   }, [handleClose, flushToMainEditor, setActiveBlockEditor]);
