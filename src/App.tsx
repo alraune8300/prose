@@ -224,7 +224,6 @@ export default function App() {
           }
           return 'table';
         });
-        setSidebarOpen(true);
       } else {
         setLeftSidebarMainTab((currentTab) => {
           if (currentTab === 'table') {
