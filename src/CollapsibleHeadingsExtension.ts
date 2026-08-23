@@ -10,6 +10,10 @@ let collapsedSet = new Set<string>();
 
 export function foldAllHeadingsInDoc(editorView: EditorView) {
   if (!editorView || !editorView.state) return;
+
+  const scrollContainer = document.querySelector('.kgv-scroll');
+  const prevScroll = scrollContainer ? scrollContainer.scrollTop : 0;
+
   const newSet = new Set<string>();
   editorView.state.doc.descendants((node: ProseMirrorNode, pos: number) => {
     if (node.type.name === 'heading') {
@@ -19,23 +23,63 @@ export function foldAllHeadingsInDoc(editorView: EditorView) {
   });
   collapsedSet = newSet;
   editorView.dispatch(editorView.state.tr.setMeta(collapsiblePluginKey, { updated: true }));
+
+  if (scrollContainer) {
+    requestAnimationFrame(() => { scrollContainer.scrollTop = prevScroll; });
+  }
 }
 
 export function unfoldAllHeadingsInDoc(editorView: EditorView) {
   if (!editorView || !editorView.state) return;
+
+  const scrollContainer = document.querySelector('.kgv-scroll');
+  const prevScroll = scrollContainer ? scrollContainer.scrollTop : 0;
+
   collapsedSet.clear();
   editorView.dispatch(editorView.state.tr.setMeta(collapsiblePluginKey, { updated: true }));
+
+  if (scrollContainer) {
+    requestAnimationFrame(() => { scrollContainer.scrollTop = prevScroll; });
+  }
 }
 
 export function toggleHeadingFold(editorView: EditorView, pos: number, textContent: string) {
   if (!editorView || !editorView.state) return;
   const key = `${pos}-${textContent.slice(0, 30)}`;
+
+  const scrollContainer = document.querySelector('.kgv-scroll');
+  let prevScroll = 0;
+  let headingY = 0;
+  if (scrollContainer) {
+    prevScroll = scrollContainer.scrollTop;
+    try {
+      headingY = editorView.coordsAtPos(pos).top;
+    } catch (e) {}
+  }
+
   if (collapsedSet.has(key)) {
     collapsedSet.delete(key);
   } else {
     collapsedSet.add(key);
   }
+  
   editorView.dispatch(editorView.state.tr.setMeta(collapsiblePluginKey, { updated: true }));
+
+  if (scrollContainer) {
+    requestAnimationFrame(() => {
+      try {
+        if (headingY > 0) {
+           const newHeadingY = editorView.coordsAtPos(pos).top;
+           const diff = newHeadingY - headingY;
+           scrollContainer.scrollTop += diff;
+        } else {
+           scrollContainer.scrollTop = prevScroll;
+        }
+      } catch (e) {
+        scrollContainer.scrollTop = prevScroll;
+      }
+    });
+  }
 }
 
 export const CollapsibleHeadingsExtension = Extension.create({

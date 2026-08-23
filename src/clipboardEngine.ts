@@ -153,8 +153,8 @@ export function sanitizePastedHtml(rawHtml: string): string {
  * Checks if a plain text string contains common markdown structures
  * (Headings, Bold, Italic, Blockquotes, Lists, Tables, Code fences, Links).
  */
-export function isMarkdownText(text: string): boolean {
-  if (!text || text.trim().length < 2) return false;
+export function isMarkdownText(text: string): number {
+  if (!text || text.trim().length < 2) return 0;
   const trimmed = text.trim();
 
   // Heading markers: # H1, ## H2, ### H3
@@ -184,15 +184,15 @@ export function isMarkdownText(text: string): boolean {
   // Count signals
   let signals = 0;
   if (hasHeading) signals += 2;
-  if (hasList) signals += 1.5;
-  if (hasBlockquote) signals += 1.5;
-  if (hasCodeBlock) signals += 2;
+  if (hasList) signals += 1;
+  if (hasBlockquote) signals += 1;
+  if (hasCodeBlock) signals += 1;
   if (hasEmphasis) signals += 1;
-  if (hasTable) signals += 3;
-  if (hasLinkOrImage) signals += 1.5;
+  if (hasTable) signals += 2;
+  if (hasLinkOrImage) signals += 1;
   if (hasHr) signals += 1;
 
-  return signals >= 2;
+  return signals;
 }
 
 /**
@@ -250,8 +250,13 @@ export function handleSmartEditorPaste(editor: Editor, event: React.ClipboardEve
     }
   }
 
+  // Evaluate Markdown signals
+  const mdSignals = isMarkdownText(text);
+  const isStrongMarkdown = mdSignals >= 2;
+
   // Tier 2: Check for Rich HTML (Word / Google Docs / Web pages)
-  if (html && html.trim().length > 0) {
+  // Skip this tier if we have strong markdown signals (e.g. copied from a UI that wraps markdown in HTML)
+  if (!isStrongMarkdown && html && html.trim().length > 0) {
     const cleanedHtml = sanitizePastedHtml(html);
     if (cleanedHtml && cleanedHtml.length > 0) {
       // Check if it has actual semantic tags or is just a wrapped plain string
@@ -265,7 +270,7 @@ export function handleSmartEditorPaste(editor: Editor, event: React.ClipboardEve
   }
 
   // Tier 3: Check for Raw Markdown syntax in plain text
-  if (text && isMarkdownText(text)) {
+  if (text && mdSignals >= 1) {
     event.preventDefault();
     const mdHtml = parseMarkdownToHtml(text);
     if (mdHtml && mdHtml.trim()) {

@@ -36,22 +36,63 @@ export default function CommandPaletteModal({
   const listRef = useRef<HTMLDivElement>(null);
 
   const tUI = {
-    placeholder: {
-      vi: 'Gõ lệnh hoặc > / / để lọc...',
+    placeholder: { 
       en: 'Type a command or > / / to filter...',
+      vi: 'Gõ lệnh hoặc > / / để lọc...',
       fr: 'Tapez une commande ou > / / pour filtrer...',
+      de: 'Einen Befehl eingeben oder > / / zum Filtern...',
+      it: 'Digita un comando o > / / per filtrare...',
+      es: 'Escribe un comando o > / / para filtrar...',
+      ko: '명령어를 입력하거나 > / / 를 입력하여 필터링...',
+      zh: '输入命令或 > / / 进行过滤...',
+      ja: 'コマンドを入力するか、> / / でフィルタリング...'
     },
-    filter: { vi: 'Lọc:', en: 'Filter:', fr: 'Filtre:' },
-    table: { vi: 'Bảng (Table)', en: 'Table', fr: 'Tableau' },
-    foldAll: { vi: 'Gập Đề Mục', en: 'Fold All', fr: 'Plier tout' },
-    focusMode: { vi: 'Chế độ tập trung', en: 'Focus Mode', fr: 'Mode focus' },
-    splitDiff: { vi: 'So Sánh', en: 'Split Diff', fr: 'Comparer' },
-    noCommands: { vi: 'Không tìm thấy lệnh phù hợp với', en: 'No commands found matching', fr: 'Aucune commande trouvée pour' }
+    filter: {
+      en: 'Filter:',
+      vi: 'Lọc:',
+      fr: 'Filtre:',
+      de: 'Filter:',
+      it: 'Filtro:',
+      es: 'Filtro:',
+      ko: '필터:',
+      zh: '过滤:',
+      ja: 'フィルター:'
+    },
+    table: { en: 'Table', vi: 'Bảng (Table)', fr: 'Tableau', de: 'Tabelle', it: 'Tabella', es: 'Tabla', ko: '표', zh: '表格', ja: 'テーブル' },
+    foldAll: { en: 'Fold All', vi: 'Gập Đề Mục', fr: 'Plier tout', de: 'Alle einklappen', it: 'Riduci tutto', es: 'Plegar todo', ko: '모두 접기', zh: '折叠全部', ja: 'すべて折りたたむ' },
+    focusMode: { en: 'Focus Mode', vi: 'Chế độ tập trung', fr: 'Mode focus', de: 'Fokus-Modus', it: 'Modalità Focus', es: 'Modo enfoque', ko: '집중 모드', zh: '专注模式', ja: '集中モード' },
+    splitDiff: { en: 'Split Diff', vi: 'So Sánh', fr: 'Comparer', de: 'Vergleich', it: 'Confronta', es: 'Comparar', ko: '비교', zh: '对比', ja: '比較' },
+    noCommands: { 
+      en: 'No commands found matching',
+      vi: 'Không tìm thấy lệnh phù hợp với',
+      fr: 'Aucune commande trouvée pour',
+      de: 'Keine Befehle gefunden für',
+      it: 'Nessun comando trovato per',
+      es: 'No se encontraron comandos para',
+      ko: '일치하는 명령이 없습니다',
+      zh: '未找到匹配的命令',
+      ja: '一致するコマンドがありません'
+    },
+    navigate: { en: 'Navigate', vi: 'Di chuyển', fr: 'Naviguer', de: 'Navigieren', it: 'Naviga', es: 'Navegar', ko: '이동', zh: '导航', ja: '移動' },
+    select: { en: 'Select', vi: 'Chọn', fr: 'Sélectionner', de: 'Auswählen', it: 'Seleziona', es: 'Seleccionar', ko: '선택', zh: '选择', ja: '選択' }
+  };
+
+  const categoryT = {
+    'Actions & Tools': { en: 'Actions & Tools', vi: 'Công cụ & Hành động', fr: 'Actions & Outils', de: 'Aktionen & Tools', it: 'Azioni e Strumenti', es: 'Acciones y Herramientas', ko: '작업 및 도구', zh: '操作与工具', ja: 'アクションとツール' },
+    'View & Layout': { en: 'View & Layout', vi: 'Hiển thị & Giao diện', fr: 'Vue & Mise en page', de: 'Ansicht & Layout', it: 'Visualizzazione e Layout', es: 'Vista y Diseño', ko: '보기 및 레이아웃', zh: '视图与布局', ja: '表示とレイアウト' },
+    'Navigation & Search': { en: 'Navigation & Search', vi: 'Điều hướng & Tìm kiếm', fr: 'Navigation & Recherche', de: 'Navigation & Suche', it: 'Navigazione e Ricerca', es: 'Navegación y Búsqueda', ko: '탐색 및 검색', zh: '导航与搜索', ja: 'ナビゲーションと検索' },
+    'System & Export': { en: 'System & Export', vi: 'Hệ thống & Xuất file', fr: 'Système & Export', de: 'System & Export', it: 'Sistema ed Esportazione', es: 'Sistema y Exportación', ko: '시스템 및 내보내기', zh: '系统与导出', ja: 'システムとエクスポート' }
   };
 
   const getT = (key: keyof typeof tUI) => {
     const k = tUI[key];
     if (!k) return '';
+    return (k as Record<string, string>)[lang] || k.en;
+  };
+
+  const getCatT = (cat: string) => {
+    const k = categoryT[cat as keyof typeof categoryT];
+    if (!k) return cat;
     return (k as Record<string, string>)[lang] || k.en;
   };
 
@@ -266,7 +307,7 @@ export default function CommandPaletteModal({
                   style={{ color: theme.text }}
                 >
                   <Hash size={10} />
-                  <span>{category}</span>
+                  <span>{getCatT(category)}</span>
                 </div>
 
                 {/* Items */}
@@ -288,9 +329,6 @@ export default function CommandPaletteModal({
                         backgroundColor: isSelected
                           ? theme.isDark ? 'rgba(255, 255, 255, 0.08)' : theme.accentLight || 'rgba(0,0,0,0.04)'
                           : 'transparent',
-                        borderLeft: isSelected
-                          ? `3px solid ${theme.accent}`
-                          : '3px solid transparent',
                       }}
                     >
                       <div className="flex items-center gap-2.5 min-w-0 pr-2">
@@ -339,10 +377,10 @@ export default function CommandPaletteModal({
         >
           <div className="flex items-center gap-3">
             <span>
-              <kbd className="px-1 py-0.5 rounded border">↑↓</kbd> Di chuyển
+              <kbd className="px-1 py-0.5 rounded border">↑↓</kbd> {getT('navigate')}
             </span>
             <span>
-              <kbd className="px-1 py-0.5 rounded border">↵</kbd> Chọn
+              <kbd className="px-1 py-0.5 rounded border">↵</kbd> {getT('select')}
             </span>
           </div>
           <div className="flex items-center gap-1 font-sans font-medium">

@@ -7,6 +7,25 @@ import { getEditorExtensions } from './Editor';
 import { ThemeColors } from './types';
 import { t, Lang } from './i18n';
 
+const blockTranslations: Record<string, Record<string, string>> = {
+  quote: { en: 'Quote', vi: 'Trích dẫn', fr: 'Citation', de: 'Zitat', it: 'Citazione', es: 'Cita', ko: '인용', zh: '引用', ja: '引用' },
+  list: { en: 'List', vi: 'Danh sách', fr: 'Liste', de: 'Liste', it: 'Elenco', es: 'Lista', ko: '목록', zh: '列表', ja: 'リスト' },
+  paragraph: { en: 'Paragraph', vi: 'Đoạn văn', fr: 'Paragraphe', de: 'Absatz', it: 'Paragrafo', es: 'Párrafo', ko: '문단', zh: '段落', ja: '段落' },
+  dragToReorder: { en: 'Drag to reorder', vi: 'Kéo để sắp xếp', fr: 'Faire glisser pour réorganiser', de: 'Zum Neuordnen ziehen', it: 'Trascina per riordinare', es: 'Arrastrar para reordenar', ko: '드래그하여 순서 변경', zh: '拖动以重新排序', ja: 'ドラッグして並べ替え' },
+  duplicateBlock: { en: 'Duplicate Block', vi: 'Nhân bản khối', fr: 'Dupliquer le bloc', de: 'Block duplizieren', it: 'Duplica blocco', es: 'Duplicar bloque', ko: '블록 복제', zh: '复制块', ja: 'ブロックを複製' },
+  deleteBlock: { en: 'Delete Block', vi: 'Xóa khối', fr: 'Supprimer le bloc', de: 'Block löschen', it: 'Elimina blocco', es: 'Eliminar bloque', ko: '블록 삭제', zh: '删除块', ja: 'ブロックを削除' },
+  options: { en: 'Options', vi: 'Tuỳ chọn', fr: 'Options', de: 'Optionen', it: 'Opzioni', es: 'Opciones', ko: '옵션', zh: '选项', ja: 'オプション' },
+  turnInto: { en: 'Turn Into', vi: 'Chuyển thành', fr: 'Transformer en', de: 'Umwandeln in', it: 'Trasforma in', es: 'Convertir en', ko: '전환', zh: '转换为', ja: '変換' },
+  heading1: { en: 'Heading 1', vi: 'Tiêu đề 1', fr: 'Titre 1', de: 'Überschrift 1', it: 'Intestazione 1', es: 'Título 1', ko: '제목 1', zh: '标题 1', ja: '見出し 1' },
+  heading2: { en: 'Heading 2', vi: 'Tiêu đề 2', fr: 'Titre 2', de: 'Überschrift 2', it: 'Intestazione 2', es: 'Título 2', ko: '제목 2', zh: '标题 2', ja: '見出し 2' },
+  heading3: { en: 'Heading 3', vi: 'Tiêu đề 3', fr: 'Titre 3', de: 'Überschrift 3', it: 'Intestazione 3', es: 'Título 3', ko: '제목 3', zh: '标题 3', ja: '見出し 3' },
+  duplicate: { en: 'Duplicate', vi: 'Nhân bản', fr: 'Dupliquer', de: 'Duplizieren', it: 'Duplica', es: 'Duplicar', ko: '복제', zh: '复制', ja: '複製' },
+};
+
+const getBlockT = (lang: Lang, key: keyof typeof blockTranslations) => {
+  return blockTranslations[key]?.[lang as string] || blockTranslations[key]?.['en'] || key;
+};
+
 interface BlockItem {
   id: string;
   index: number;
@@ -357,10 +376,10 @@ export default function BlockOrganizerPanel({
       case 'heading1': return 'H1';
       case 'heading2': return 'H2';
       case 'heading3': return 'H3';
-      case 'blockquote': return 'Quote';
+      case 'blockquote': return getBlockT(lang, 'quote');
       case 'bulletList':
-      case 'orderedList': return 'List';
-      default: return 'Paragraph';
+      case 'orderedList': return getBlockT(lang, 'list');
+      default: return getBlockT(lang, 'paragraph');
     }
   };
 
@@ -464,7 +483,7 @@ export default function BlockOrganizerPanel({
                                 alignItems: 'center',
                               }}
                               className="hover:text-blue-500 transition-colors"
-                              title="Drag to reorder"
+                              title={getBlockT(lang, 'dragToReorder')}
                             >
                               <GripVertical size={13} />
                             </div>
@@ -499,7 +518,7 @@ export default function BlockOrganizerPanel({
                           <div style={{ display: 'flex', alignItems: 'center', gap: '2px', position: 'relative' }}>
                             <button
                               onClick={() => handleDuplicate(block)}
-                              title="Duplicate Block"
+                              title={getBlockT(lang, 'duplicateBlock')}
                               style={{
                                 background: 'transparent',
                                 border: 'none',
@@ -517,7 +536,7 @@ export default function BlockOrganizerPanel({
 
                             <button
                               onClick={() => handleDelete(block)}
-                              title="Delete Block"
+                              title={getBlockT(lang, 'deleteBlock')}
                               style={{
                                 background: 'transparent',
                                 border: 'none',
@@ -535,7 +554,7 @@ export default function BlockOrganizerPanel({
 
                             <button
                               onClick={() => setActiveMenu(activeMenu === block.id ? null : block.id)}
-                              title="Turn into / Options"
+                              title={getBlockT(lang, 'options')}
                               style={{
                                 background: 'transparent',
                                 border: 'none',
@@ -569,15 +588,17 @@ export default function BlockOrganizerPanel({
                                 }}
                               >
                                 <div style={{ padding: '8px', borderBottom: `1px solid ${theme.borderFaint}` }}>
-                                  <div style={{ fontSize: '0.7rem', color: theme.textFaint, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px', paddingLeft: '8px' }}>Turn Into</div>
-                                  <button onClick={() => handleTurnInto(block, 'paragraph')} style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '6px 8px', background: 'none', border: 'none', color: theme.text, cursor: 'pointer', borderRadius: '4px', fontSize: '0.85rem' }} className="hover:bg-black/5 dark:hover:bg-white/10"><Type size={14} /> Paragraph</button>
-                                  <button onClick={() => handleTurnInto(block, 'heading1')} style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '6px 8px', background: 'none', border: 'none', color: theme.text, cursor: 'pointer', borderRadius: '4px', fontSize: '0.85rem' }} className="hover:bg-black/5 dark:hover:bg-white/10"><Heading1 size={14} /> Heading 1</button>
-                                  <button onClick={() => handleTurnInto(block, 'heading2')} style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '6px 8px', background: 'none', border: 'none', color: theme.text, cursor: 'pointer', borderRadius: '4px', fontSize: '0.85rem' }} className="hover:bg-black/5 dark:hover:bg-white/10"><Heading2 size={14} /> Heading 2</button>
-                                  <button onClick={() => handleTurnInto(block, 'heading3')} style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '6px 8px', background: 'none', border: 'none', color: theme.text, cursor: 'pointer', borderRadius: '4px', fontSize: '0.85rem' }} className="hover:bg-black/5 dark:hover:bg-white/10"><Heading3 size={14} /> Heading 3</button>
-                                  <button onClick={() => handleTurnInto(block, 'blockquote')} style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '6px 8px', background: 'none', border: 'none', color: theme.text, cursor: 'pointer', borderRadius: '4px', fontSize: '0.85rem' }} className="hover:bg-black/5 dark:hover:bg-white/10"><Quote size={14} /> Quote</button>
+                                  <div style={{ fontSize: '0.7rem', color: theme.textFaint, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px', paddingLeft: '8px' }}>
+                                    {getBlockT(lang, 'turnInto')}
+                                  </div>
+                                  <button onClick={() => handleTurnInto(block, 'paragraph')} style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '6px 8px', background: 'none', border: 'none', color: theme.text, cursor: 'pointer', borderRadius: '4px', fontSize: '0.85rem' }} className="hover:bg-black/5 dark:hover:bg-white/10"><Type size={14} /> {getBlockT(lang, 'paragraph')}</button>
+                                  <button onClick={() => handleTurnInto(block, 'heading1')} style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '6px 8px', background: 'none', border: 'none', color: theme.text, cursor: 'pointer', borderRadius: '4px', fontSize: '0.85rem' }} className="hover:bg-black/5 dark:hover:bg-white/10"><Heading1 size={14} /> {getBlockT(lang, 'heading1')}</button>
+                                  <button onClick={() => handleTurnInto(block, 'heading2')} style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '6px 8px', background: 'none', border: 'none', color: theme.text, cursor: 'pointer', borderRadius: '4px', fontSize: '0.85rem' }} className="hover:bg-black/5 dark:hover:bg-white/10"><Heading2 size={14} /> {getBlockT(lang, 'heading2')}</button>
+                                  <button onClick={() => handleTurnInto(block, 'heading3')} style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '6px 8px', background: 'none', border: 'none', color: theme.text, cursor: 'pointer', borderRadius: '4px', fontSize: '0.85rem' }} className="hover:bg-black/5 dark:hover:bg-white/10"><Heading3 size={14} /> {getBlockT(lang, 'heading3')}</button>
+                                  <button onClick={() => handleTurnInto(block, 'blockquote')} style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '6px 8px', background: 'none', border: 'none', color: theme.text, cursor: 'pointer', borderRadius: '4px', fontSize: '0.85rem' }} className="hover:bg-black/5 dark:hover:bg-white/10"><Quote size={14} /> {getBlockT(lang, 'quote')}</button>
                                 </div>
                                 <div style={{ padding: '8px' }}>
-                                  <button onClick={() => handleDuplicate(block)} style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '6px 8px', background: 'none', border: 'none', color: theme.text, cursor: 'pointer', borderRadius: '4px', fontSize: '0.85rem' }} className="hover:bg-black/5 dark:hover:bg-white/10"><Copy size={14} /> Duplicate</button>
+                                  <button onClick={() => handleDuplicate(block)} style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '6px 8px', background: 'none', border: 'none', color: theme.text, cursor: 'pointer', borderRadius: '4px', fontSize: '0.85rem' }} className="hover:bg-black/5 dark:hover:bg-white/10"><Copy size={14} /> {getBlockT(lang, 'duplicate')}</button>
                                 </div>
                               </div>
                             )}
