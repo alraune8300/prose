@@ -16,7 +16,6 @@ import FlashcardStudio from './FlashcardStudio';
 import GoogleFontsPanel from './GoogleFontsPanel';
 import SplitRevisionStudio from './SplitRevisionStudio';
 import CommandPaletteModal, { type CommandItem } from './CommandPaletteModal';
-import TableGridPickerModal from './TableGridPickerModal';
 import Editor from './Editor';
 import Toolbar from './Toolbar';
 import WelcomeScreen from './WelcomeScreen';
@@ -179,11 +178,11 @@ export default function App() {
     } catch { return []; }
   });
   const [citationStyle, setCitationStyle] = useState<CitationStyle>('apa');
-  const [leftSidebarMainTab, setLeftSidebarMainTab] = useState<'files' | 'footnotes' | 'citations'>('files');
+  const [leftSidebarMainTab, setLeftSidebarMainTab] = useState<'files' | 'footnotes' | 'citations' | 'table'>('files');
+  const previousLeftSidebarTabRef = useRef<'files' | 'footnotes' | 'citations'>('files');
 
-  // Command Palette & Table Picker states
+  // Command Palette states
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
-  const [tablePickerOpen, setTablePickerOpen] = useState(false);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -192,14 +191,38 @@ export default function App() {
         setCommandPaletteOpen(prev => !prev);
       }
     };
-    const handleOpenTable = () => setTablePickerOpen(true);
+    const handleOpenTable = () => {
+      setRightPanelTab('table');
+      setRightOpen(true);
+    };
+
+    const handleTableActiveChange = (e: Event) => {
+      const { inTable } = (e as CustomEvent).detail || {};
+      if (inTable) {
+        setLeftSidebarMainTab((currentTab) => {
+          if (currentTab !== 'table') {
+            previousLeftSidebarTabRef.current = currentTab as 'files' | 'footnotes' | 'citations';
+          }
+          return 'table';
+        });
+      } else {
+        setLeftSidebarMainTab((currentTab) => {
+          if (currentTab === 'table') {
+            return previousLeftSidebarTabRef.current || 'files';
+          }
+          return currentTab;
+        });
+      }
+    };
 
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('kgv-open-table-picker', handleOpenTable);
+    window.addEventListener('kgv-table-active-change', handleTableActiveChange);
 
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('kgv-open-table-picker', handleOpenTable);
+      window.removeEventListener('kgv-table-active-change', handleTableActiveChange);
     };
   }, []);
 
@@ -410,25 +433,39 @@ export default function App() {
 
   const [fontExplorerOpen, setFontExplorerOpen] = useState(false);
   
-  const [formatState, setFormatState] = useState<FormatState>({
-    fontFam: loadFont(),
-    headingFontFam: loadHeadingFont(),
-    monoFontFam: loadMonoFont(),
-    fontSize: fontSize,
-    lineH: 1.7,
-    align: 'left',
-    maxW: 794,
-    paraSpacing: 1,
-    letterSpacing: 0,
-    wordSpacing: 0,
-    smartQuotes: true,
-    smartEllipses: true,
-    markdownShortcuts: true,
-    doubleSpacePeriod: false,
-    toggleHeadings: false,
-    dashesMode: 'en-em',
-    firstLineIndent: false,
+  const [formatState, setFormatState] = useState<FormatState>(() => {
+    const saved = LS.getJSON<FormatState>('kgv-format-state');
+    return {
+      fontFam: loadFont(),
+      headingFontFam: loadHeadingFont(),
+      monoFontFam: loadMonoFont(),
+      fontSize: fontSize,
+      lineH: 1.7,
+      align: 'left',
+      maxW: 794,
+      paraSpacing: 1,
+      letterSpacing: 0,
+      wordSpacing: 0,
+      smartQuotes: true,
+      smartEllipses: true,
+      markdownShortcuts: true,
+      doubleSpacePeriod: false,
+      toggleHeadings: false,
+      dashesMode: 'en-em',
+      firstLineIndent: false,
+      pageNumbering: {
+        enabled: false,
+        position: 'bottom-center',
+        style: 'arabic',
+        skipTitlePage: true,
+      },
+      ...(saved || {}),
+    };
   });
+
+  useEffect(() => {
+    LS.setJSON('kgv-format-state', formatState);
+  }, [formatState]);
 
   useEffect(() => {
     document.documentElement.style.setProperty('--kgv-body-font', `'${docFont}', Georgia, serif`);
@@ -650,12 +687,15 @@ export default function App() {
   const commandActions: CommandItem[] = useMemo(() => [
     {
       id: 'insert-table',
-      label: lang === 'vi' ? 'Chèn bảng tương tác (Rich Table)' : 'Insert Rich Table',
+      label: lang === 'vi' ? 'Tạo bảng biểu (Right Panel)' : 'Insert Rich Table (Right Panel)',
       category: 'Actions & Tools',
       icon: <Table size={16} />,
       shortcut: 'Alt+T',
-      description: lang === 'vi' ? 'Chèn bảng với tùy chọn kích thước, thêm hàng/cột linh hoạt' : 'Insert a customizable rich text table',
-      perform: () => setTablePickerOpen(true),
+      description: lang === 'vi' ? 'Mở thanh tạo bảng ma trận và mẫu bảng ở bên phải' : 'Open table creation panel in right sidebar',
+      perform: () => {
+        setRightPanelTab('table');
+        setRightOpen(true);
+      },
     },
     {
       id: 'delete-table',
@@ -691,6 +731,31 @@ export default function App() {
       shortcut: 'F11',
       description: lang === 'vi' ? 'Ẩn tất cả thanh công cụ để tập trung viết' : 'Hide all UI panels for distraction-free writing',
       perform: () => setIsFocusMode(prev => !prev),
+    },
+    {
+      id: 'toggle-page-numbering',
+      label: t.togglePageNumbering || (lang === 'vi' ? 'Bật/Tắt đánh số trang' : 'Toggle Page Numbering'),
+      category: 'View & Layout',
+      icon: <FileText size={16} />,
+      shortcut: 'Alt + P',
+      description: t.togglePageNumberingDesc || (lang === 'vi' ? 'Bật hoặc tắt bộ đánh số trang động CSS Paged Media' : 'Toggle dynamic page numbering in print and preview'),
+      perform: () => {
+        setFormatState(prev => {
+          const current = prev.pageNumbering || {
+            enabled: false,
+            position: 'bottom-center',
+            style: 'arabic',
+            skipTitlePage: true,
+          };
+          return {
+            ...prev,
+            pageNumbering: {
+              ...current,
+              enabled: !current.enabled,
+            }
+          };
+        });
+      },
     },
     {
       id: 'toggle-preview-mode',
@@ -1625,8 +1690,8 @@ export default function App() {
   }, []);
 
   const handleExportPdf = useCallback(() => {
-    exportToPdf(activePage?.title || 'Document', activePage?.content || '', pageFormat);
-  }, [activePage, pageFormat]);
+    exportToPdf(activePage?.title || 'Document', activePage?.content || '', pageFormat, formatState.pageNumbering);
+  }, [activePage, pageFormat, formatState.pageNumbering]);
 
   const handlePrint = useCallback(() => {
     const existing = document.getElementById('kgv-print-style');
@@ -1643,14 +1708,60 @@ export default function App() {
     else if (paperSize === 'A4') pageSizeCss = `210mm 297mm ${orientation}`;
     else if (paperSize === 'pageless') pageSizeCss = `8.5in 11in ${orientation}`;
 
+    // CSS Paged Media Page Numbering generation
+    const pageNumConfig = formatState.pageNumbering;
+    let pageCounterCss = '';
+    if (pageNumConfig?.enabled) {
+      const pos = pageNumConfig.position || 'bottom-center';
+      let pageSlot = '@bottom-center';
+      if (pos === 'bottom-right') pageSlot = '@bottom-right';
+      else if (pos === 'top-right') pageSlot = '@top-right';
+
+      let counterContent = 'counter(page)';
+      if (pageNumConfig.style === 'page-of-total') {
+        counterContent = `'Trang ' counter(page) ' / ' counter(pages)`;
+      } else if (pageNumConfig.style === 'roman') {
+        counterContent = 'counter(page, lower-roman)';
+      }
+
+      const marginBoxRule = `
+        ${pageSlot} {
+          content: ${counterContent};
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+          font-size: 9pt;
+          color: #777777;
+          font-weight: normal;
+        }
+      `;
+
+      let firstPageRule = '';
+      if (pageNumConfig.skipTitlePage) {
+        firstPageRule = `
+          @page :first {
+            ${pageSlot} {
+              content: none !important;
+            }
+          }
+        `;
+      }
+
+      pageCounterCss = `
+        @page {
+          ${marginBoxRule}
+        }
+        ${firstPageRule}
+      `;
+    }
+
     const style = document.createElement('style');
     style.id = 'kgv-print-style';
     style.textContent = `
       @media print {
         @page {
           size: ${pageSizeCss};
-          margin: 0 !important;
+          margin: 1.5cm !important;
         }
+        ${pageCounterCss}
         
         body {
           background: #ffffff !important;
@@ -1732,7 +1843,7 @@ export default function App() {
     setTimeout(() => {
       window.print();
     }, 150);
-  }, [pageFormat]);
+  }, [pageFormat, formatState.pageNumbering]);
 
   const handleExportDocx = useCallback(() => {
     exportToDocx(activePage?.title || 'Document', activePage?.content || '', pageFormat);
@@ -1876,6 +1987,7 @@ export default function App() {
         `}
       >
         <LeftPanel
+          editor={editorInstance}
           projects={projects}
           activeProjectId={activeProjectId}
           activePageId={activePageId}
@@ -2425,6 +2537,31 @@ export default function App() {
                             typewriterMode={typewriterMode}
                           />
                         </div>
+
+                        {/* Page Numbering Visual Footer Indicator (Preview/Live Paper Mode) */}
+                        {formatState.pageNumbering?.enabled && (
+                          <div
+                            className={`absolute w-full px-12 flex items-center text-[11px] font-medium opacity-60 pointer-events-none select-none ${
+                              formatState.pageNumbering.position === 'top-right'
+                                ? 'top-10 justify-end'
+                                : formatState.pageNumbering.position === 'bottom-right'
+                                ? 'bottom-6 justify-end'
+                                : 'bottom-6 justify-center'
+                            }`}
+                            style={{
+                              color: theme.textMuted,
+                              fontFamily: uiFont,
+                            }}
+                          >
+                            <span>
+                              {formatState.pageNumbering.style === 'page-of-total'
+                                ? (lang === 'vi' ? 'Trang 1 / 1' : 'Page 1 of 1')
+                                : formatState.pageNumbering.style === 'roman'
+                                ? 'i'
+                                : '1'}
+                            </span>
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -2797,18 +2934,6 @@ export default function App() {
         lang={lang}
         uiFont={uiFont}
         commands={commandActions}
-      />
-
-      {/* Interactive Rich Table Grid Picker Modal */}
-      <TableGridPickerModal
-        isOpen={tablePickerOpen}
-        onClose={() => setTablePickerOpen(false)}
-        onInsertTable={(rows, cols) => {
-          window.dispatchEvent(new CustomEvent('kgv-insert-table-grid', { detail: { rows, cols } }));
-        }}
-        theme={theme}
-        uiFont={uiFont}
-        lang={lang}
       />
     </div>
   );

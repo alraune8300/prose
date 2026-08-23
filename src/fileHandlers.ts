@@ -2,7 +2,7 @@ import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 import mammoth from 'mammoth';
 import TurndownService from 'turndown';
-import { PageFormat, PAPER_SIZES_PX, Project, Folder } from './types';
+import { PageFormat, PAPER_SIZES_PX, Project, Folder, PageNumberingConfig } from './types';
 import { saveProjectToDB, saveFolderToDB } from './db';
 import { Document, Packer, Paragraph, TextRun, AlignmentType, PageNumber, Footer, HeadingLevel, PageOrientation } from 'docx';
 import { extractTextFromPdfBlob } from './referenceExtractor';
@@ -18,7 +18,24 @@ const PAPER_SIZES_PT: Record<string, { w: number; h: number }> = {
   'pageless': { w: 495, h: 0 },
 };
 
-export async function exportToPdf(title: string, contentHtml: string, pageFormat: PageFormat) {
+function toRoman(num: number): string {
+  const lookup: Array<[number, string]> = [
+    [1000, 'm'], [900, 'cm'], [500, 'd'], [400, 'cd'],
+    [100, 'c'], [90, 'xc'], [50, 'l'], [40, 'xl'],
+    [10, 'x'], [9, 'ix'], [5, 'v'], [4, 'iv'], [1, 'i']
+  ];
+  let roman = '';
+  let n = num;
+  for (const [val, letter] of lookup) {
+    while (n >= val) {
+      roman += letter;
+      n -= val;
+    }
+  }
+  return roman || String(num);
+}
+
+export async function exportToPdf(title: string, contentHtml: string, pageFormat: PageFormat, pageNumbering?: PageNumberingConfig) {
   const container = document.createElement('div');
   container.id = 'pdf-export-container';
   container.style.position = 'absolute';
@@ -130,6 +147,37 @@ export async function exportToPdf(title: string, contentHtml: string, pageFormat
 
         const pageImgData = pageCanvas.toDataURL('image/png');
         pdf.addImage(pageImgData, 'PNG', 0, 0, pdfWidth, pagePdfHeight);
+
+        // Render Page Numbering overlay if enabled
+        if (pageNumbering?.enabled) {
+          const pageNum = i + 1;
+          const shouldSkip = pageNumbering.skipTitlePage && pageNum === 1;
+          if (!shouldSkip) {
+            let label = '';
+            if (pageNumbering.style === 'arabic') {
+              label = String(pageNum);
+            } else if (pageNumbering.style === 'page-of-total') {
+              label = `${pageNum} / ${totalPages}`;
+            } else if (pageNumbering.style === 'roman') {
+              label = toRoman(pageNum);
+            } else {
+              label = String(pageNum);
+            }
+
+            pdf.setFont('helvetica', 'normal');
+            pdf.setFontSize(9);
+            pdf.setTextColor(120, 120, 120);
+
+            const pos = pageNumbering.position || 'bottom-center';
+            if (pos === 'bottom-center') {
+              pdf.text(label, pdfWidth / 2, pagePdfHeight - 20, { align: 'center' });
+            } else if (pos === 'bottom-right') {
+              pdf.text(label, pdfWidth - 36, pagePdfHeight - 20, { align: 'right' });
+            } else if (pos === 'top-right') {
+              pdf.text(label, pdfWidth - 36, 28, { align: 'right' });
+            }
+          }
+        }
       }
 
       pdf.save(`${(title || 'document').replace(/[\\/:*?"<>|]/g, '')}.pdf`);

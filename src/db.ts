@@ -1,5 +1,5 @@
 import Dexie, { Table } from 'dexie';
-import type { Project, PageFormat, Folder, VersionSnapshot } from './types';
+import type { Project, PageFormat, Folder, VersionSnapshot, FormatState } from './types';
 
 export interface AppSettings {
   id: string; // 'current'
@@ -10,6 +10,7 @@ export interface AppSettings {
   fontSize?: number;
   lineHeight?: number;
   pageFormat?: PageFormat;
+  formatState?: FormatState;
   isLeftPanelOpen?: boolean;
   isRightPanelOpen?: boolean;
   typewriterMode?: boolean;

@@ -7,6 +7,7 @@ import SpellcheckPanel from './SpellcheckPanel'
 import SearchPanel from './SearchPanel'
 import VersionHistoryPanel from './VersionHistoryPanel'
 import FootnotesPanel from './FootnotesPanel'
+import TableCreatePanel from './TableCreatePanel'
 import { Lang, t as i18nT, LANG_LABELS, LANG_FLAGS } from './i18n'
 import { CustomSelect } from './CustomSelect'
 import { Download, Upload, FileText, Printer, Copy, Check, FileCode, FileSpreadsheet, FileDown } from 'lucide-react';
@@ -497,6 +498,7 @@ ${content.split('\n\n').map(para => {
 
   const TABS: { key: Exclude<Panel, 'none' | 'preview' | 'importexport'>; icon: string; label: string }[] = [
     { key: 'format', icon: '¶', label: t(lang, 'format') || 'Format' },
+    { key: 'table', icon: '⊞', label: lang === 'vi' ? 'Tạo Bảng' : 'Table' },
     { key: 'export', icon: '↓', label: t(lang, 'export') || 'Export' },
     { key: 'fonts', icon: 'Aa', label: t(lang, 'fonts') || 'Fonts' },
     { key: 'footnotes', icon: '[^]', label: t(lang, 'footnotes') || 'Footnotes' },
@@ -566,6 +568,7 @@ ${content.split('\n\n').map(para => {
             }}>
               <span style={{ fontFamily: uiFont, fontSize: '0.8rem', fontWeight: 700, color: c.text, letterSpacing: '0.02em', flex: 1, paddingRight: 8, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {panel === 'format' ? (t(lang, 'format') || 'Format') :
+                 panel === 'table' ? (lang === 'vi' ? 'Tạo Bảng Biểu' : 'Insert Table') :
                  panel === 'export' ? (t(lang, 'export') || 'Export') :
                  panel === 'footnotes' ? (t(lang, 'footnotes') || 'Footnotes') :
                  panel === 'fonts' ? (t(lang, 'fonts') || 'Fonts') :
@@ -591,6 +594,16 @@ ${content.split('\n\n').map(para => {
                 <PanelRightClose size={16} />
               </button>
             </div>
+
+        {/* TABLE CREATION PANEL */}
+        {panel === 'table' && (
+          <TableCreatePanel
+            editor={props.editor as any}
+            theme={c as any}
+            lang={lang}
+            uiFont={uiFont}
+          />
+        )}
 
         {/* FORMAT PANEL */}
         {panel === 'format' && (
@@ -900,6 +913,194 @@ ${content.split('\n\n').map(para => {
                       ))}
                     </div>
                   </div>
+                )}
+              </div>
+            </Accordion>
+
+            {/* PAGE NUMBERING & PAGINATION CONTROLS */}
+            <Accordion title={t(lang, 'pageNumbering') || 'Page Numbering'} uiFont={uiFont} c={c} defaultOpen={Boolean(formatState.pageNumbering?.enabled)}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {/* Master Switch */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: `1px solid ${c.borderFaint}` }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 2, flex: 1, paddingRight: 12 }}>
+                    <span style={{ fontFamily: uiFont, fontSize: '0.78rem', fontWeight: 600, color: c.text, lineHeight: 1.35 }}>
+                      {t(lang, 'showPageNumbers') || 'Show page numbers'}
+                    </span>
+                    <span style={{ fontFamily: uiFont, fontSize: '0.65rem', color: c.textFaint, lineHeight: 1.3 }}>
+                      {t(lang, 'showPageNumbersDesc') || 'Display dynamic page counter on print & preview'}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => {
+                      const current = formatState.pageNumbering || {
+                        enabled: false,
+                        position: 'bottom-center',
+                        style: 'arabic',
+                        skipTitlePage: true,
+                      };
+                      onFormatChange({
+                        pageNumbering: {
+                          ...current,
+                          enabled: !current.enabled,
+                        }
+                      });
+                    }}
+                    style={{
+                      width: 44, height: 24, borderRadius: 12,
+                      background: formatState.pageNumbering?.enabled ? c.accent : 'transparent',
+                      border: `1px solid ${formatState.pageNumbering?.enabled ? c.accent : c.border}`,
+                      cursor: 'pointer', position: 'relative', transition: 'all 0.2s', flexShrink: 0
+                    }}
+                  >
+                    <div style={{
+                      position: 'absolute', top: 2,
+                      left: formatState.pageNumbering?.enabled ? 22 : 2,
+                      width: 18, height: 18, borderRadius: '50%',
+                      background: formatState.pageNumbering?.enabled ? c.surface : c.border,
+                      transition: 'left 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center'
+                    }}>
+                      {formatState.pageNumbering?.enabled && <Check size={12} color={c.accent} strokeWidth={3} />}
+                    </div>
+                  </button>
+                </div>
+
+                {formatState.pageNumbering?.enabled && (
+                  <>
+                    {/* Position Selector */}
+                    <div>
+                      <div style={{ fontFamily: uiFont, fontSize: '0.64rem', fontWeight: 700, color: c.textFaint, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>
+                        {t(lang, 'position') || 'Position'}
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 5 }}>
+                        {([
+                          { id: 'bottom-center', label: t(lang, 'bottomCenter') || 'Bottom Center' },
+                          { id: 'bottom-right', label: t(lang, 'bottomRight') || 'Bottom Right' },
+                          { id: 'top-right', label: t(lang, 'topRight') || 'Top Right' },
+                        ] as const).map(pos => {
+                          const active = (formatState.pageNumbering?.position || 'bottom-center') === pos.id;
+                          return (
+                            <button
+                              key={pos.id}
+                              onClick={() => {
+                                const current = formatState.pageNumbering || {
+                                  enabled: true,
+                                  position: 'bottom-center',
+                                  style: 'arabic',
+                                  skipTitlePage: true,
+                                };
+                                onFormatChange({
+                                  pageNumbering: { ...current, position: pos.id }
+                                });
+                              }}
+                              title={pos.label}
+                              style={{
+                                padding: '6px 4px', borderRadius: 6, cursor: 'pointer',
+                                border: `1.5px solid ${active ? c.accent : c.border}`,
+                                background: active ? c.accentLight : 'transparent',
+                                color: active ? c.accent : c.textMuted,
+                                fontFamily: uiFont, fontSize: '0.68rem', fontWeight: active ? 600 : 500,
+                                transition: 'all 0.12s', textAlign: 'center', whiteSpace: 'nowrap',
+                                overflow: 'hidden', textOverflow: 'ellipsis'
+                              }}
+                            >
+                              {pos.label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Format Style Selector */}
+                    <div>
+                      <div style={{ fontFamily: uiFont, fontSize: '0.64rem', fontWeight: 700, color: c.textFaint, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>
+                        {t(lang, 'numberFormat') || 'Number Format'}
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                        {([
+                          { id: 'arabic', sample: '1, 2, 3...', title: t(lang, 'standardArabic') || 'Standard Arabic' },
+                          { id: 'page-of-total', sample: '1 / 12', title: t(lang, 'pageOfTotal') || 'Page X of Y' },
+                          { id: 'roman', sample: 'i, ii, iii...', title: t(lang, 'romanNumerals') || 'Roman Numerals' },
+                        ] as const).map(fmt => {
+                          const active = (formatState.pageNumbering?.style || 'arabic') === fmt.id;
+                          return (
+                            <button
+                              key={fmt.id}
+                              onClick={() => {
+                                const current = formatState.pageNumbering || {
+                                  enabled: true,
+                                  position: 'bottom-center',
+                                  style: 'arabic',
+                                  skipTitlePage: true,
+                                };
+                                onFormatChange({
+                                  pageNumbering: { ...current, style: fmt.id }
+                                });
+                              }}
+                              style={{
+                                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                padding: '6px 10px', borderRadius: 6, cursor: 'pointer',
+                                border: `1.5px solid ${active ? c.accent : c.border}`,
+                                background: active ? c.accentLight : 'transparent',
+                                color: active ? c.accent : c.text,
+                                fontFamily: uiFont, fontSize: '0.74rem',
+                                transition: 'all 0.12s', textAlign: 'left'
+                              }}
+                            >
+                              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                <span style={{ fontWeight: active ? 600 : 500 }}>{fmt.title}</span>
+                                <span style={{ fontSize: '0.65rem', color: active ? c.accent : c.textFaint, fontFamily: 'monospace' }}>{fmt.sample}</span>
+                              </div>
+                              {active && <Check size={14} color={c.accent} strokeWidth={2.5} />}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Skip title page option */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderTop: `1px solid ${c.borderFaint}` }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 2, flex: 1, paddingRight: 12 }}>
+                        <span style={{ fontFamily: uiFont, fontSize: '0.76rem', color: c.text, lineHeight: 1.35 }}>
+                          {t(lang, 'skipTitlePage') || 'Skip title / first page'}
+                        </span>
+                        <span style={{ fontFamily: uiFont, fontSize: '0.64rem', color: c.textFaint, lineHeight: 1.3 }}>
+                          {t(lang, 'skipTitlePageDesc') || 'Start visible numbering from page 2'}
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => {
+                          const current = formatState.pageNumbering || {
+                            enabled: true,
+                            position: 'bottom-center',
+                            style: 'arabic',
+                            skipTitlePage: true,
+                          };
+                          onFormatChange({
+                            pageNumbering: {
+                              ...current,
+                              skipTitlePage: !current.skipTitlePage,
+                            }
+                          });
+                        }}
+                        style={{
+                          width: 38, height: 22, borderRadius: 11,
+                          background: (formatState.pageNumbering?.skipTitlePage !== false) ? c.accent : 'transparent',
+                          border: `1px solid ${(formatState.pageNumbering?.skipTitlePage !== false) ? c.accent : c.border}`,
+                          cursor: 'pointer', position: 'relative', transition: 'all 0.2s', flexShrink: 0
+                        }}
+                      >
+                        <div style={{
+                          position: 'absolute', top: 2,
+                          left: (formatState.pageNumbering?.skipTitlePage !== false) ? 18 : 2,
+                          width: 16, height: 16, borderRadius: '50%',
+                          background: (formatState.pageNumbering?.skipTitlePage !== false) ? c.surface : c.border,
+                          transition: 'left 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center'
+                        }}>
+                          {(formatState.pageNumbering?.skipTitlePage !== false) && <Check size={10} color={c.accent} strokeWidth={3} />}
+                        </div>
+                      </button>
+                    </div>
+                  </>
                 )}
               </div>
             </Accordion>

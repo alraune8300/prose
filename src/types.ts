@@ -89,7 +89,7 @@ export interface Footnote {
 
 export type SyncStatus = 'saved' | 'saving' | 'unsaved' | 'error'
 
-export type Panel = 'none' | 'format' | 'export' | 'preview' | 'timer' | 'colors' | 'fonts' | 'importexport' | 'settings' | 'history' | 'search' | 'spellcheck' | 'footnotes'
+export type Panel = 'none' | 'format' | 'export' | 'preview' | 'timer' | 'colors' | 'fonts' | 'importexport' | 'settings' | 'history' | 'search' | 'spellcheck' | 'footnotes' | 'table'
 
 export type PaperSize = 'A4' | 'Letter' | 'Legal' | 'A5' | 'Tabloid' | 'pageless'
 export type PageOrientation = 'portrait' | 'landscape'
@@ -110,6 +110,16 @@ export const PAPER_SIZES_PX: Record<PaperSize, { w: number; h: number }> = {
   'pageless': { w: 660, h: 0 },
 }
 
+export type PageNumberPosition = 'bottom-center' | 'bottom-right' | 'top-right'
+export type PageNumberStyle = 'arabic' | 'page-of-total' | 'roman'
+
+export interface PageNumberingConfig {
+  enabled: boolean
+  position: PageNumberPosition
+  style: PageNumberStyle
+  skipTitlePage: boolean
+}
+
 export interface FormatState {
   fontFam: string
   headingFontFam: string
@@ -128,6 +138,7 @@ export interface FormatState {
   doubleSpacePeriod?: boolean
   toggleHeadings?: boolean
   dashesMode?: 'disabled' | 'em' | 'en-em'
+  pageNumbering?: PageNumberingConfig
 }
 
 export interface VersionSnapshot {

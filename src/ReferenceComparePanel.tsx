@@ -11,6 +11,7 @@ import type { Lang } from './i18n';
 import { t } from './i18n';
 import { processReferenceFile } from './referenceExtractor';
 import { PdfCanvasViewer } from './PdfCanvasViewer';
+import { parseMarkdownToHtml, sanitizePastedHtml } from './clipboardEngine';
 import { 
   saveReferenceDocumentToDB, 
   getReferenceDocumentFromDB, 
@@ -436,6 +437,75 @@ export default function ReferenceComparePanel({
       showToast(t(lang, 'quoteInsertedToast') || t(lang, 'splitInsertQuote') || 'Quote inserted to draft!');
       setSelectedText('');
       setPopoverPos(null);
+    }
+  };
+
+  // Extract full or selected content to main editor preserving 100% Rich Text (HTML / Markdown) format
+  const handleExtractRichToDraft = (textOrHtml?: string, isExplicitHtml: boolean = false) => {
+    let htmlToInsert = '';
+    let plainToInsert = '';
+
+    if (textOrHtml) {
+      if (isExplicitHtml) {
+        htmlToInsert = sanitizePastedHtml(textOrHtml);
+        const temp = document.createElement('div');
+        temp.innerHTML = htmlToInsert;
+        plainToInsert = temp.innerText || temp.textContent || '';
+      } else if (refType === 'markdown') {
+        htmlToInsert = parseMarkdownToHtml(textOrHtml);
+        plainToInsert = textOrHtml;
+      } else {
+        htmlToInsert = textOrHtml
+          .split(/\n\n+/)
+          .map((p) => `<p>${p.replace(/\n/g, '<br>')}</p>`)
+          .join('');
+        plainToInsert = textOrHtml;
+      }
+    } else {
+      // Full document extraction
+      if (docxHtml) {
+        htmlToInsert = sanitizePastedHtml(docxHtml);
+        plainToInsert = refContent;
+      } else if (refType === 'markdown') {
+        htmlToInsert = parseMarkdownToHtml(refContent);
+        plainToInsert = refContent;
+      } else {
+        htmlToInsert = refContent
+          .split(/\n\n+/)
+          .map((p) => `<p>${p.replace(/\n/g, '<br>')}</p>`)
+          .join('');
+        plainToInsert = refContent;
+      }
+    }
+
+    if (htmlToInsert) {
+      window.dispatchEvent(
+        new CustomEvent('kgv-insert-formatted', {
+          detail: { html: htmlToInsert, text: plainToInsert },
+        })
+      );
+      showToast(lang === 'vi' ? 'Đã trích xuất giữ nguyên 100% định dạng sang bài viết!' : 'Extracted with 100% format to main draft!');
+      setSelectedText('');
+      setPopoverPos(null);
+    }
+  };
+
+  // Drag and drop handler to drag formatted content directly to Tiptap editor
+  const handleDragStartExtract = (e: React.DragEvent) => {
+    const sel = window.getSelection();
+    const text = sel && !sel.isCollapsed ? sel.toString().trim() : refContent;
+    let html = '';
+    if (docxHtml && (!sel || sel.isCollapsed)) {
+      html = sanitizePastedHtml(docxHtml);
+    } else if (refType === 'markdown') {
+      html = parseMarkdownToHtml(text);
+    } else {
+      html = text.split(/\n\n+/).map(p => `<p>${p.replace(/\n/g, '<br>')}</p>`).join('');
+    }
+    if (e.dataTransfer) {
+      e.dataTransfer.setData('text/html', html);
+      e.dataTransfer.setData('text/plain', text);
+      e.dataTransfer.effectAllowed = 'copy';
     }
   };
 
@@ -912,36 +982,46 @@ export default function ReferenceComparePanel({
         </div>
       </div>
 
-      {/* Floating Selection Action Bar (when user selects text to quote) */}
+      {/* Floating Selection Action Bar (when user selects text to quote/extract) */}
       {selectedText && tab === 'reference' && displayMode !== 'edit' && (
         <div 
-          className="px-3 py-1.5 flex items-center justify-between gap-2 border-b animate-in fade-in slide-in-from-top-1 text-xs shrink-0 select-none"
+          className="px-3 py-1.5 flex items-center justify-between gap-2 border-b animate-in fade-in slide-in-from-top-1 text-xs shrink-0 select-none flex-wrap sm:flex-nowrap"
           style={{ backgroundColor: theme.accentLight, borderColor: theme.accentMid }}
         >
           <span className="truncate text-xs font-medium flex items-center gap-1" style={{ color: theme.accent }}>
             <Quote size={13} />
             <span>{t(lang, 'ghostClipCite') || 'Ghost Clip & Cite'}: {selectedText.length} {t(lang, 'characters')?.toLowerCase() || 'chars'}</span>
           </span>
-          <div className="flex items-center gap-1.5 shrink-0">
+          <div className="flex items-center gap-1.5 shrink-0 flex-wrap">
+            <button
+              type="button"
+              onClick={() => handleExtractRichToDraft(selectedText)}
+              className="flex items-center gap-1 px-2.5 py-1 rounded shadow-xs font-medium transition-all hover:opacity-90 active:scale-95 text-xs text-white"
+              style={{ backgroundColor: theme.accent }}
+              title="Trích xuất đoạn chọn vào bài viết (giữ 100% định dạng Rich Text)"
+            >
+              <ArrowRight size={12} />
+              <span>{lang === 'vi' ? 'Trích xuất vào bài' : 'Extract to Draft'}</span>
+            </button>
             <button
               type="button"
               onClick={() => handleQuote(selectedText)}
-              className="flex items-center gap-1 px-2.5 py-1 rounded shadow-xs font-medium transition-all hover:opacity-90 active:scale-95 text-xs text-white"
-              style={{ backgroundColor: theme.accent }}
+              className="flex items-center gap-1 px-2 py-1 rounded border shadow-xs font-medium transition-all hover:bg-white/40 active:scale-95 text-xs"
+              style={{ borderColor: theme.accent, color: theme.accent }}
               title={t(lang, 'quoteToEditor') || 'Quote to Editor'}
             >
-              <ArrowRight size={12} />
-              <span>{t(lang, 'quoteToEditor') || 'Quote to Editor'}</span>
+              <Quote size={12} />
+              <span>{lang === 'vi' ? 'Trích dẫn' : 'Quote'}</span>
             </button>
             <button
               type="button"
               onClick={() => handleAddAsFootnote(selectedText)}
-              className="flex items-center gap-1 px-2.5 py-1 rounded border shadow-xs font-medium transition-all hover:bg-white/40 active:scale-95 text-xs"
+              className="flex items-center gap-1 px-2 py-1 rounded border shadow-xs font-medium transition-all hover:bg-white/40 active:scale-95 text-xs"
               style={{ borderColor: theme.accent, color: theme.accent }}
               title={t(lang, 'addAsFootnote') || 'Add as Footnote'}
             >
               <Bookmark size={12} />
-              <span>{t(lang, 'addAsFootnote') || 'Add as Footnote'}</span>
+              <span>{lang === 'vi' ? 'Chú thích' : 'Footnote'}</span>
             </button>
             <button
               type="button"
@@ -1159,9 +1239,20 @@ export default function ReferenceComparePanel({
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
+                    onClick={() => handleExtractRichToDraft()}
+                    className="flex items-center gap-1 hover:underline font-semibold"
+                    style={{ color: theme.accent }}
+                    title="Trích xuất toàn bộ tài liệu sang bài viết chính (giữ 100% định dạng)"
+                  >
+                    <ArrowRight size={11} />
+                    <span>{lang === 'vi' ? 'Trích xuất sang bài viết' : 'Extract to Draft'}</span>
+                  </button>
+                  <span>•</span>
+                  <button
+                    type="button"
                     onClick={() => handleCopy(refContent)}
                     className="flex items-center gap-1 hover:underline font-medium"
-                    style={{ color: theme.accent }}
+                    style={{ color: theme.textMuted || theme.text }}
                   >
                     <Copy size={11} />
                     <span>{t(lang, 'splitCopyAll') || 'Copy All'}</span>
@@ -1171,19 +1262,21 @@ export default function ReferenceComparePanel({
                     type="button"
                     onClick={() => handleQuote(refContent)}
                     className="flex items-center gap-1 hover:underline font-medium"
-                    style={{ color: theme.accent }}
+                    style={{ color: theme.textMuted || theme.text }}
                   >
-                    <ArrowRight size={11} />
-                    <span>{t(lang, 'splitInsertAll') || 'Insert All to Draft'}</span>
+                    <Quote size={11} />
+                    <span>{t(lang, 'splitInsertAll') || 'Quote All'}</span>
                   </button>
                 </div>
               </div>
 
-              {/* Text Body */}
+              {/* Text Body with Drag & Drop to Editor support */}
               <div 
                 ref={contentContainerRef}
                 onMouseUp={handleMouseUp}
-                className="flex-1 overflow-y-auto p-4 select-text kgv-scroll"
+                draggable={true}
+                onDragStart={handleDragStartExtract}
+                className="flex-1 overflow-y-auto p-4 select-text kgv-scroll cursor-text"
                 style={{
                   fontFamily: `'${docFont}', Georgia, serif`,
                   fontSize: `${15 + fontSizeOffset}px`,

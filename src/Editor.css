@@ -254,30 +254,106 @@
 }
 
 /* Rich Table Engine Styles */
+.ProseMirror table.kgv-rich-table,
 .ProseMirror table {
   border-collapse: collapse;
   table-layout: fixed;
   width: 100%;
-  margin: 1rem 0;
-  overflow: hidden;
-  border-radius: 0.5rem;
+  margin: 1.25rem 0;
+  border-radius: 6px;
   border: 1px solid rgba(156, 163, 175, 0.3);
+  transition: width 0.2s ease, margin 0.2s ease;
+  position: relative;
 }
 
-.ProseMirror td,
-.ProseMirror th {
-  min-width: 1em;
+/* Table Alignment */
+.ProseMirror table[data-align="left"] {
+  margin-left: 0 !important;
+  margin-right: auto !important;
+  width: auto !important;
+  max-width: 100% !important;
+}
+
+.ProseMirror table[data-align="center"] {
+  margin-left: auto !important;
+  margin-right: auto !important;
+  width: auto !important;
+  max-width: 100% !important;
+}
+
+.ProseMirror table[data-align="full"] {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  width: 100% !important;
+}
+
+/* Table Styles: Minimal, Full Grid, Striped */
+.ProseMirror table td,
+.ProseMirror table th {
+  min-width: 2em;
   border: 1px solid rgba(156, 163, 175, 0.3);
   padding: 0.5rem 0.75rem;
   vertical-align: top;
   box-sizing: border-box;
   position: relative;
+  transition: padding 0.15s ease, background-color 0.15s ease;
 }
 
-.ProseMirror th {
+.ProseMirror table th {
   font-weight: 600;
   text-align: left;
-  background-color: rgba(156, 163, 175, 0.12);
+  background-color: rgba(156, 163, 175, 0.14);
+}
+
+/* Minimalist Style: only horizontal lines */
+.ProseMirror table[data-table-style="minimal"] {
+  border: none !important;
+  border-top: 1.5px solid rgba(156, 163, 175, 0.45) !important;
+  border-bottom: 1.5px solid rgba(156, 163, 175, 0.45) !important;
+  border-radius: 0 !important;
+}
+
+.ProseMirror table[data-table-style="minimal"] td,
+.ProseMirror table[data-table-style="minimal"] th {
+  border-left: none !important;
+  border-right: none !important;
+  border-top: 1px solid rgba(156, 163, 175, 0.25) !important;
+  border-bottom: 1px solid rgba(156, 163, 175, 0.25) !important;
+}
+
+.ProseMirror table[data-table-style="minimal"] th {
+  background: transparent !important;
+  border-bottom: 1.5px solid rgba(156, 163, 175, 0.45) !important;
+}
+
+/* Striped Rows Style */
+.ProseMirror table[data-table-style="striped"] tbody tr:nth-child(even) td {
+  background-color: rgba(156, 163, 175, 0.08);
+}
+
+/* Cell Padding Variants */
+.ProseMirror table[data-padding="compact"] td,
+.ProseMirror table[data-padding="compact"] th {
+  padding: 0.25rem 0.5rem !important;
+  font-size: 0.88em;
+}
+
+.ProseMirror table[data-padding="normal"] td,
+.ProseMirror table[data-padding="normal"] th {
+  padding: 0.5rem 0.75rem !important;
+}
+
+.ProseMirror table[data-padding="relaxed"] td,
+.ProseMirror table[data-padding="relaxed"] th {
+  padding: 0.75rem 1.15rem !important;
+}
+
+/* Active Cell Outline Highlight */
+.ProseMirror td:focus-within,
+.ProseMirror th:focus-within {
+  outline: 2px solid rgba(59, 130, 246, 0.6) !important;
+  outline-offset: -2px;
+  background-color: rgba(59, 130, 246, 0.04);
 }
 
 .ProseMirror .selectedCell:after {
@@ -285,7 +361,7 @@
   position: absolute;
   content: "";
   left: 0; right: 0; top: 0; bottom: 0;
-  background: rgba(245, 158, 11, 0.15);
+  background: rgba(59, 130, 246, 0.18);
   pointer-events: none;
 }
 
@@ -295,7 +371,8 @@
   top: 0;
   bottom: -0.5px;
   width: 4px;
-  background-color: #f59e0b;
+  background-color: #3b82f6;
+  opacity: 0.8;
   pointer-events: none;
 }
 
@@ -308,6 +385,43 @@
   cursor: ew-resize;
   cursor: col-resize;
 }
+
+/* Table Caption & Source Note rendering */
+.kgv-rich-table[data-show-caption="true"][data-caption]:not([data-caption=""]):before {
+  content: attr(data-caption);
+  display: table-caption;
+  caption-side: top;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.92em;
+  padding-bottom: 0.5rem;
+  opacity: 0.9;
+  letter-spacing: 0.01em;
+  color: currentColor;
+}
+
+.kgv-rich-table[data-show-source-note="true"][data-source-note]:not([data-source-note=""]):after {
+  content: attr(data-source-note);
+  display: table-caption;
+  caption-side: bottom;
+  text-align: left;
+  font-size: 0.82em;
+  font-style: italic;
+  padding-top: 0.5rem;
+  opacity: 0.7;
+  color: currentColor;
+}
+
+/* Dragging & Hover guides for row / col */
+.kgv-table-drag-handle {
+  transition: transform 0.15s ease, opacity 0.15s ease;
+  user-select: none;
+  touch-action: none;
+}
+.kgv-table-drag-handle:active {
+  cursor: grabbing;
+}
+
 
 
 

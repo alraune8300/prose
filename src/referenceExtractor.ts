@@ -1,6 +1,7 @@
 import * as pdfjsLib from 'pdfjs-dist';
 import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 import mammoth from 'mammoth';
+import { parseMarkdownToHtml, sanitizePastedHtml } from './clipboardEngine';
 
 // Configure PDF.js worker safely
 if (typeof window !== 'undefined') {
@@ -81,7 +82,7 @@ export async function extractTextFromPdfBlob(blob: Blob): Promise<{ text: string
 }
 
 /**
- * Extracts text and HTML from a DOCX file/blob safely
+ * Extracts text and HTML from a DOCX file/blob with full fidelity
  */
 export async function extractFromDocxBlob(blob: Blob): Promise<{ html: string; text: string }> {
   try {
@@ -90,8 +91,9 @@ export async function extractFromDocxBlob(blob: Blob): Promise<{ html: string; t
       mammoth.convertToHtml({ arrayBuffer }),
       mammoth.extractRawText({ arrayBuffer }),
     ]);
+    const cleanHtml = sanitizePastedHtml(htmlRes.value || '');
     return {
-      html: htmlRes.value || '',
+      html: cleanHtml || htmlRes.value || '',
       text: textRes.value || '',
     };
   } catch (err) {
@@ -104,7 +106,7 @@ export async function extractFromDocxBlob(blob: Blob): Promise<{ html: string; t
 }
 
 /**
- * Universal file processor: detects file type and generates both Live View and Extracted Text data
+ * Universal file processor: detects file type and generates both Live View and Extracted Text data with full rich-text fidelity
  */
 export async function processReferenceFile(file: File): Promise<ExtractedDocResult> {
   const name = file.name || 'document';
@@ -121,9 +123,15 @@ export async function processReferenceFile(file: File): Promise<ExtractedDocResu
     }
 
     const res = await extractTextFromPdfBlob(file);
+    const htmlContent = res.text
+      .split(/\n\n+/)
+      .map(p => `<p>${p.replace(/\n/g, '<br>')}</p>`)
+      .join('');
+
     return {
       title: name,
       rawText: res.text,
+      htmlContent,
       fileType: 'pdf',
       blobUrl,
       file,
@@ -182,15 +190,26 @@ export async function processReferenceFile(file: File): Promise<ExtractedDocResu
     reader.onload = (e) => {
       const text = (e.target?.result as string) || '';
       let fileType: ExtractedDocResult['fileType'] = 'text';
+      let htmlContent = '';
+
       if (lowerName.endsWith('.md') || lowerName.endsWith('.markdown')) {
         fileType = 'markdown';
+        htmlContent = parseMarkdownToHtml(text);
       } else if (/\.(js|ts|tsx|jsx|py|java|c|cpp|json|csv|html|css|xml|yaml|yml|sql|sh)$/i.test(lowerName)) {
         fileType = 'code';
+        htmlContent = `<pre><code class="language-${lowerName.split('.').pop()}">${text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</code></pre>`;
+      } else {
+        fileType = 'text';
+        htmlContent = text
+          .split(/\n\n+/)
+          .map((p) => `<p>${p.replace(/\n/g, '<br>')}</p>`)
+          .join('');
       }
 
       resolve({
         title: name,
         rawText: text,
+        htmlContent: htmlContent || text,
         fileType,
         file,
         fileSize: size,
@@ -208,3 +227,4 @@ export async function processReferenceFile(file: File): Promise<ExtractedDocResu
     reader.readAsText(file);
   });
 }
+

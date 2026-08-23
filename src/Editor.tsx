@@ -19,6 +19,8 @@ import { SearchHighlightExtension, searchHighlightKey } from './SearchHighlightE
 import { SmartFormatting } from './SmartFormattingExtension';
 import { CollapsibleHeadingsExtension, toggleHeadingFold, foldAllHeadingsInDoc, unfoldAllHeadingsInDoc } from './CollapsibleHeadingsExtension';
 import TableContextualToolbar from './TableContextualToolbar';
+import { convertTableToList, convertListToTable, getActiveTableInfo } from './tableUtils';
+import { handleSmartEditorPaste, copySelectionAs } from './clipboardEngine';
 import type { ThemeColors, FormatState } from './types';
 import type { Dict } from './i18n';
 import { executeSearchReplace, executeSearchNav } from './searchReplaceFix';
@@ -101,6 +103,9 @@ function Editor({
     onSelectionUpdate: ({ editor }) => {
       if (callbacksRef.current.onEditorReady) callbacksRef.current.onEditorReady(editor);
       handleTypewriterScroll(editor);
+
+      const inTable = editor.isActive('table');
+      window.dispatchEvent(new CustomEvent('kgv-table-active-change', { detail: { inTable } }));
       
       const spellState = spellcheckKey.getState(editor.state);
       if (spellState?.enabled && spellState?.checker) {
@@ -122,6 +127,10 @@ function Editor({
       } else {
          window.dispatchEvent(new CustomEvent('kgv-spellcheck-error', { detail: null }));
       }
+    },
+    onTransaction: ({ editor }) => {
+      const inTable = editor.isActive('table');
+      window.dispatchEvent(new CustomEvent('kgv-table-active-change', { detail: { inTable } }));
     },
     onBlur: ({ editor }) => {
       const html = editor.getHTML();
@@ -270,7 +279,60 @@ function Editor({
         autocapitalize: 'off',
         spellcheck: 'false',
       },
+      handlePaste: (_view, event) => {
+        if (editor && !editor.isDestroyed) {
+          const handled = handleSmartEditorPaste(editor, event);
+          if (handled) return true;
+        }
+        return false;
+      },
+      handleDOMEvents: {
+        copy: (_view, event) => {
+          if (!editor || editor.isDestroyed) return false;
+          // If copying while table is active, format clean table clipboard data (HTML + TSV plain text)
+          if (editor.isActive('table') && !editor.state.selection.empty) {
+            try {
+              const tableInfo = getActiveTableInfo(editor);
+              if (tableInfo) {
+                const selectedHtml = editor.getHTML();
+                const selectedText = editor.state.doc.textBetween(
+                  editor.state.selection.from,
+                  editor.state.selection.to,
+                  '\t',
+                  '\n'
+                );
+                if (event.clipboardData && (selectedHtml || selectedText)) {
+                  event.clipboardData.setData('text/html', selectedHtml);
+                  event.clipboardData.setData('text/plain', selectedText);
+                  event.preventDefault();
+                  return true;
+                }
+              }
+            } catch {
+              // fallback to standard copy
+            }
+          }
+          return false;
+        },
+      },
       handleKeyDown: (_view, event) => {
+        // Ctrl+Shift+C / Cmd+Shift+C: Copy as raw Markdown
+        if ((event.ctrlKey || event.metaKey) && event.shiftKey && (event.key === 'C' || event.key === 'c')) {
+          event.preventDefault();
+          if (editor && !editor.isDestroyed) {
+            copySelectionAs(editor, 'markdown').then((res) => {
+              if (res.success) {
+                window.dispatchEvent(
+                  new CustomEvent('kgv-toast-notify', {
+                    detail: { message: `Đã sao chép ${res.charCount} ký tự dưới dạng Markdown!` },
+                  })
+                );
+              }
+            });
+          }
+          return true;
+        }
+
         if (event.key === 'Tab') {
           event.preventDefault();
           if (editor && !editor.isDestroyed) {
@@ -310,14 +372,38 @@ function Editor({
       }
     };
     const handleInsertTableGrid = (e: Event) => {
-      const { rows, cols } = (e as CustomEvent).detail || {};
+      const { rows, cols, withHeader, styleType, alignment } = (e as CustomEvent).detail || {};
       if (editor && !editor.isDestroyed && rows && cols) {
-        editor.chain().focus().insertTable({ rows, cols, withHeaderRow: true }).run();
+        editor.chain().focus().insertTable({
+          rows,
+          cols,
+          withHeaderRow: withHeader !== undefined ? withHeader : true,
+        }).run();
+
+        if (styleType || alignment) {
+          setTimeout(() => {
+            const tableEl = document.querySelector('.kgv-editor table:last-of-type') as HTMLElement;
+            if (tableEl) {
+              if (styleType) tableEl.setAttribute('data-table-style', styleType);
+              if (alignment) tableEl.setAttribute('data-align', alignment);
+            }
+          }, 50);
+        }
       }
     };
     const handleDeleteTable = () => {
       if (editor && !editor.isDestroyed && editor.isActive('table')) {
         editor.chain().focus().deleteTable().run();
+      }
+    };
+    const handleConvertTableToList = () => {
+      if (editor && !editor.isDestroyed) {
+        convertTableToList(editor);
+      }
+    };
+    const handleConvertListToTable = () => {
+      if (editor && !editor.isDestroyed) {
+        convertListToTable(editor);
       }
     };
 
@@ -326,6 +412,8 @@ function Editor({
     window.addEventListener('kgv-unfold-all-headings', handleUnfoldAll);
     window.addEventListener('kgv-insert-table-grid', handleInsertTableGrid);
     window.addEventListener('kgv-delete-table', handleDeleteTable);
+    window.addEventListener('kgv-convert-table-to-list', handleConvertTableToList);
+    window.addEventListener('kgv-convert-list-to-table', handleConvertListToTable);
 
     return () => {
       window.removeEventListener('kgv-toggle-heading-fold', handleToggleFold);
@@ -333,6 +421,8 @@ function Editor({
       window.removeEventListener('kgv-unfold-all-headings', handleUnfoldAll);
       window.removeEventListener('kgv-insert-table-grid', handleInsertTableGrid);
       window.removeEventListener('kgv-delete-table', handleDeleteTable);
+      window.removeEventListener('kgv-convert-table-to-list', handleConvertTableToList);
+      window.removeEventListener('kgv-convert-list-to-table', handleConvertListToTable);
     };
   }, [editor]);
 
@@ -501,6 +591,32 @@ function Editor({
       });
     }
 
+    function handleCopyAs(e: Event) {
+      if (!editor || editor.isDestroyed) return;
+      const format = ((e as CustomEvent).detail?.format || 'rich') as 'rich' | 'markdown' | 'plain';
+      copySelectionAs(editor, format).then((res) => {
+        if (res.success) {
+          window.dispatchEvent(
+            new CustomEvent('kgv-toast-notify', {
+              detail: { message: `Đã sao chép ${res.charCount} ký tự (${res.format})!` },
+            })
+          );
+        }
+      });
+    }
+
+    function handleInsertFormatted(e: Event) {
+      if (!editor || editor.isDestroyed) return;
+      const { html, text } = (e as CustomEvent).detail || {};
+      if (html) {
+        editor.chain().focus().insertContent(html).run();
+      } else if (text) {
+        editor.chain().focus().insertContent(text).run();
+      }
+    }
+
+    window.addEventListener('kgv-copy-as', handleCopyAs);
+    window.addEventListener('kgv-insert-formatted', handleInsertFormatted);
     window.addEventListener('kgv-spellcheck', handleSpellcheck);
     window.addEventListener('kgv-spellcheck-replace', handleSpellcheckReplace);
     window.addEventListener('kgv-search-query', handleSearchQuery);
@@ -514,6 +630,8 @@ function Editor({
     window.addEventListener('kgv-search-replace', handleSearchReplace);
     window.addEventListener('kgv-search-nav', handleSearchNav);
     return () => {
+      window.removeEventListener('kgv-copy-as', handleCopyAs);
+      window.removeEventListener('kgv-insert-formatted', handleInsertFormatted);
       window.removeEventListener('kgv-search-replace', handleSearchReplace);
       window.removeEventListener('kgv-search-nav', handleSearchNav);
       window.removeEventListener('kgv-search-query', handleSearchQuery);
@@ -558,7 +676,7 @@ function Editor({
         } as React.CSSProperties}
       >
         <EditorContent editor={editor} />
-        
+        <TableContextualToolbar editor={editor} theme={theme} />
       </div>
     );
   }
@@ -613,19 +731,124 @@ export const getEditorExtensions = () => [
     heading: { levels: [1, 2, 3] },
     horizontalRule: {},
   }),
-  Table.configure({
+  Table.extend({
+    addAttributes() {
+      return {
+        alignment: {
+          default: 'full',
+          parseHTML: (element) => element.getAttribute('data-align') || 'full',
+          renderHTML: (attributes) => ({
+            'data-align': attributes.alignment || 'full',
+          }),
+        },
+        styleType: {
+          default: 'grid',
+          parseHTML: (element) => element.getAttribute('data-table-style') || 'grid',
+          renderHTML: (attributes) => ({
+            'data-table-style': attributes.styleType || 'grid',
+          }),
+        },
+        cellPadding: {
+          default: 'normal',
+          parseHTML: (element) => element.getAttribute('data-padding') || 'normal',
+          renderHTML: (attributes) => ({
+            'data-padding': attributes.cellPadding || 'normal',
+          }),
+        },
+        caption: {
+          default: '',
+          parseHTML: (element) => element.getAttribute('data-caption') || '',
+          renderHTML: (attributes) => ({
+            'data-caption': attributes.caption || '',
+          }),
+        },
+        showCaption: {
+          default: false,
+          parseHTML: (element) => element.getAttribute('data-show-caption') === 'true',
+          renderHTML: (attributes) => ({
+            'data-show-caption': attributes.showCaption ? 'true' : 'false',
+          }),
+        },
+        sourceNote: {
+          default: '',
+          parseHTML: (element) => element.getAttribute('data-source-note') || '',
+          renderHTML: (attributes) => ({
+            'data-source-note': attributes.sourceNote || '',
+          }),
+        },
+        showSourceNote: {
+          default: false,
+          parseHTML: (element) => element.getAttribute('data-show-source-note') === 'true',
+          renderHTML: (attributes) => ({
+            'data-show-source-note': attributes.showSourceNote ? 'true' : 'false',
+          }),
+        },
+      };
+    },
+  }).configure({
     resizable: true,
     HTMLAttributes: {
       class: 'kgv-rich-table border-collapse w-full my-4 border text-sm',
     },
   }),
-  TableRow,
-  TableCell.configure({
+  TableRow.extend({
+    addAttributes() {
+      return {
+        ...this.parent?.(),
+        backgroundColor: {
+          default: null,
+          parseHTML: (element) => element.getAttribute('data-bg') || element.style.backgroundColor || null,
+          renderHTML: (attributes) => {
+            if (!attributes.backgroundColor) return {};
+            return {
+              'data-bg': attributes.backgroundColor,
+              style: `background-color: ${attributes.backgroundColor};`,
+            };
+          },
+        },
+      };
+    },
+  }),
+  TableCell.extend({
+    addAttributes() {
+      return {
+        ...this.parent?.(),
+        backgroundColor: {
+          default: null,
+          parseHTML: (element: HTMLElement) => element.getAttribute('data-bg') || element.style.backgroundColor || null,
+          renderHTML: (attributes: Record<string, unknown>) => {
+            if (!attributes.backgroundColor) return {};
+            return {
+              'data-bg': attributes.backgroundColor as string,
+              style: `background-color: ${attributes.backgroundColor};`,
+            };
+          },
+        },
+      };
+    },
+  }).configure({
     HTMLAttributes: {
       class: 'border p-2 min-w-[80px] relative align-top',
     },
   }),
-  TableHeader.configure({
+  TableHeader.extend({
+    addAttributes() {
+      return {
+        ...this.parent?.(),
+        backgroundColor: {
+          default: null,
+          parseHTML: (element: HTMLElement) => element.getAttribute('data-bg') || element.style.backgroundColor || null,
+          renderHTML: (attributes: Record<string, unknown>) => {
+            if (!attributes.backgroundColor) return {};
+            return {
+              'data-bg': attributes.backgroundColor as string,
+              style: `background-color: ${attributes.backgroundColor};`,
+            };
+          },
+        },
+      };
+    },
+  }).configure({
     HTMLAttributes: {
       class: 'border p-2 min-w-[80px] font-semibold bg-slate-500/10 align-top text-left',
     },

@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react'
 import { Page, Folder, SyncStatus, Project } from './types'
 import { Lang, t as i18nT } from './i18n'
-import { Home, Folder as FolderIcon, Edit2, FileText, Trash2, ChevronDown, RotateCcw, X, MoreHorizontal, Upload, Plus, PanelLeftClose, Bookmark, BookOpen } from 'lucide-react'
+import { Home, Folder as FolderIcon, Edit2, FileText, Trash2, ChevronDown, RotateCcw, X, MoreHorizontal, Upload, Plus, PanelLeftClose, Bookmark, BookOpen, Table as TableIcon } from 'lucide-react'
 import { importJsonBackupFile } from './fileHandlers'
 import FootnotesPanel from './FootnotesPanel'
 import CitationsPanel from './CitationsPanel'
+import TableInspectorPanel from './TableInspectorPanel'
 import type { CitationSource, CitationStyle } from './citationsEngine'
+import type { Editor } from '@tiptap/react'
 
 function timeSince(date: Date, lang: Lang): string {
   const seconds = Math.floor((Date.now() - date.getTime()) / 1000)
@@ -580,39 +582,67 @@ const renderFolder = (folder: Folder, depth = 0) => {
       )}
 
       {/* Main Sidebar Tab Switcher */}
-      <div className="flex border-b px-3 py-2 gap-1 shrink-0" style={{ borderColor: c.border, backgroundColor: c.surface }}>
+      <div className="flex border-b px-2 py-2 gap-1 shrink-0" style={{ borderColor: c.border, backgroundColor: c.surface }}>
         <button
           type="button"
-          onClick={() => (props.onLeftSidebarMainTabChange as unknown as (tab: 'files' | 'footnotes' | 'citations') => void)?.('files')}
-          className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-medium flex items-center justify-center gap-1 transition-all ${(props.leftSidebarMainTab || 'files') === 'files' ? 'shadow-xs font-semibold' : ''}`}
+          onClick={() => (props.onLeftSidebarMainTabChange as unknown as (tab: 'files' | 'footnotes' | 'citations' | 'table') => void)?.('files')}
+          className={`flex-1 py-1.5 px-1.5 rounded-lg text-xs font-medium flex items-center justify-center gap-1 transition-all ${(props.leftSidebarMainTab || 'files') === 'files' ? 'shadow-xs font-semibold' : ''}`}
           style={{ backgroundColor: (props.leftSidebarMainTab || 'files') === 'files' ? c.accentLight : 'transparent', color: (props.leftSidebarMainTab || 'files') === 'files' ? c.accent : c.textMuted }}
         >
           <FileText size={13} />
-          <span>{t(lang, 'files') || 'Files'}</span>
+          <span className="truncate">{t(lang, 'files') || 'Files'}</span>
         </button>
         <button
           type="button"
-          onClick={() => (props.onLeftSidebarMainTabChange as unknown as (tab: 'files' | 'footnotes' | 'citations') => void)?.('footnotes')}
-          className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-medium flex items-center justify-center gap-1 transition-all ${props.leftSidebarMainTab === 'footnotes' ? 'shadow-xs font-semibold' : ''}`}
+          onClick={() => (props.onLeftSidebarMainTabChange as unknown as (tab: 'files' | 'footnotes' | 'citations' | 'table') => void)?.('footnotes')}
+          className={`flex-1 py-1.5 px-1.5 rounded-lg text-xs font-medium flex items-center justify-center gap-1 transition-all ${props.leftSidebarMainTab === 'footnotes' ? 'shadow-xs font-semibold' : ''}`}
           style={{ backgroundColor: props.leftSidebarMainTab === 'footnotes' ? c.accentLight : 'transparent', color: props.leftSidebarMainTab === 'footnotes' ? c.accent : c.textMuted }}
         >
           <Bookmark size={13} />
-          <span>{t(lang, 'footnotes') || 'Footnotes'}</span>
+          <span className="truncate">{t(lang, 'footnotes') || 'Footnotes'}</span>
         </button>
         <button
           type="button"
-          onClick={() => (props.onLeftSidebarMainTabChange as unknown as (tab: 'files' | 'footnotes' | 'citations') => void)?.('citations')}
-          className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-medium flex items-center justify-center gap-1 transition-all ${props.leftSidebarMainTab === 'citations' ? 'shadow-xs font-semibold' : ''}`}
+          onClick={() => (props.onLeftSidebarMainTabChange as unknown as (tab: 'files' | 'footnotes' | 'citations' | 'table') => void)?.('citations')}
+          className={`flex-1 py-1.5 px-1.5 rounded-lg text-xs font-medium flex items-center justify-center gap-1 transition-all ${props.leftSidebarMainTab === 'citations' ? 'shadow-xs font-semibold' : ''}`}
           style={{ backgroundColor: props.leftSidebarMainTab === 'citations' ? c.accentLight : 'transparent', color: props.leftSidebarMainTab === 'citations' ? c.accent : c.textMuted }}
         >
           <BookOpen size={13} />
-          <span>{t(lang, 'citations') || 'Citations'}</span>
+          <span className="truncate">{t(lang, 'citations') || 'Citations'}</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => (props.onLeftSidebarMainTabChange as unknown as (tab: 'files' | 'footnotes' | 'citations' | 'table') => void)?.('table')}
+          className={`flex-1 py-1.5 px-1.5 rounded-lg text-xs font-medium flex items-center justify-center gap-1 transition-all ${props.leftSidebarMainTab === 'table' ? 'shadow-xs font-semibold' : ''}`}
+          style={{ backgroundColor: props.leftSidebarMainTab === 'table' ? c.accentLight : 'transparent', color: props.leftSidebarMainTab === 'table' ? c.accent : c.textMuted }}
+          title={lang === 'vi' ? 'Bảng điều khiển Bảng biểu' : 'Table Inspector'}
+        >
+          <TableIcon size={13} />
+          <span className="truncate">{lang === 'vi' ? 'Bảng' : 'Table'}</span>
         </button>
       </div>
 
       {/* Main scrollable body */}
       <div style={{ flex: 1, height: '100%', overflowY: 'auto', overflowX: 'hidden', minHeight: 0, display: 'flex', flexDirection: 'column' }}>
-        {(props.leftSidebarMainTab || 'files') === 'footnotes' ? (
+        {(props.leftSidebarMainTab || 'files') === 'table' ? (
+          <TableInspectorPanel
+            editor={props.editor as Editor | null}
+            theme={{
+              bg: c.bg,
+              text: c.text,
+              textMuted: c.textMuted,
+              textFaint: c.textFaint,
+              accent: c.accent,
+              accentLight: c.accentLight,
+              border: c.border,
+              borderFaint: c.borderFaint,
+              surface: c.surface,
+              isDark: c.isDark,
+            }}
+            lang={lang}
+            uiFont={uiFont}
+          />
+        ) : (props.leftSidebarMainTab || 'files') === 'footnotes' ? (
           <FootnotesPanel
             theme={{
               bg: c.bg,
