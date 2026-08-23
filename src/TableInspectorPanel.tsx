@@ -128,10 +128,10 @@ export default function TableInspectorPanel({ editor, theme, lang = 'vi', uiFont
           <TableIcon size={24} className="opacity-40" />
         </div>
         <h4 className="text-sm font-semibold mb-1" style={{ color: theme.text }}>
-          {getT('Chưa chọn Bảng nào', 'No Table Selected', 'Aucun tableau sélectionné')}
+          {dict.noTableSelected}
         </h4>
         <p className="text-xs max-w-[220px] opacity-60 mb-4" style={{ color: theme.textMuted }}>
-          {getT('Nhấp con trỏ vào bất kỳ ô bảng nào để mở Table Inspector tùy biến sâu.', 'Click cursor into any table cell to open Table Inspector.', 'Cliquez dans une cellule pour ouvrir l\'Inspecteur de tableau.')}
+          {dict.clickCursorIntoTable}
         </p>
         
         {/* Quick Convert List to Table button if list active */}
@@ -142,7 +142,7 @@ export default function TableInspectorPanel({ editor, theme, lang = 'vi', uiFont
           style={{ borderColor: theme.border, color: theme.accent || '#3b82f6' }}
         >
           <List size={14} />
-          <span>{getT('Chuyển Danh sách đang chọn thành Bảng', 'Convert List to Table', 'Convertir la liste en tableau')}</span>
+          <span>{dict.convertListToTable}</span>
         </button>
       </div>
     );

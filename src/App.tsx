@@ -7,7 +7,7 @@ import { getDict, type Dict } from './i18n';
 import { exportTxt, exportJson } from './exportUtils';
 import { importFile, exportToPdf, exportToDocx, exportToHtmlFile, exportToMarkdownFile, exportToJsonBackup } from './fileHandlers';
 import { saveApiKey, loadApiKey, injectGoogleFont, reinjectSavedFonts } from './googleFontsApi';
-import { X, Plus, Minus, ZoomIn, Eye, Maximize2, PanelLeft, Hourglass, Coffee, Settings, LayoutList, Columns, Brain, FileText, GitCompare, Table, FoldVertical, UnfoldVertical, Terminal, Sparkles, Trash2 } from 'lucide-react';
+import {  X, Plus, Minus, ZoomIn, Eye, Maximize2, PanelLeft, Hourglass, Coffee, Settings, LayoutList, Columns, Brain, FileText, GitCompare, Table, FoldVertical, UnfoldVertical, Terminal, Sparkles, Trash2 , Activity, Type } from 'lucide-react';
 import type { Editor as TiptapEditorType } from '@tiptap/react';
 import LeftPanel from './LeftPanel';
 import RightPanel from './RightPanel';
@@ -178,11 +178,30 @@ export default function App() {
     } catch { return []; }
   });
   const [citationStyle, setCitationStyle] = useState<CitationStyle>('apa');
-  const [leftSidebarMainTab, setLeftSidebarMainTab] = useState<'files' | 'footnotes' | 'citations' | 'table'>('files');
+  const [leftSidebarMainTab, setLeftSidebarMainTab] = useState<'files' | 'footnotes' | 'citations' | 'table' | 'highlights'>('files');
   const previousLeftSidebarTabRef = useRef<'files' | 'footnotes' | 'citations'>('files');
 
   // Command Palette states
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
+
+  const [codexEntities, setCodexEntities] = useState<any[]>([]);
+  const [editorialHighlight, setEditorialHighlight] = useState<any>(null);
+  const [creativeOptions, setCreativeOptions] = useState({ rhythmEnabled: false, dialogueEnabled: false, lang: 'en' });
+  
+  useEffect(() => {
+    // Load codex entities from DB if available, we'll store them in AppSettings for now
+    getAppSettings().then(s => {
+      if (s?.codexEntities) setCodexEntities(s.codexEntities);
+    });
+  }, []);
+  
+  const handleUpdateCodexEntities = (entities: any[]) => {
+    setCodexEntities(entities);
+    getAppSettings().then(s => {
+      saveAppSettings({ ...(s || {}), codexEntities: entities } as any);
+    });
+  };
+
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -726,6 +745,29 @@ export default function App() {
     const getT = (key: keyof typeof cmdT) => (cmdT[key] as Record<string, string>)[lang] || cmdT[key].en;
 
     return [
+    {
+      id: 'toggle-rhythm',
+      label: 'Toggle Rhythm View',
+      category: 'View & Layout',
+      icon: <Activity size={16} />,
+      description: 'Analyze sentence length and cadence visually.',
+      perform: () => {
+        setCreativeOptions(prev => ({ ...prev, rhythmEnabled: !prev.rhythmEnabled }));
+        setCmdOpen(false);
+      }
+    },
+    {
+      id: 'isolate-dialogues',
+      label: 'Isolate Dialogues',
+      category: 'View & Layout',
+      icon: <Type size={16} />,
+      description: 'Fade out non-dialogue text for editing.',
+      perform: () => {
+        setCreativeOptions(prev => ({ ...prev, dialogueEnabled: !prev.dialogueEnabled }));
+        setCmdOpen(false);
+      }
+    },
+
     {
       id: 'insert-table',
       label: getT('insertTable'),
@@ -2029,6 +2071,9 @@ export default function App() {
         `}
       >
         <LeftPanel
+          codexEntities={codexEntities}
+          onUpdateCodexEntities={handleUpdateCodexEntities}
+          onEditorialHighlight={setEditorialHighlight}
           editor={editorInstance}
           projects={projects}
           activeProjectId={activeProjectId}
@@ -2347,7 +2392,10 @@ export default function App() {
             <div className="flex-1 h-full overflow-y-auto kgv-scroll flex flex-col items-center p-4 md:p-6 border-r" style={{ borderColor: theme.borderFaint }}>
               <div className="w-full max-w-3xl">
                 <Editor
-                  key={activePage?.id || 'empty'}
+          creativeOptions={creativeOptions}
+          codexEntities={codexEntities}
+          editorialHighlight={editorialHighlight}
+          key={activePage?.id || 'empty'}
                   theme={theme}
                   docFont={docFont}
                   headingFont={headingFont}

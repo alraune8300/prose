@@ -484,3 +484,46 @@ ol.kgv-editor {
 }
 
 
+
+/* Creative Suite Styles */
+.rhythm-sentence {
+  transition: background-color 0.3s;
+}
+.rhythm-short {
+  background-color: rgba(244, 63, 94, 0.15); /* rose / fast */
+  border-bottom: 2px solid rgba(244, 63, 94, 0.4);
+}
+.rhythm-medium {
+  background-color: rgba(16, 185, 129, 0.1); /* emerald / balanced */
+}
+.rhythm-long {
+  background-color: rgba(59, 130, 246, 0.15); /* blue / long */
+  border-bottom: 2px dashed rgba(59, 130, 246, 0.5);
+}
+
+.non-dialogue-block {
+  opacity: 0.3;
+  transition: opacity 0.3s;
+}
+.non-dialogue-block .dialogue-text {
+  opacity: 1;
+  background-color: rgba(255, 255, 255, 0.1); /* slight highlight */
+  font-weight: 500;
+}
+
+.editorial-highlight {
+  transition: background-color 0.2s, border 0.2s;
+}
+.editorial-highlight.severity-low {
+  background-color: rgba(245, 158, 11, 0.1); /* amber 10% */
+}
+.editorial-highlight.severity-high {
+  background-color: rgba(244, 63, 94, 0.35); /* rose 35% */
+  border-bottom: 2px dotted rgba(244, 63, 94, 0.8);
+}
+
+.codex-mention {
+  padding: 0 2px;
+  border-radius: 4px;
+  background-color: rgba(245, 158, 11, 0.15);
+}

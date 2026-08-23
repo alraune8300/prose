@@ -1,11 +1,15 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect } from 'react'
 import { Page, Folder, SyncStatus, Project } from './types'
 import { Lang, t as i18nT } from './i18n'
-import { Home, Folder as FolderIcon, Edit2, FileText, Trash2, ChevronDown, RotateCcw, X, MoreHorizontal, Upload, Plus, PanelLeftClose, Bookmark, BookOpen, Table as TableIcon } from 'lucide-react'
+import { Home, Highlighter,  Folder as FolderIcon, Edit2, FileText, Trash2, ChevronDown, RotateCcw, X, MoreHorizontal, Upload, Plus, PanelLeftClose, Bookmark, BookOpen, Activity, Type, Table as TableIcon } from 'lucide-react'
 import { importJsonBackupFile } from './fileHandlers'
 import FootnotesPanel from './FootnotesPanel'
+import HighlightsPanel from './HighlightsPanel'
 import CitationsPanel from './CitationsPanel'
 import TableInspectorPanel from './TableInspectorPanel'
+import { StoryCodexPanel } from './StoryCodexPanel'
+import { EditorialInspectorPanel } from './EditorialInspectorPanel'
 import type { CitationSource, CitationStyle } from './citationsEngine'
 import type { Editor } from '@tiptap/react'
 
@@ -494,9 +498,12 @@ const renderFolder = (folder: Folder, depth = 0) => {
         {onGoHome && <div style={{ width: 24, height: 1, background: c.borderFaint, margin: '4px 0' }} />}
         {[
           { key: 'files', icon: FileText, label: t(lang, 'files') || 'Files' },
+          { key: 'codex', icon: Type, label: t(lang, 'storyCodex') || 'Story Codex' },
+          { key: 'editorial', icon: Activity, label: t(lang, 'editorial') || 'Editorial' },
           { key: 'footnotes', icon: Bookmark, label: t(lang, 'footnotes') || 'Footnotes' },
           { key: 'citations', icon: BookOpen, label: t(lang, 'citations') || 'Citations' },
-          { key: 'table', icon: TableIcon, label: lang === 'vi' ? 'Bảng' : 'Table' },
+          { key: 'table', icon: TableIcon, label: t(lang, 'table') || 'Table' },
+          { key: 'highlights', icon: Highlighter, label: lang === 'vi' ? 'Highlights' : 'Highlights' },
         ].map(tab => {
           const active = (props.leftSidebarMainTab || 'files') === tab.key
           return (
@@ -642,7 +649,24 @@ const renderFolder = (folder: Folder, depth = 0) => {
 
       {/* Main scrollable body */}
       <div style={{ flex: 1, height: '100%', overflowY: 'auto', overflowX: 'hidden', minHeight: 0, display: 'flex', flexDirection: 'column' }}>
-        {(props.leftSidebarMainTab || 'files') === 'table' ? (
+        {(props.leftSidebarMainTab || 'files') === 'codex' ? (
+          <StoryCodexPanel
+            theme={props.theme as any}
+            uiFont={props.uiFont as any}
+            lang={props.lang as any}
+            entities={props.codexEntities as any || []}
+            onUpdate={props.onUpdateCodexEntities || (() => {})}
+            editor={props.editor as any}
+          />
+        ) : (props.leftSidebarMainTab || 'files') === 'editorial' ? (
+          <EditorialInspectorPanel
+            theme={props.theme as any}
+            uiFont={props.uiFont as any}
+            lang={props.lang as any}
+            editor={props.editor as any}
+            onHighlightWord={props.onEditorialHighlight || (() => {})}
+          />
+        ) : (props.leftSidebarMainTab || 'files') === 'table' ? (
           <TableInspectorPanel
             editor={props.editor as Editor | null}
             theme={{
@@ -685,6 +709,8 @@ const renderFolder = (folder: Folder, depth = 0) => {
             activeHighlightedId={props.activeFootnoteHighlight as string | null | undefined}
             onClearHighlight={(props.onClearFootnoteHighlight as unknown as () => void) || (() => {})}
           />
+        ) : (props.leftSidebarMainTab || 'files') === 'highlights' ? (
+          <HighlightsPanel theme={props.theme as any} editor={props.editor as any} lang={props.lang as any} uiFont={props.uiFont as any} />
         ) : (props.leftSidebarMainTab || 'files') === 'citations' ? (
           <CitationsPanel
             theme={{

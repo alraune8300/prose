@@ -5,6 +5,7 @@ import Link from '@tiptap/extension-link';
 import TextAlign from '@tiptap/extension-text-align';
 import FontFamily from '@tiptap/extension-font-family';
 import { TextStyle } from '@tiptap/extension-text-style';
+import { Color } from '@tiptap/extension-color';
 import Superscript from '@tiptap/extension-superscript';
 import Subscript from '@tiptap/extension-subscript';
 import { Table } from '@tiptap/extension-table';
@@ -13,7 +14,16 @@ import { TableCell } from '@tiptap/extension-table-cell';
 import { TableHeader } from '@tiptap/extension-table-header';
 import { ResizableImage } from './tiptapExtensions';
 import './Editor.css';
-import { FontSize, LineHeight, TextTransform, FontFeatures, LetterSpacing, WordSpacing, IndentExtension } from './tiptapExtensions';
+import { FontSize, LineHeight,  TextTransform, FontFeatures, LetterSpacing, WordSpacing, IndentExtension } from './tiptapExtensions';
+
+
+import { CreativeExtensions, editorialPluginKey, rhythmPluginKey, dialoguePluginKey } from './CreativeExtensions';
+import { CodexMention } from './CodexMentionExtension';
+import getSuggestionOptions from './mentionSuggestion';
+import { FloatingToolbar } from './FloatingToolbar';
+import { setupMentionHover } from './HoverPreview';
+import { AnnotationHighlight } from './AnnotationHighlightExtension';
+
 import { SpellcheckExtension, spellcheckKey } from './SpellcheckExtension';
 import { SearchHighlightExtension, searchHighlightKey } from './SearchHighlightExtension';
 import { SmartFormatting } from './SmartFormattingExtension';
@@ -38,6 +48,9 @@ type Props = {
   content: string;
   onContentChange: (html: string) => void;
   isFocusMode?: boolean;
+  codexEntities?: any[];
+  editorialHighlight?: any;
+  creativeOptions?: { rhythmEnabled: boolean, dialogueEnabled: boolean, lang: string };
   onToggleFocusMode?: () => void;
   isPreviewMode?: boolean;
   onTogglePreviewMode?: () => void;
@@ -49,7 +62,12 @@ function Editor({
   isFocusMode = false,
   isPreviewMode = false,
   typewriterMode = false,
+  codexEntities = [],
+  editorialHighlight,
+  creativeOptions,
 }: Props) {
+  
+
   const lastEmittedContentRef = useRef(content || '');
   const updateTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const callbacksRef = useRef({ onContentChange, onEditorReady, typewriterMode });
@@ -170,6 +188,8 @@ function Editor({
     },
 
     editorProps: {
+      
+      
       handleTextInput: (view, from, to, text) => {
         const state = window.__formatState;
         if (!state) return false;
@@ -238,6 +258,14 @@ function Editor({
       },
       handleClick: (view, pos, event) => {
         const target = event.target as HTMLElement;
+        
+        const mark = target.closest('mark[data-hl-id]');
+        if (mark) {
+          const id = mark.getAttribute('data-hl-id');
+          window.dispatchEvent(new CustomEvent('kgv-jump-to-highlight-panel', { detail: id }));
+          return false;
+        }
+
         const footnoteTarget = target.closest('.kgv-footnote-marker, sup.footnote-ref');
         if (footnoteTarget) {
           const fnId = footnoteTarget.getAttribute('data-footnote-id') || footnoteTarget.textContent?.replace(/[^\w\d]/g, '');
@@ -352,6 +380,34 @@ function Editor({
       },
     },
   });
+  useEffect(() => {
+    if (editor && !editor.isDestroyed && creativeOptions) {
+      editor.view.dispatch(editor.state.tr.setMeta(rhythmPluginKey, { enabled: creativeOptions.rhythmEnabled, lang: creativeOptions.lang }));
+      editor.view.dispatch(editor.state.tr.setMeta(dialoguePluginKey, { enabled: creativeOptions.dialogueEnabled }));
+    }
+  }, [creativeOptions, editor]);
+
+
+  useEffect(() => {
+    let tippyInstance: any = null;
+    if (editor && editor.view.dom.parentElement) {
+      tippyInstance = setupMentionHover(editor.view.dom.parentElement, () => globalCodexEntities);
+    }
+    return () => {
+      if (tippyInstance) tippyInstance.destroy();
+    };
+  }, [editor]);
+
+  useEffect(() => {
+    globalCodexEntities = codexEntities;
+  }, [codexEntities]);
+
+  useEffect(() => {
+    if (editor && !editor.isDestroyed) {
+      editor.view.dispatch(editor.state.tr.setMeta(editorialPluginKey, { highlightWords: editorialHighlight }));
+    }
+  }, [editorialHighlight, editor]);
+
 
   useEffect(() => {
     const handleToggleFold = (e: Event) => {
@@ -674,7 +730,8 @@ function Editor({
           ['--kgv-mono-font' as string]: `'${currentMonoFont}', monospace`,
         } as React.CSSProperties}
       >
-        <EditorContent editor={editor} />
+        <FloatingToolbar editor={editor} theme={theme} />
+          <EditorContent editor={editor} />
       </div>
     );
   }
@@ -711,6 +768,7 @@ function Editor({
             ['--kgv-mono-font' as string]: `'${currentMonoFont}', monospace`,
           } as React.CSSProperties}
         >
+          <EditorBubbleMenu editor={editor} theme={theme} />
           <EditorContent editor={editor} />
         </div>
       </div>
@@ -721,7 +779,10 @@ function Editor({
 
 export default React.memo(Editor);
 
+export let globalCodexEntities: any[] = [];
 export const getEditorExtensions = () => [
+  CreativeExtensions,
+  CodexMention.configure({ suggestion: getSuggestionOptions() }),
   StarterKit.configure({
     link: false,
     heading: { levels: [1, 2, 3] },
@@ -849,7 +910,7 @@ export const getEditorExtensions = () => [
       class: 'border p-2 min-w-[80px] font-semibold bg-slate-500/10 align-top text-left',
     },
   }),
-  CollapsibleHeadingsExtension,
+  CollapsibleHeadingsExtension, AnnotationHighlight,
   Link.configure({
     openOnClick: false,
     HTMLAttributes: {
@@ -861,7 +922,7 @@ export const getEditorExtensions = () => [
   SmartFormatting,
   SpellcheckExtension,
   SearchHighlightExtension,
-  TextStyle, FontFamily, FontSize, LineHeight, TextTransform, FontFeatures, LetterSpacing, WordSpacing, Superscript, Subscript, IndentExtension, ResizableImage,
+  TextStyle, Color, FontFamily, FontSize, LineHeight, TextTransform, FontFeatures, LetterSpacing, WordSpacing, Superscript, Subscript, IndentExtension, ResizableImage,
   TextAlign.configure({ types: ['heading', 'paragraph'] }),
 ];
 

@@ -18,6 +18,7 @@
     "@tiptap/extension-font-family": "3.29.2",
     "@tiptap/extension-image": "3.29.2",
     "@tiptap/extension-link": "3.29.2",
+    "@tiptap/extension-mention": "^3.30.2",
     "@tiptap/extension-subscript": "3.29.2",
     "@tiptap/extension-superscript": "3.29.2",
     "@tiptap/extension-table": "3.29.2",
@@ -30,6 +31,7 @@
     "@tiptap/extension-underline": "3.29.2",
     "@tiptap/react": "3.29.2",
     "@tiptap/starter-kit": "3.29.2",
+    "@tiptap/suggestion": "^3.30.2",
     "@types/turndown": "^5.0.6",
     "date-fns": "^4.4.0",
     "dexie": "^4.4.4",
@@ -49,6 +51,7 @@
     "prosemirror-view": "^1.42.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "tippy.js": "^6.3.7",
     "turndown": "^7.2.4"
   },
   "devDependencies": {
