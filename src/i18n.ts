@@ -730,6 +730,8 @@ export const translations: { en: Strings } & Record<Lang, Partial<Strings>> = {
     previewMode: 'Preview Mode',
     focusMode: 'Focus Mode',
     blockView: 'Block View',
+    blockViewDesc: 'Drag to reorder. Click text to edit. Format with toolbar.',
+    exitBlockView: 'Exit block view',
 pageOf: 'of',
     readTime: 'min read',
     print: 'Print',

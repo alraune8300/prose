@@ -1870,6 +1870,16 @@ ${content.split('\n\n').map(para => {
         {panel === 'settings' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 24, paddingBottom: 32 }}>
             <div>
+              <SectionLabel label={t(lang, 'language') || 'Language'} uiFont={uiFont} c={c} />
+              <CustomSelect
+                value={lang}
+                onChange={val => onLangChange(val as Lang)}
+                options={Object.entries(LANG_LABELS).map(([k, v]) => ({ value: k, label: `${LANG_FLAGS[k as Lang] || ''} ${v}` }))}
+                theme={c as any}
+                disableSearch={true}
+              />
+            </div>
+            <div>
               <SectionLabel label={t(lang, 'colorTheme') || 'Color Theme'} uiFont={uiFont} c={c} />
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                 <input
