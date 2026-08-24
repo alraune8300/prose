@@ -165,7 +165,7 @@ function Toolbar({
             dropdownClassName="w-56 bottom-full mb-2 !mt-0"
             footerNode={
               <button
-                onPointerDown={(e) => { e.preventDefault(); setSavedSelection(editor?.state.selection); setShowGoogleFonts(true); }}
+                onClick={() => { setSavedSelection(editor?.state.selection); setShowGoogleFonts(true); }}
                 className="w-full text-left px-4 py-2 text-xs font-semibold hover:opacity-80 transition-opacity"
                 style={{ color: theme.accent }}
               >

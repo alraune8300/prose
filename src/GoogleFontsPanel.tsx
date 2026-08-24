@@ -106,7 +106,7 @@ function FontRow({
   return (
     <div
       ref={ref}
-      onPointerDown={(e) => { e.preventDefault(); handleApplyToSelection(name); }}
+      onClick={() => handleApplyToSelection(name)}
       style={{
         padding: '6px 8px',
         cursor: 'pointer',
@@ -166,7 +166,7 @@ function FontRow({
         </button>
         <button
           type="button"
-          onPointerDown={(e) => { e.preventDefault(); handleApplyToSelection(name); }}
+          onClick={() => handleApplyToSelection(name)}
           title={t(lang, 'applyFontToSelection')}
           style={{
             padding: '3px 7px', borderRadius: 4,

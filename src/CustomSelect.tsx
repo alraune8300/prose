@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import type { ThemeColors } from './types';
 
 export interface SelectOption {
@@ -43,10 +44,26 @@ export function CustomSelect({
 }: CustomSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const [coords, setCoords] = useState({ top: 0, left: 0, width: 0 });
+
+  useEffect(() => {
+    if (isOpen && containerRef.current) {
+      const rect = containerRef.current.getBoundingClientRect();
+      setCoords({
+        top: rect.top,
+        left: rect.left,
+        width: rect.width,
+      });
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+      if (
+        containerRef.current && !containerRef.current.contains(event.target as Node) &&
+        (!dropdownRef.current || !dropdownRef.current.contains(event.target as Node))
+      ) {
         setIsOpen(false);
       }
     }
@@ -60,7 +77,7 @@ export function CustomSelect({
   return (
     <div className="relative inline-block text-left" ref={containerRef}>
       <button type="button" 
-        onPointerDown={(e) => { e.preventDefault(); setIsOpen(!isOpen); if (!isOpen && onOpen) onOpen(); }}
+        onClick={() => { setIsOpen(!isOpen); if (!isOpen && onOpen) onOpen(); }}
         className={`cursor-pointer ${buttonClassName}`}
         style={buttonStyle}
       >
@@ -69,21 +86,25 @@ export function CustomSelect({
         )}
       </button>
 
-      {isOpen && (
+      {isOpen && createPortal(
         <div 
-          className={`absolute z-50 mt-2 rounded-xl shadow-xl flex flex-col overflow-y-auto ${dropdownClassName}`}
+          ref={dropdownRef}
+          className={`fixed z-[9999] rounded-xl shadow-xl flex flex-col overflow-y-auto ${dropdownClassName.replace('bottom-full', '').replace('mb-2', '').replace('!mt-0', '')}`}
           style={{ 
             backgroundColor: theme.surface, 
             border: `1px solid ${theme.border}`,
-            minWidth: '100%',
+            minWidth: Math.max(224, coords.width),
             maxHeight: '300px',
+            top: coords.top - 8,
+            left: coords.left,
+            transform: 'translateY(-100%)',
             ...dropdownStyle 
           }}
         >
           {options && options.map((opt, i) => (
             <React.Fragment key={opt.value}>
               <button
-                onPointerDown={(e) => { e.preventDefault(); onChange(opt.value); setIsOpen(false); }}
+                onClick={() => { onChange(opt.value); setIsOpen(false); }}
                 className="w-full text-left px-4 py-3 text-[13px] md:text-sm transition-colors truncate flex-shrink-0"
                 style={{ 
                   color: theme.text,
@@ -109,7 +130,7 @@ export function CustomSelect({
               {group.options.map((opt) => (
                 <button
                   key={opt.value}
-                  onPointerDown={(e) => { e.preventDefault(); onChange(opt.value); setIsOpen(false); }}
+                  onClick={() => { onChange(opt.value); setIsOpen(false); }}
                   className="w-full text-left px-3 py-2 text-[13px] md:text-sm transition-colors truncate flex-shrink-0"
                   style={{ 
                     color: theme.text,
@@ -128,12 +149,12 @@ export function CustomSelect({
             </div>
           ))}
           {footerNode && (
-            <div className="flex-shrink-0 sticky bottom-0 border-t" style={{ backgroundColor: theme.surface, borderColor: theme.borderFaint }}>
+            <div onClick={() => setIsOpen(false)} className="flex-shrink-0 sticky bottom-0 border-t" style={{ backgroundColor: theme.surface, borderColor: theme.borderFaint }}>
               {footerNode}
             </div>
           )}
         </div>
-      )}
+      , document.body)}
     </div>
   );
 }
