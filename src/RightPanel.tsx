@@ -6,7 +6,6 @@ import GoogleFontsPanel from './GoogleFontsPanel'
 import SpellcheckPanel from './SpellcheckPanel'
 import SearchPanel from './SearchPanel'
 import VersionHistoryPanel from './VersionHistoryPanel'
-import FootnotesPanel from './FootnotesPanel'
 import TableCreatePanel from './TableCreatePanel'
 import { Lang, t as i18nT, LANG_LABELS, LANG_FLAGS } from './i18n'
 import { CustomSelect } from './CustomSelect'
@@ -501,7 +500,6 @@ ${content.split('\n\n').map(para => {
     { key: 'table', icon: '⊞', label: t(lang, 'insertTable') || 'Table' },
     { key: 'export', icon: '↓', label: t(lang, 'export') || 'Export' },
     { key: 'fonts', icon: 'Aa', label: t(lang, 'fonts') || 'Fonts' },
-    { key: 'footnotes', icon: '[^]', label: t(lang, 'footnotes') || 'Footnotes' },
     { key: 'timer', icon: '◷', label: t(lang, 'timer') || 'Timer' },
     { key: 'history', icon: '⟲', label: t(lang, 'versionHistory') || 'History' },
     { key: 'search', icon: '⌕', label: t(lang, 'findAndReplace') || 'Search' },
@@ -570,7 +568,6 @@ ${content.split('\n\n').map(para => {
                 {panel === 'format' ? (t(lang, 'format') || 'Format') :
                  panel === 'table' ? (t(lang, 'insertTable') || 'Insert Table') :
                  panel === 'export' ? (t(lang, 'export') || 'Export') :
-                 panel === 'footnotes' ? (t(lang, 'footnotes') || 'Footnotes') :
                  panel === 'fonts' ? (t(lang, 'fonts') || 'Fonts') :
                  panel === 'timer' ? (t(lang, 'timer') || 'Timer') :
                  panel === 'history' ? (t(lang, 'versionHistory') || 'History') :
@@ -1839,86 +1836,59 @@ ${content.split('\n\n').map(para => {
             </div>
           </div>
         )}
-        
-        {/* FOOTNOTES PANEL */}
-        {panel === 'footnotes' && (
-          <FootnotesPanel
-            theme={props.theme as any || c as any}
-            uiFont={uiFont}
-            docFont={bodyFont}
-            lang={lang}
-            rawContent={(props.activePage as any)?.content || (props.content as string) || ''}
-            onUpdateFootnoteContent={(props.onUpdateFootnoteContent as any) || (() => {})}
-            onInsertNewFootnote={(props.onInsertNewFootnote as any) || (() => {})}
-            onDeleteFootnote={(props.onDeleteFootnote as any) || (() => {})}
-            onScrollToEditorMarker={(props.onScrollToEditorMarker as any) || (() => {})}
-            activeHighlightedId={(props.activeFootnoteHighlight as string) || (props.activeHighlightedId as string) || null}
-            onClearHighlight={(props.onClearFootnoteHighlight as any) || (props.onClearHighlight as any) || (() => {})}
-          />
-        )}
-
         {/* HISTORY PANEL */}
         {panel === 'history' && (
           <VersionHistoryPanel
-            activePage={props.activePage as any }
-            theme={props.theme as any }
+            activePage={props.activePage as any}
+            theme={props.theme as any || c as any}
             lang={lang}
             uiFont={uiFont}
-            onRestore={props.onRestore as any }
+            onRestore={(props.onRestore as any) || (() => {})}
+          />
+        )}
+        
+        {/* SEARCH PANEL */}
+        {panel === 'search' && (
+          <SearchPanel
+            c={c as any}
+            uiFont={uiFont}
+            lang={lang}
+          />
+        )}
+        
+        {/* SPELLCHECK PANEL */}
+        {panel === 'spellcheck' && (
+          <SpellcheckPanel
+            c={c as any}
+            uiFont={uiFont}
+            headingFont={bodyFont}
+            lang={lang}
           />
         )}
 
         {/* SETTINGS PANEL */}
-
-        {panel === 'spellcheck' && (
-          <SpellcheckPanel c={c} uiFont={uiFont} lang={lang} />
-        )}
-
-        {panel === 'search' && (
-          <SearchPanel c={c} uiFont={uiFont} lang={lang} />
-        )}
-
         {panel === 'settings' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 24, paddingBottom: 32 }}>
             <div>
-              <SectionLabel label={t(lang, 'language')} uiFont={uiFont} c={c} />
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 8 }}>
-                {(Object.keys(LANG_LABELS) as Lang[]).map(l => (
-                  <button
-                    key={l}
-                    onClick={() => onLangChange(l)}
-                    className="truncate whitespace-nowrap"
-                    style={{
-                      padding: '7px 10px', borderRadius: 8, cursor: 'pointer',
-                      border: `1px solid ${lang === l ? c.accent : c.border}`,
-                      background: lang === l ? c.accentLight : 'transparent',
-                      color: lang === l ? c.accent : c.textMuted,
-                      fontFamily: uiFont, fontSize: '0.75rem', fontWeight: lang === l ? 600 : 400,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                      transition: 'all 0.12s', width: '100%'
-                    }}
-                  >
-                    <span>{LANG_FLAGS[l] || ''}</span>
-                    <span>{LANG_LABELS[l]}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <SectionLabel label={t(lang, 'hueSlider')} uiFont={uiFont} c={c} />
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <input type="range" min={0} max={359} value={hue}
+              <SectionLabel label={t(lang, 'colorTheme') || 'Color Theme'} uiFont={uiFont} c={c} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <input
+                  type="range"
+                  min={0}
+                  max={359}
+                  value={hue}
                   onChange={e => {
                     const val = Number(e.target.value)
-                    setHue(val)
-                    onHueChange(val)
-                    onPresetSelect(null)
-                    const ht = buildHueTheme(val, c.isDark)
-                    if (props.onCustomThemeChange) {
-                      (props.onCustomThemeChange as (ct: { bg: string, text: string, accent: string }) => void)({
-                        bg: ht.bg, text: ht.text, accent: ht.accent,
-                      })
+                    if (val >= 0 && val <= 359) {
+                      setHue(val)
+                      onHueChange(val)
+                      onPresetSelect(null)
+                      const ht = buildHueTheme(val, c.isDark)
+                      if (props.onCustomThemeChange) {
+                        (props.onCustomThemeChange as (ct: { bg: string, text: string, accent: string }) => void)({
+                          bg: ht.bg, text: ht.text, accent: ht.accent,
+                        })
+                      }
                     }
                   }}
                   className="hue-slider" style={{ flex: 1 }} />
