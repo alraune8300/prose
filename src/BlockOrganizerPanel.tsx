@@ -450,8 +450,8 @@ export default function BlockOrganizerPanel({
                         {...provided.draggableProps}
                         style={{
                           ...provided.draggableProps.style,
-                          background: snapshot.isDragging ? theme.accentLight : theme.surface,
-                          border: `1px solid ${snapshot.isDragging ? theme.accent : theme.border}`,
+                          background: snapshot.isDragging ? (theme.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)') : theme.surface,
+                          border: `1px solid ${snapshot.isDragging ? theme.text : theme.border}`,
                           borderRadius: '10px',
                           padding: '10px 14px',
                           display: 'flex',

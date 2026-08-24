@@ -87,7 +87,7 @@ export default function SpellcheckPanel({ c, uiFont, headingFont, lang, }: Spell
         <div style={{
           width: 44, height: 24, borderRadius: 12, flexShrink: 0,
           background: enabled ? c.accent : 'transparent',
-          border: `1px solid ${enabled ? c.accent : c.borderFaint}`,
+          border: `1px solid ${enabled ? c.text : c.borderFaint}`,
           position: 'relative', transition: 'all 0.2s', cursor: 'pointer'
         }} onClick={() => setEnabled(!enabled)}>
           <div style={{
@@ -104,11 +104,12 @@ export default function SpellcheckPanel({ c, uiFont, headingFont, lang, }: Spell
           <label style={{ fontFamily: uiFont, fontSize: '0.85rem', color: c.textMuted }}>{t(lang, 'spellLanguage')}</label>
           <div style={{ position: 'relative', zIndex: 50 }}>
             <CustomSelect
+              searchPlaceholder={t(lang, 'search') || 'Search...'}
               value={spellLang}
               onChange={(val) => setSpellLang(val as Lang)}
               options={(Object.keys(LANG_LABELS) as Lang[]).map(l => ({
                 value: l,
-                label: `${LANG_FLAGS[l]} ${LANG_LABELS[l]}`
+                label: LANG_FLAGS[l] ? `${LANG_FLAGS[l]} ${LANG_LABELS[l]}` : LANG_LABELS[l]
               }))}
               theme={c as unknown as import("./types").ThemeColors}
               buttonStyle={{ 

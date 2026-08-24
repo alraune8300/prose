@@ -345,7 +345,7 @@ export default function FlashcardStudio({
     >
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-[300] px-4 py-2.5 rounded-xl shadow-2xl text-xs font-medium text-white flex items-center gap-2 animate-in slide-in-from-bottom-2 duration-150" style={{ backgroundColor: theme.accent }}>
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-[300] px-4 py-2.5 rounded-xl shadow-2xl text-xs font-medium  flex items-center gap-2 animate-in slide-in-from-bottom-2 duration-150" style={{ backgroundColor: theme.isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)', color: theme.text, border: `1px solid ${theme.border}` }}>
           <Sparkles size={14} />
           <span>{toastMessage}</span>
         </div>
@@ -354,7 +354,7 @@ export default function FlashcardStudio({
       {/* Top Header Navigation */}
       <div className="flex items-center justify-between px-6 py-4 border-b shrink-0" style={{ borderColor: theme.border }}>
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-xl shadow-xs" style={{ backgroundColor: theme.accentLight, color: theme.accent }}>
+          <div className="p-2 rounded-xl shadow-xs" style={{ backgroundColor: theme.surface, color: theme.text, border: `1px solid ${theme.border}` }}>
             <Brain size={22} />
           </div>
           <div>
@@ -386,7 +386,7 @@ export default function FlashcardStudio({
           <button
             onClick={startReviewSession}
             className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5 hover:opacity-90 active:scale-95"
-            style={{ backgroundColor: theme.accentLight, color: theme.accent }}
+            style={{ backgroundColor: (theme.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'), color: theme.text }}
             title={t(lang, 'flashcardMode')}
           >
             <Play size={13} className="fill-current" />
@@ -446,14 +446,14 @@ export default function FlashcardStudio({
                       style={{ backgroundColor: theme.surface, borderColor: theme.border }}
                     >
                       <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded" style={{ backgroundColor: theme.accentLight, color: theme.accent }}>
+                        <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded" style={{ backgroundColor: (theme.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'), color: theme.text }}>
                           {b.type}
                         </span>
                         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                           <button
                             onClick={() => handleQuickConvert(b.text, b.type)}
-                            className="px-2 py-1 rounded text-[11px] font-medium transition-colors text-white"
-                            style={{ backgroundColor: theme.accent }}
+                            className="px-2 py-1 rounded text-[11px] font-medium transition-colors "
+                            style={{ backgroundColor: theme.isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)', color: theme.text, border: `1px solid ${theme.border}` }}
                             title="Quick Convert to Card Front/Back"
                           >
                             {t(lang, 'quickConvertBtn')}
@@ -493,7 +493,7 @@ export default function FlashcardStudio({
                     <h2 className="text-sm font-semibold">
                       {editingCardId ? t(lang, 'editFlashcard') : t(lang, 'create3DFlashcard')}
                     </h2>
-                    <span className="text-[11px] px-2 py-0.5 rounded-full border" style={{ borderColor: theme.border, color: theme.accent }}>
+                    <span className="text-[11px] px-2 py-0.5 rounded-full border" style={{ borderColor: theme.border, color: theme.text }}>
                       {t(lang, 'clozeHint')}
                     </span>
                   </div>
@@ -516,7 +516,7 @@ export default function FlashcardStudio({
                     {/* Front Face */}
                     <div className="absolute inset-0 p-6 backface-hidden flex flex-col justify-between">
                       <div className="flex items-center justify-between border-b pb-2" style={{ borderColor: theme.borderFaint }}>
-                        <span className="text-xs font-bold uppercase tracking-wider opacity-60" style={{ color: theme.accent }}>{t(lang, 'frontFace')}</span>
+                        <span className="text-xs font-bold uppercase tracking-wider opacity-60" style={{ color: theme.text }}>{t(lang, 'frontFace')}</span>
                         <span className="text-[11px] opacity-50">{t(lang, 'tabToFlip')}</span>
                       </div>
                       <textarea
@@ -533,7 +533,7 @@ export default function FlashcardStudio({
                     {/* Back Face */}
                     <div className="absolute inset-0 p-6 backface-hidden rotate-y-180 flex flex-col justify-between">
                       <div className="flex items-center justify-between border-b pb-2" style={{ borderColor: theme.borderFaint }}>
-                        <span className="text-xs font-bold uppercase tracking-wider opacity-60" style={{ color: theme.accent }}>{t(lang, 'backFace')}</span>
+                        <span className="text-xs font-bold uppercase tracking-wider opacity-60" style={{ color: theme.text }}>{t(lang, 'backFace')}</span>
                         <span className="text-[11px] opacity-50">{t(lang, 'tabToFlip')}</span>
                       </div>
                       <textarea
@@ -562,8 +562,8 @@ export default function FlashcardStudio({
                   <div className="flex items-center gap-2 ml-auto">
                     <button
                       onClick={handleSaveCard}
-                      className="px-6 py-2.5 rounded-xl text-xs font-semibold text-white shadow-md transition-all hover:opacity-90 active:scale-95 flex items-center gap-2"
-                      style={{ backgroundColor: theme.accent }}
+                      className="px-6 py-2.5 rounded-xl text-xs font-semibold  shadow-md transition-all hover:opacity-90 active:scale-95 flex items-center gap-2"
+                      style={{ backgroundColor: theme.isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)', color: theme.text, border: `1px solid ${theme.border}` }}
                     >
                       <Check size={14} />
                       <span>{editingCardId ? t(lang, 'updateCard') : t(lang, 'saveCard')}</span>
@@ -599,8 +599,8 @@ export default function FlashcardStudio({
                 </button>
                 <button
                   onClick={exportToJson}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold text-white shadow-xs transition-all hover:opacity-90"
-                  style={{ backgroundColor: theme.accent }}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold  shadow-xs transition-all hover:opacity-90"
+                  style={{ backgroundColor: theme.isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)', color: theme.text, border: `1px solid ${theme.border}` }}
                 >
                   <Download size={14} />
                   <span>{t(lang, 'backupJson')}</span>
@@ -617,7 +617,7 @@ export default function FlashcardStudio({
                   style={{ backgroundColor: theme.surface, borderColor: theme.border }}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border" style={{ borderColor: theme.border, color: theme.accent }}>
+                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border" style={{ borderColor: theme.border, color: theme.text }}>
                       Box {c.box} • Reviews: {c.reviewsCount}
                     </span>
                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -662,7 +662,7 @@ export default function FlashcardStudio({
               <div className="w-48 h-2 rounded-full bg-black/10 dark:bg-white/10 overflow-hidden">
                 <div 
                   className="h-full transition-all duration-300 rounded-full"
-                  style={{ width: `${((currentStudyIndex + 1) / studyQueue.length) * 100}%`, backgroundColor: theme.accent }}
+                  style={{ width: `${((currentStudyIndex + 1) / studyQueue.length) * 100}%`, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)', color: theme.text, border: `1px solid ${theme.border}` }}
                 />
               </div>
             </div>
@@ -683,7 +683,7 @@ export default function FlashcardStudio({
             >
               {/* Front */}
               <div className="absolute inset-0 p-8 backface-hidden flex flex-col justify-between items-center text-center">
-                <span className="text-xs font-bold uppercase tracking-widest opacity-50" style={{ color: theme.accent }}>{t(lang, 'frontFace')}</span>
+                <span className="text-xs font-bold uppercase tracking-widest opacity-50" style={{ color: theme.text }}>{t(lang, 'frontFace')}</span>
                 <div className="text-xl font-medium leading-relaxed my-auto" style={{ color: theme.text }}>
                   {studyQueue[currentStudyIndex]?.front}
                 </div>
@@ -692,7 +692,7 @@ export default function FlashcardStudio({
 
               {/* Back */}
               <div className="absolute inset-0 p-8 backface-hidden rotate-y-180 flex flex-col justify-between items-center text-center">
-                <span className="text-xs font-bold uppercase tracking-widest opacity-50" style={{ color: theme.accent }}>{t(lang, 'backFace')}</span>
+                <span className="text-xs font-bold uppercase tracking-widest opacity-50" style={{ color: theme.text }}>{t(lang, 'backFace')}</span>
                 <div className="text-lg font-normal leading-relaxed my-auto" style={{ color: theme.text }}>
                   {studyQueue[currentStudyIndex]?.back}
                 </div>
@@ -737,7 +737,7 @@ export default function FlashcardStudio({
           <div className="w-full max-w-sm h-full flex flex-col p-5 shadow-2xl border-l animate-in slide-in-from-right duration-200" style={{ backgroundColor: theme.surface, borderColor: theme.border }}>
             <div className="flex items-center justify-between pb-3 border-b" style={{ borderColor: theme.borderFaint }}>
               <div className="flex items-center gap-2">
-                <Settings size={15} style={{ color: theme.accent }} />
+                <Settings size={15} style={{ color: theme.text }} />
                 <h3 className="text-xs font-semibold uppercase tracking-wider opacity-80">{t(lang, 'srsSettings')}</h3>
               </div>
               <button 
@@ -831,8 +831,8 @@ export default function FlashcardStudio({
                   setShowSettingsDrawer(false);
                   showToast(t(lang, 'settingsSavedToast'));
                 }}
-                className="px-4 py-1.5 rounded-lg text-[11px] font-medium text-white shadow-xs transition-transform active:scale-95"
-                style={{ backgroundColor: theme.accent }}
+                className="px-4 py-1.5 rounded-lg text-[11px] font-medium  shadow-xs transition-transform active:scale-95"
+                style={{ backgroundColor: theme.isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)', color: theme.text, border: `1px solid ${theme.border}` }}
               >
                 {t(lang, 'saveCard')}
               </button>

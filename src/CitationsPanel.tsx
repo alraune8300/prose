@@ -125,11 +125,11 @@ export default function CitationsPanel({
       {/* Header */}
       <div className="px-4 py-3 border-b flex items-center justify-between gap-2" style={{ borderColor: theme.border, backgroundColor: theme.surface }}>
         <div className="flex items-center gap-2 min-w-0 flex-1">
-          <BookOpen size={16} className="shrink-0" style={{ color: theme.accent }} />
+          <BookOpen size={16} className="shrink-0" style={{ color: theme.text }} />
           <span className="font-semibold text-sm truncate" style={{ color: theme.text }}>
             {t(lang, 'citationDesk') || 'Citation Desk'}
           </span>
-          <span className="text-[10px] px-1.5 py-0.5 rounded-full font-mono shrink-0" style={{ backgroundColor: theme.accentLight, color: theme.accent }}>
+          <span className="text-[10px] px-1.5 py-0.5 rounded-full font-mono shrink-0" style={{ backgroundColor: (theme.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'), color: theme.text }}>
             {sources.length}
           </span>
         </div>
@@ -137,7 +137,7 @@ export default function CitationsPanel({
           <button
             onClick={() => setShowAddModal(true)}
             className="p-1.5 rounded-lg transition-colors flex items-center gap-1 text-xs font-medium cursor-pointer"
-            style={{ backgroundColor: theme.accent, color: '#ffffff' }}
+            style={{ backgroundColor: theme.isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)', color: theme.text, border: `1px solid ${theme.border}` }}
             title={t(lang, 'addSource') || 'Add Source'}
           >
             <Plus size={14} />
@@ -211,7 +211,7 @@ export default function CitationsPanel({
                 <div className="flex items-start justify-between gap-2">
                   <div className="space-y-0.5 flex-1">
                     <div className="flex items-center gap-1.5">
-                      <span className="text-[10px] font-mono px-1.5 py-0.5 rounded font-semibold" style={{ backgroundColor: theme.accentLight, color: theme.accent }}>
+                      <span className="text-[10px] font-mono px-1.5 py-0.5 rounded font-semibold" style={{ backgroundColor: (theme.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'), color: theme.text }}>
                         @{s.key}
                       </span>
                       <span className="text-[10px] opacity-70 uppercase font-mono" style={{ color: theme.textMuted }}>{s.type}</span>
@@ -233,7 +233,7 @@ export default function CitationsPanel({
                       <button
                         onClick={() => onInsertCitationMarker(s.key)}
                         className="px-1.5 py-0.5 rounded text-[10px] font-medium text-white transition-colors cursor-pointer"
-                        style={{ backgroundColor: theme.accent }}
+                        style={{ backgroundColor: theme.isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)', color: theme.text, border: `1px solid ${theme.border}` }}
                         title={t(lang, 'insertIntoEditor') || 'Insert into editor'}
                       >
                         + Insert
@@ -255,7 +255,7 @@ export default function CitationsPanel({
                 </div>
 
                 {s.doi && (
-                  <div className="flex items-center gap-1 text-[10px] font-mono pt-1 border-t" style={{ borderColor: theme.borderFaint, color: theme.accent }}>
+                  <div className="flex items-center gap-1 text-[10px] font-mono pt-1 border-t" style={{ borderColor: theme.borderFaint, color: theme.text }}>
                     <ExternalLink size={11} />
                     <a href={`https://doi.org/${s.doi}`} target="_blank" rel="noopener noreferrer" className="hover:underline truncate">
                       DOI: {s.doi}
@@ -274,7 +274,7 @@ export default function CitationsPanel({
           <div className="w-full max-w-md rounded-2xl border shadow-xl p-5 space-y-4 animate-in fade-in zoom-in-95 duration-150" style={{ backgroundColor: theme.surface, borderColor: theme.border }}>
             <div className="flex items-center justify-between border-b pb-3" style={{ borderColor: theme.border }}>
               <div className="flex items-center gap-2">
-                <BookOpen size={18} style={{ color: theme.accent }} />
+                <BookOpen size={18} style={{ color: theme.text }} />
                 <h3 className="font-semibold text-sm" style={{ color: theme.text }}>
                   {t(lang, 'addReferenceSource') || 'Add Reference Source'}
                 </h3>
@@ -394,7 +394,7 @@ export default function CitationsPanel({
                   <button
                     type="submit"
                     className="px-4 py-1.5 rounded-lg text-xs font-medium text-white shadow-xs cursor-pointer"
-                    style={{ backgroundColor: theme.accent }}
+                    style={{ backgroundColor: theme.isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)', color: theme.text, border: `1px solid ${theme.border}` }}
                   >
                     {t(lang, 'addToLibrary') || 'Add to Library'}
                   </button>
@@ -410,7 +410,7 @@ export default function CitationsPanel({
                     className="flex flex-col items-center justify-center p-4 border-2 border-dashed rounded-xl cursor-pointer transition-colors hover:border-blue-500"
                     style={{ borderColor: theme.border, backgroundColor: theme.background }}
                   >
-                    <Upload size={20} style={{ color: theme.accent }} className="mb-1" />
+                    <Upload size={20} style={{ color: theme.text }} className="mb-1" />
                     <span className="text-xs font-medium" style={{ color: theme.text }}>
                       {t(lang, 'chooseBibFile') || 'Choose .bib file'}
                     </span>
@@ -451,7 +451,7 @@ export default function CitationsPanel({
                     type="button"
                     onClick={handleImportBibtexText}
                     className="px-4 py-1.5 rounded-lg text-xs font-medium text-white shadow-xs cursor-pointer"
-                    style={{ backgroundColor: theme.accent }}
+                    style={{ backgroundColor: theme.isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)', color: theme.text, border: `1px solid ${theme.border}` }}
                   >
                     {t(lang, 'importBibtex') || 'Import BibTeX'}
                   </button>

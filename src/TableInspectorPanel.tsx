@@ -139,7 +139,7 @@ export default function TableInspectorPanel({ editor, theme, lang = 'vi', uiFont
           type="button"
           onClick={() => editor && convertListToTable(editor)}
           className="px-3 py-2 rounded-xl border flex items-center gap-1.5 text-xs font-medium hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer transition-all active:scale-95"
-          style={{ borderColor: theme.border, color: theme.accent || '#3b82f6' }}
+          style={{ borderColor: theme.border, color: theme.text }}
         >
           <List size={14} />
           <span>{dict.convertListToTable}</span>
@@ -207,16 +207,16 @@ export default function TableInspectorPanel({ editor, theme, lang = 'vi', uiFont
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5 font-semibold text-xs">
-            <TableIcon size={14} style={{ color: theme.accent || '#3b82f6' }} />
+            <TableIcon size={14} style={{ color: theme.text }} />
             <span>{dict.tableInspector || (isVi ? 'Tùy biến Bảng (Inspector)' : 'Table Inspector')}</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span
               className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold border"
               style={{
-                backgroundColor: theme.accentLight || 'rgba(59,130,246,0.1)',
-                borderColor: theme.accent ? `${theme.accent}40` : 'rgba(59,130,246,0.25)',
-                color: theme.accent || '#3b82f6',
+                backgroundColor: (theme.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'),
+                borderColor: theme.border,
+                color: theme.text,
               }}
             >
               {tableInfo.rowCount} × {tableInfo.colCount}
@@ -250,7 +250,7 @@ export default function TableInspectorPanel({ editor, theme, lang = 'vi', uiFont
       {/* 2. Cell Merge & Split Controls */}
       <div className="flex flex-col gap-1.5">
         <span className="font-semibold text-xs flex items-center gap-1.5 opacity-85">
-          <Combine size={13} style={{ color: theme.accent }} />
+          <Combine size={13} style={{ color: theme.text }} />
           <span>{isVi ? 'Gộp & Tách Ô (Merge / Split)' : 'Merge & Split Cells'}</span>
         </span>
         <div className="grid grid-cols-2 gap-1.5">
@@ -262,8 +262,8 @@ export default function TableInspectorPanel({ editor, theme, lang = 'vi', uiFont
               tableInfo.canMerge ? 'hover:bg-blue-500/10 cursor-pointer font-medium' : 'opacity-40 cursor-not-allowed'
             }`}
             style={{
-              borderColor: tableInfo.canMerge ? theme.accent : theme.border,
-              color: tableInfo.canMerge ? theme.accent : undefined
+              borderColor: tableInfo.canMerge ? theme.text : theme.border,
+              color: tableInfo.canMerge ? theme.text : undefined
             }}
           >
             <Combine size={13} />
@@ -277,8 +277,8 @@ export default function TableInspectorPanel({ editor, theme, lang = 'vi', uiFont
               tableInfo.canSplit ? 'hover:bg-blue-500/10 cursor-pointer font-medium' : 'opacity-40 cursor-not-allowed'
             }`}
             style={{
-              borderColor: tableInfo.canSplit ? theme.accent : theme.border,
-              color: tableInfo.canSplit ? theme.accent : undefined
+              borderColor: tableInfo.canSplit ? theme.text : theme.border,
+              color: tableInfo.canSplit ? theme.text : undefined
             }}
           >
             <Split size={13} />
@@ -290,7 +290,7 @@ export default function TableInspectorPanel({ editor, theme, lang = 'vi', uiFont
       {/* 3. Table Caption & Source Note Section */}
       <div className="flex flex-col gap-2 pt-2 border-t" style={{ borderColor: theme.borderFaint || theme.border }}>
         <span className="font-semibold text-xs flex items-center gap-1.5 opacity-85">
-          <FileText size={13} style={{ color: theme.accent }} />
+          <FileText size={13} style={{ color: theme.text }} />
           <span>{isVi ? 'Tiêu đề & Nguồn Bảng (Caption & Source)' : 'Caption & Source Note'}</span>
         </span>
 
@@ -385,7 +385,7 @@ export default function TableInspectorPanel({ editor, theme, lang = 'vi', uiFont
       <div className="flex flex-col gap-2 pt-2 border-t" style={{ borderColor: theme.borderFaint || theme.border }}>
         <div className="flex items-center justify-between">
           <span className="font-semibold text-xs flex items-center gap-1.5 opacity-85">
-            <Paintbrush size={13} style={{ color: theme.accent }} />
+            <Paintbrush size={13} style={{ color: theme.text }} />
             <span>{isVi ? 'Màu nền Nhấn (Accent Highlight)' : 'Accent Highlight'}</span>
           </span>
           <div className="flex items-center gap-1 bg-black/5 dark:bg-white/5 p-0.5 rounded-lg">
@@ -511,7 +511,7 @@ export default function TableInspectorPanel({ editor, theme, lang = 'vi', uiFont
       <div className="flex flex-col gap-2 pt-2 border-t" style={{ borderColor: theme.borderFaint || theme.border }}>
         <div className="flex items-center justify-between">
           <span className="font-semibold text-xs flex items-center gap-1.5 opacity-85">
-            <Rows size={13} style={{ color: theme.accent }} />
+            <Rows size={13} style={{ color: theme.text }} />
             <span>{isVi ? 'Quản lý Hàng (Rows)' : 'Row Controls'}</span>
           </span>
           <div className="flex items-center gap-1">
@@ -546,7 +546,7 @@ export default function TableInspectorPanel({ editor, theme, lang = 'vi', uiFont
             style={{ borderColor: theme.border }}
             title={isVi ? 'Thêm 1 hàng phía trên' : 'Add row above'}
           >
-            <ArrowUp size={12} style={{ color: theme.accent }} />
+            <ArrowUp size={12} style={{ color: theme.text }} />
             <span className="text-[11px] font-medium">{isVi ? '+ Trên' : '+ Above'}</span>
           </button>
           <button onMouseDown={(e) => e.preventDefault()}
@@ -556,7 +556,7 @@ export default function TableInspectorPanel({ editor, theme, lang = 'vi', uiFont
             style={{ borderColor: theme.border }}
             title={isVi ? 'Thêm 1 hàng phía dưới' : 'Add row below'}
           >
-            <ArrowDown size={12} style={{ color: theme.accent }} />
+            <ArrowDown size={12} style={{ color: theme.text }} />
             <span className="text-[11px] font-medium">{isVi ? '+ Dưới' : '+ Below'}</span>
           </button>
           <button onMouseDown={(e) => e.preventDefault()}
@@ -599,7 +599,7 @@ export default function TableInspectorPanel({ editor, theme, lang = 'vi', uiFont
       <div className="flex flex-col gap-2 pt-2 border-t" style={{ borderColor: theme.borderFaint || theme.border }}>
         <div className="flex items-center justify-between">
           <span className="font-semibold text-xs flex items-center gap-1.5 opacity-85">
-            <Columns size={13} style={{ color: theme.accent }} />
+            <Columns size={13} style={{ color: theme.text }} />
             <span>{isVi ? 'Quản lý Cột (Columns)' : 'Column Controls'}</span>
           </span>
           <div className="flex items-center gap-1">
@@ -634,7 +634,7 @@ export default function TableInspectorPanel({ editor, theme, lang = 'vi', uiFont
             style={{ borderColor: theme.border }}
             title={isVi ? 'Thêm 1 cột bên trái' : 'Add column left'}
           >
-            <ArrowLeft size={12} style={{ color: theme.accent }} />
+            <ArrowLeft size={12} style={{ color: theme.text }} />
             <span className="text-[11px] font-medium">{isVi ? '+ Trái' : '+ Left'}</span>
           </button>
           <button onMouseDown={(e) => e.preventDefault()}
@@ -644,7 +644,7 @@ export default function TableInspectorPanel({ editor, theme, lang = 'vi', uiFont
             style={{ borderColor: theme.border }}
             title={isVi ? 'Thêm 1 cột bên phải' : 'Add column right'}
           >
-            <ArrowRight size={12} style={{ color: theme.accent }} />
+            <ArrowRight size={12} style={{ color: theme.text }} />
             <span className="text-[11px] font-medium">{isVi ? '+ Phải' : '+ Right'}</span>
           </button>
           <button onMouseDown={(e) => e.preventDefault()}
@@ -753,7 +753,7 @@ export default function TableInspectorPanel({ editor, theme, lang = 'vi', uiFont
           className="p-2.5 rounded-xl border flex items-center justify-center gap-1.5 hover:bg-blue-500/10 font-medium cursor-pointer transition-all active:scale-95 mt-1"
           style={{
             borderColor: theme.accent || '#3b82f6',
-            color: theme.accent || '#3b82f6',
+            color: theme.text,
             backgroundColor: theme.accentLight || 'rgba(59,130,246,0.06)'
           }}
         >
@@ -838,7 +838,7 @@ export default function TableInspectorPanel({ editor, theme, lang = 'vi', uiFont
           className="p-2.5 rounded-xl border flex items-center justify-center gap-1.5 hover:bg-black/5 dark:hover:bg-white/5 font-medium cursor-pointer transition-all active:scale-95"
           style={{ borderColor: theme.border }}
         >
-          <ClipboardPaste size={13} style={{ color: theme.accent }} />
+          <ClipboardPaste size={13} style={{ color: theme.text }} />
           <span>{isVi ? 'Dán dữ liệu từ Clipboard (Excel/Sheets)' : 'Paste from Clipboard (Excel/Sheets)'}</span>
         </button>
         {pasteSuccessNotice && (

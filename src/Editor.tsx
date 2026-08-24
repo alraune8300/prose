@@ -768,7 +768,7 @@ function Editor({
             ['--kgv-mono-font' as string]: `'${currentMonoFont}', monospace`,
           } as React.CSSProperties}
         >
-          <EditorBubbleMenu editor={editor} theme={theme} />
+          <FloatingToolbar editor={editor} theme={theme} />
           <EditorContent editor={editor} />
         </div>
       </div>

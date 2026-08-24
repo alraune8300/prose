@@ -2152,53 +2152,52 @@ export default function App() {
               </button>
             )}
 
-            <div className={`absolute top-4 z-50 hidden lg:flex items-center p-1 rounded-xl border shadow-xs gap-1 transition-all duration-300 ${sidebarOpen ? 'left-4' : 'left-16'}`} style={{ backgroundColor: theme.surface, borderColor: theme.border }}>
+            <div className={`absolute top-4 z-50 hidden lg:flex items-center p-1 rounded-xl border shadow-xs gap-0.5 transition-all duration-300 ${sidebarOpen ? 'left-4' : 'left-16'}`} style={{ backgroundColor: theme.surface, borderColor: theme.border }}>
               <button
                 onClick={() => { setViewMode('normal'); setBlockViewOpen(false); }}
-                className={`p-2 rounded-lg transition-all ${viewMode === 'normal' && !blockViewOpen ? 'shadow-xs' : 'opacity-70 hover:opacity-100'}`}
+                className="p-2 rounded-lg transition-all flex items-center justify-center"
                 style={{
-                  backgroundColor: viewMode === 'normal' && !blockViewOpen ? theme.accent : 'transparent',
-                  color: viewMode === 'normal' && !blockViewOpen ? '#fff' : theme.text
+                  backgroundColor: viewMode === 'normal' && !blockViewOpen ? (theme.isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)') : 'transparent',
+                  color: viewMode === 'normal' && !blockViewOpen ? theme.text : theme.textMuted
                 }}
                 title={t.normalView || 'Normal View'}
               >
-                <FileText size={16} />
+                <FileText size={15} />
               </button>
               <button
                 onClick={() => { setViewMode('block'); setBlockViewOpen(true); setIsFocusMode(false); setIsPreviewMode(false); }}
-                className={`p-2 rounded-lg transition-all ${viewMode === 'block' || blockViewOpen ? 'shadow-xs' : 'opacity-70 hover:opacity-100'}`}
+                className="p-2 rounded-lg transition-all flex items-center justify-center"
                 style={{
-                  backgroundColor: viewMode === 'block' || blockViewOpen ? theme.accent : 'transparent',
-                  color: viewMode === 'block' || blockViewOpen ? '#fff' : theme.text
+                  backgroundColor: viewMode === 'block' || blockViewOpen ? (theme.isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)') : 'transparent',
+                  color: viewMode === 'block' || blockViewOpen ? theme.text : theme.textMuted
                 }}
                 title={t.blockView || 'Block View'}
               >
-                <LayoutList size={16} />
+                <LayoutList size={15} />
               </button>
               <button
                 onClick={() => { setViewMode('flashcard'); setBlockViewOpen(false); setIsFocusMode(false); setIsPreviewMode(false); }}
-                className={`p-2 rounded-lg transition-all ${viewMode === 'flashcard' ? 'shadow-xs' : 'opacity-70 hover:opacity-100'}`}
+                className="p-2 rounded-lg transition-all flex items-center justify-center"
                 style={{
-                  backgroundColor: viewMode === 'flashcard' ? theme.accent : 'transparent',
-                  color: viewMode === 'flashcard' ? '#fff' : theme.text
+                  backgroundColor: viewMode === 'flashcard' ? (theme.isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)') : 'transparent',
+                  color: viewMode === 'flashcard' ? theme.text : theme.textMuted
                 }}
                 title={t.flashcardMode || 'Flashcard Mode'}
               >
-                <Brain size={16} />
+                <Brain size={15} />
               </button>
-
-              <div className="w-px h-4 mx-0.5 opacity-20 bg-current shrink-0" style={{ backgroundColor: theme.border }} />
-
+              <div className="w-px h-4 mx-1 opacity-20" style={{ backgroundColor: theme.textMuted }} />
               <button
                 onClick={() => setCommandPaletteOpen(true)}
-                className="p-2 rounded-lg opacity-70 hover:opacity-100 transition-all cursor-pointer"
-                style={{ color: theme.text }}
+                className="p-2 rounded-lg transition-all cursor-pointer flex items-center justify-center"
+                style={{ color: theme.textMuted }}
+                onMouseEnter={e => e.currentTarget.style.color = theme.text}
+                onMouseLeave={e => e.currentTarget.style.color = theme.textMuted}
                 title={lang === 'vi' ? 'Command Palette (Ctrl + K)' : 'Command Palette (Ctrl + K)'}
               >
-                <Terminal size={16} />
+                <Terminal size={15} />
               </button>
             </div>
-
             <div className="absolute top-4 right-16 z-50 flex items-center gap-2 pr-2">
               <WordCountDropdown
                 wordCount={wordCount}
@@ -2326,7 +2325,7 @@ export default function App() {
                   <button
                     onClick={handleCommitDraft}
                     className="px-3 py-1.5 rounded-md text-sm font-medium transition-colors"
-                    style={{ backgroundColor: theme.accent, color: theme.isDark ? theme.bg : '#fff' }}
+                    style={{ backgroundColor: theme.isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)', color: theme.text, border: `1px solid ${theme.border}` }}
                     title="Update original document with these changes"
                   >
                     Commit to Original

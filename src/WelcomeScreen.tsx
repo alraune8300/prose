@@ -648,9 +648,7 @@ function WelcomeScreen({ theme, themeMode, onSelectTheme, uiFont, lang = 'vi', o
                     onClick={(e) => { e.stopPropagation(); setIsNewMenuOpen(!isNewMenuOpen); setIsDataMenuOpen(false); }}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all cursor-pointer font-medium text-sm border"
                     style={{ 
-                      backgroundColor: theme.accentLight, 
-                      color: theme.accent,
-                      borderColor: 'transparent'
+                      backgroundColor: theme.isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)', color: theme.text, borderColor: theme.border
                     }}
                     onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.8'; }}
                     onMouseLeave={(e) => { e.currentTarget.style.opacity = '1'; }}

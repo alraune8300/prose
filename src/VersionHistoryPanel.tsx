@@ -94,8 +94,8 @@ export default function VersionHistoryPanel({
             </button>
             <button
               onClick={handleCreateSnapshot}
-              className="px-3 py-1.5 text-xs rounded text-white font-medium flex items-center gap-1 transition-transform active:scale-95"
-              style={{ backgroundColor: theme.accent }}
+              className="px-3 py-1.5 text-xs rounded  font-medium flex items-center gap-1 transition-transform active:scale-95"
+              style={{ backgroundColor: theme.isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)', color: theme.text, border: `1px solid ${theme.border}` }}
             >
               <Save size={13} />
               {t(lang, 'save')}
@@ -131,7 +131,7 @@ export default function VersionHistoryPanel({
                 onClick={() => setSelectedVersionId(prev => prev === v.id ? null : v.id)}
                 className={`px-4 py-3 rounded-lg border cursor-pointer transition-all ${selectedVersionId === v.id ? 'shadow-sm' : 'hover:bg-black/5 dark:hover:bg-white/5'}`}
                 style={{ 
-                  borderColor: selectedVersionId === v.id ? theme.accent : theme.borderFaint,
+                  borderColor: selectedVersionId === v.id ? theme.text : theme.borderFaint,
                   backgroundColor: selectedVersionId === v.id ? theme.surface : 'transparent'
                 }}
               >
@@ -145,7 +145,7 @@ export default function VersionHistoryPanel({
                   <div className="flex items-center gap-1">
                     {confirmDeleteId === v.id ? (
                       <div className="flex items-center gap-1">
-                        <button onClick={(e) => { e.stopPropagation(); executeDelete(v.id); }} className="px-2 py-1 text-xs rounded bg-red-500 text-white hover:bg-red-600 transition-colors">
+                        <button onClick={(e) => { e.stopPropagation(); executeDelete(v.id); }} className="px-2 py-1 text-xs rounded bg-red-500  hover:bg-red-600 transition-colors">
                           {t(lang, 'delete') || 'Delete'}
                         </button>
                         <button onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(null); }} className="px-2 py-1 text-xs rounded hover:bg-black/10 dark:hover:bg-white/10 transition-colors" style={{ color: theme.text }}>
@@ -168,8 +168,8 @@ export default function VersionHistoryPanel({
                     <h5 className="text-xs font-semibold tracking-wider uppercase opacity-60" style={{ color: theme.text }}>{t(lang, 'preview') || 'Preview'}</h5>
                     <button
                       onClick={() => onRestore(v.content, v.title || activePage?.title || 'Restored')}
-                      className="px-3 py-1.5 text-xs rounded text-white font-medium flex items-center gap-1.5 transition-transform active:scale-95"
-                      style={{ backgroundColor: theme.accent }}
+                      className="px-3 py-1.5 text-xs rounded  font-medium flex items-center gap-1.5 transition-transform active:scale-95"
+                      style={{ backgroundColor: theme.isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)', color: theme.text, border: `1px solid ${theme.border}` }}
                     >
                       <RotateCcw size={13} />
                       {t(lang, 'restoreThisVersion') || 'Restore'}

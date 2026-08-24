@@ -541,10 +541,10 @@ ${content.split('\n\n').map(para => {
                     width: 40, height: 40,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     border: 'none',
-                    background: active ? c.accentLight : 'none',
-                    color: active ? c.accent : c.textFaint,
+                    background: active ? (c.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)') : 'none',
+                    color: active ? c.text : c.textMuted,
                     cursor: 'pointer', fontSize: '0.8rem',
-                    borderLeft: `2px solid ${active ? c.accent : 'transparent'}`,
+                    borderLeft: `2px solid ${active ? c.text : 'transparent'}`,
                     transition: 'all 0.12s',
                     flexShrink: 0,
                   }}
@@ -709,7 +709,7 @@ ${content.split('\n\n').map(para => {
                             if (editor) (editor.chain().focus() as unknown as Record<string, (arg: string) => { run: () => boolean }>).setFontFeatures?.(featStr)?.run?.();
                             onFormatChange({ fontFeatures: featStr } as Partial<FormatState>)
                           }}
-                          style={{ padding: '3px 8px', borderRadius: 5, cursor: 'pointer', fontFamily: uiFont, fontSize: '0.68rem', border: `1px solid ${active ? c.accent : c.border}`, background: active ? c.accentLight : 'transparent', color: active ? c.accent : c.textMuted, transition: 'all 0.12s' }}>
+                          style={{ padding: '3px 8px', borderRadius: 5, cursor: 'pointer', fontFamily: uiFont, fontSize: '0.68rem', border: `1px solid ${active ? c.border : 'transparent'}`, background: active ? (c.isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)') : 'transparent', color: active ? c.text : c.textMuted, transition: 'all 0.12s' }}>
                           {lbl}
                         </button>
                       )
@@ -732,7 +732,7 @@ ${content.split('\n\n').map(para => {
                           if (editor) editor.chain().focus().setTextAlign(a).run();
                           
                         }}
-                          style={{ flex: 1, padding: '5px 0', borderRadius: 5, border: `1.5px solid ${active ? c.accent : c.border}`, background: active ? c.accentLight : 'transparent', color: active ? c.accent : c.textMuted, fontFamily: uiFont, fontSize: '0.68rem', cursor: 'pointer', transition: 'all 0.12s' }}>
+                          style={{ flex: 1, padding: '5px 0', borderRadius: 5, border: `1px solid ${active ? c.border : 'transparent'}`, background: active ? (c.isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)') : 'transparent', color: active ? c.text : c.textMuted, fontFamily: uiFont, fontSize: '0.68rem', cursor: 'pointer', transition: 'all 0.12s' }}>
                           {a === 'left' ? '≡L' : a === 'center' ? '≡C' : a === 'right' ? '≡R' : '≡J'}
                         </button>
                       );
@@ -859,9 +859,9 @@ ${content.split('\n\n').map(para => {
                     }}
                       style={{
                         padding: '4px 10px', borderRadius: 5,
-                        border: `1px solid ${active ? c.accent : c.border}`,
-                        background: active ? c.accentLight : 'transparent',
-                        color: active ? c.accent : c.textMuted,
+                        border: `1px solid ${active ? c.border : 'transparent'}`,
+                        background: active ? (c.isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)') : 'transparent',
+                        color: active ? c.text : c.textMuted,
                         fontFamily: uiFont, fontSize: '0.72rem',
                         cursor: 'pointer', transition: 'all 0.12s',
                       }}
@@ -995,9 +995,9 @@ ${content.split('\n\n').map(para => {
                               title={pos.label}
                               style={{
                                 padding: '6px 4px', borderRadius: 6, cursor: 'pointer',
-                                border: `1.5px solid ${active ? c.accent : c.border}`,
-                                background: active ? c.accentLight : 'transparent',
-                                color: active ? c.accent : c.textMuted,
+                                border: `1px solid ${active ? c.border : 'transparent'}`,
+                                background: active ? (c.isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)') : 'transparent',
+                                color: active ? c.text : c.textMuted,
                                 fontFamily: uiFont, fontSize: '0.68rem', fontWeight: active ? 600 : 500,
                                 transition: 'all 0.12s', textAlign: 'center', whiteSpace: 'nowrap',
                                 overflow: 'hidden', textOverflow: 'ellipsis'
@@ -1039,8 +1039,8 @@ ${content.split('\n\n').map(para => {
                               style={{
                                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                                 padding: '6px 10px', borderRadius: 6, cursor: 'pointer',
-                                border: `1.5px solid ${active ? c.accent : c.border}`,
-                                background: active ? c.accentLight : 'transparent',
+                                border: `1px solid ${active ? c.border : 'transparent'}`,
+                                background: active ? (c.isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)') : 'transparent',
                                 color: active ? c.accent : c.text,
                                 fontFamily: uiFont, fontSize: '0.74rem',
                                 transition: 'all 0.12s', textAlign: 'left'
@@ -1048,7 +1048,7 @@ ${content.split('\n\n').map(para => {
                             >
                               <div style={{ display: 'flex', flexDirection: 'column' }}>
                                 <span style={{ fontWeight: active ? 600 : 500 }}>{fmt.title}</span>
-                                <span style={{ fontSize: '0.65rem', color: active ? c.accent : c.textFaint, fontFamily: 'monospace' }}>{fmt.sample}</span>
+                                <span style={{ fontSize: '0.65rem', color: active ? c.text : c.textFaint, fontFamily: 'monospace' }}>{fmt.sample}</span>
                               </div>
                               {active && <Check size={14} color={c.accent} strokeWidth={2.5} />}
                             </button>

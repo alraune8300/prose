@@ -158,13 +158,13 @@ export default function FootnotesPanel({
       {/* Header with Title & Add Action */}
       <div className="flex items-center justify-between gap-2 px-4 py-3 border-b shrink-0" style={{ borderColor: theme.border, backgroundColor: theme.surface }}>
         <div className="flex items-center gap-2 min-w-0 flex-1">
-          <Bookmark size={16} className="shrink-0" style={{ color: theme.accent }} />
+          <Bookmark size={16} className="shrink-0" style={{ color: theme.text }} />
           <span className="font-semibold text-sm truncate min-w-0 flex-1" style={{ color: theme.text }}>
             {t(lang, 'contextualFootnotes')}
           </span>
           <span 
             className="text-[10px] px-1.5 py-0.5 rounded-full font-mono font-semibold shrink-0" 
-            style={{ backgroundColor: theme.accentLight, color: theme.accent }}
+            style={{ backgroundColor: theme.isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)', color: theme.text, border: `1px solid ${theme.border}` }}
           >
             {footnotes.length}
           </span>
@@ -172,8 +172,8 @@ export default function FootnotesPanel({
 
         <button
           onClick={onInsertNewFootnote}
-          className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg transition-all hover:opacity-90 active:scale-95 text-white shadow-xs font-medium shrink-0"
-          style={{ backgroundColor: theme.accent }}
+          className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-lg transition-all hover:opacity-90 active:scale-95  shadow-xs font-medium shrink-0"
+          style={{ backgroundColor: theme.isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)', color: theme.text, border: `1px solid ${theme.border}` }}
           title={t(lang, 'insertNewFootnote')}
         >
           <Plus size={13} />
@@ -209,7 +209,7 @@ export default function FootnotesPanel({
             className="flex flex-col items-center justify-center text-center p-6 rounded-2xl border border-dashed my-4" 
             style={{ borderColor: theme.border, backgroundColor: theme.surface }}
           >
-            <Hash size={24} className="mb-2 opacity-40" style={{ color: theme.accent }} />
+            <Hash size={24} className="mb-2 opacity-40" style={{ color: theme.text }} />
             <p className="text-xs font-medium mb-1" style={{ color: theme.text }}>
               {searchQuery ? (lang === 'vi' ? 'Không tìm thấy kết quả' : 'No results found') : t(lang, 'noFootnotesYet')}
             </p>
@@ -221,7 +221,7 @@ export default function FootnotesPanel({
             <button
               onClick={onInsertNewFootnote}
               className="text-xs px-3 py-1.5 rounded-lg border transition-all hover:opacity-80 active:scale-95 font-medium flex items-center gap-1.5"
-              style={{ borderColor: theme.accent, color: theme.accent, backgroundColor: theme.surface }}
+              style={{ borderColor: theme.accent, color: theme.text, backgroundColor: theme.surface }}
             >
               <Plus size={13} />
               <span>{t(lang, 'addFirstFootnote')}</span>
@@ -238,9 +238,9 @@ export default function FootnotesPanel({
                   isHighlighted ? 'ring-2 shadow-md' : ''
                 }`}
                 style={{
-                  backgroundColor: isHighlighted ? theme.accentLight : theme.surface,
-                  borderColor: isHighlighted ? theme.accent : theme.border,
-                  boxShadow: isHighlighted ? `0 0 0 2px ${theme.accent}` : undefined,
+                  backgroundColor: isHighlighted ? (theme.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)') : theme.surface,
+                  borderColor: isHighlighted ? theme.text : theme.border,
+                  boxShadow: undefined,
                 }}
               >
                 {/* Footnote Card Topbar */}
@@ -249,8 +249,8 @@ export default function FootnotesPanel({
                     <span
                       className="px-1.5 py-0.5 rounded font-mono font-bold text-[11px] shrink-0"
                       style={{
-                        backgroundColor: isHighlighted ? theme.accent : theme.accentLight,
-                        color: isHighlighted ? '#ffffff' : theme.accent,
+                        backgroundColor: isHighlighted ? theme.text : (theme.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'),
+                        color: isHighlighted ? '#ffffff' : theme.text,
                       }}
                     >
                       [^{fn.label}]
@@ -266,7 +266,7 @@ export default function FootnotesPanel({
                     <button
                       onClick={() => onScrollToEditorMarker(fn.id)}
                       className="p-1 rounded hover:bg-black/5 dark:hover:bg-white/10 transition-colors flex items-center gap-1 text-[11px] font-medium"
-                      style={{ color: theme.accent }}
+                      style={{ color: theme.text }}
                       title={t(lang, 'jumpToText')}
                     >
                       <ArrowUpRight size={13} />
@@ -313,7 +313,7 @@ export default function FootnotesPanel({
 
                 {/* Quick link helper preview if text contains URLs */}
                 {fn.content && (fn.content.includes('http://') || fn.content.includes('https://')) && (
-                  <div className="mt-1.5 flex items-center gap-1 text-[10px]" style={{ color: theme.accent }}>
+                  <div className="mt-1.5 flex items-center gap-1 text-[10px]" style={{ color: theme.text }}>
                     <ExternalLink size={10} />
                     <span className="truncate opacity-80 font-mono">{t(lang, 'containsActiveLinks')}</span>
                   </div>

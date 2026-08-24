@@ -719,7 +719,7 @@ export default function ReferenceComparePanel({
             borderColor: theme.accent,
           }}
         >
-          <FileUp size={44} className="animate-bounce mb-3" style={{ color: theme.accent }} />
+          <FileUp size={44} className="animate-bounce mb-3" style={{ color: theme.text }} />
           <h4 className="text-base font-bold mb-1" style={{ color: theme.text }}>
             {t(lang, 'splitDropFilesHere') || 'Drop file here'}
           </h4>
@@ -739,7 +739,7 @@ export default function ReferenceComparePanel({
             color: theme.text,
           }}
         >
-          <Sparkles size={13} style={{ color: theme.accent }} />
+          <Sparkles size={13} style={{ color: theme.text }} />
           <span>{toastMessage}</span>
         </div>
       )}
@@ -760,8 +760,8 @@ export default function ReferenceComparePanel({
           <button
             type="button"
             onClick={() => handleQuote(selectedText)}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium text-white transition-all hover:opacity-90 active:scale-95 shadow-xs shrink-0"
-            style={{ backgroundColor: theme.accent }}
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium  transition-all hover:opacity-90 active:scale-95 shadow-xs shrink-0"
+            style={{ backgroundColor: theme.isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)', color: theme.text, border: `1px solid ${theme.border}` }}
             title={t(lang, 'quoteToEditor') || 'Quote to Editor (Blockquote + Source)'}
           >
             <ArrowRight size={12} />
@@ -774,7 +774,7 @@ export default function ReferenceComparePanel({
             style={{ borderColor: theme.border, color: theme.text }}
             title={t(lang, 'addAsFootnote') || 'Add as Footnote'}
           >
-            <Bookmark size={12} style={{ color: theme.accent }} />
+            <Bookmark size={12} style={{ color: theme.text }} />
             <span>{t(lang, 'addAsFootnote') || 'Add as Footnote'}</span>
           </button>
           <div className="w-px h-4 mx-0.5" style={{ backgroundColor: theme.border }} />
@@ -831,9 +831,8 @@ export default function ReferenceComparePanel({
             onClick={handlePasteFromClipboard}
             className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-md border font-medium transition-all hover:opacity-90 active:scale-95 shadow-xs"
             style={{ 
-              backgroundColor: theme.accentLight,
-              borderColor: theme.accentMid,
-              color: theme.accent 
+              backgroundColor: theme.isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)', color: theme.text, border: `1px solid ${theme.border}`,
+              borderColor: theme.accentMid 
             }}
             title={t(lang, 'splitPastePrompt') || 'Paste text from Clipboard (Ctrl+V)'}
           >
@@ -874,7 +873,7 @@ export default function ReferenceComparePanel({
       >
         {/* Document Title & Type Badge & Clear button */}
         <div className="flex items-center gap-1.5 min-w-0 flex-1 overflow-hidden">
-          <FileText size={13} className="shrink-0" style={{ color: theme.accent }} />
+          <FileText size={13} className="shrink-0" style={{ color: theme.text }} />
           <span className="truncate font-medium text-xs" title={refTitle} style={{ color: theme.text }}>
             {refTitle}
           </span>
@@ -986,9 +985,9 @@ export default function ReferenceComparePanel({
       {selectedText && tab === 'reference' && displayMode !== 'edit' && (
         <div 
           className="px-3 py-1.5 flex items-center justify-between gap-2 border-b animate-in fade-in slide-in-from-top-1 text-xs shrink-0 select-none flex-wrap sm:flex-nowrap"
-          style={{ backgroundColor: theme.accentLight, borderColor: theme.accentMid }}
+          style={{ backgroundColor: theme.isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)', color: theme.text, border: `1px solid ${theme.border}`, borderColor: theme.accentMid }}
         >
-          <span className="truncate text-xs font-medium flex items-center gap-1" style={{ color: theme.accent }}>
+          <span className="truncate text-xs font-medium flex items-center gap-1" style={{ color: theme.text }}>
             <Quote size={13} />
             <span>{t(lang, 'ghostClipCite') || 'Ghost Clip & Cite'}: {selectedText.length} {t(lang, 'characters')?.toLowerCase() || 'chars'}</span>
           </span>
@@ -996,8 +995,8 @@ export default function ReferenceComparePanel({
             <button
               type="button"
               onClick={() => handleExtractRichToDraft(selectedText)}
-              className="flex items-center gap-1 px-2.5 py-1 rounded shadow-xs font-medium transition-all hover:opacity-90 active:scale-95 text-xs text-white"
-              style={{ backgroundColor: theme.accent }}
+              className="flex items-center gap-1 px-2.5 py-1 rounded shadow-xs font-medium transition-all hover:opacity-90 active:scale-95 text-xs "
+              style={{ backgroundColor: theme.isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)', color: theme.text, border: `1px solid ${theme.border}` }}
               title="Trích xuất đoạn chọn vào bài viết (giữ 100% định dạng Rich Text)"
             >
               <ArrowRight size={12} />
@@ -1007,7 +1006,7 @@ export default function ReferenceComparePanel({
               type="button"
               onClick={() => handleQuote(selectedText)}
               className="flex items-center gap-1 px-2 py-1 rounded border shadow-xs font-medium transition-all hover:bg-white/40 active:scale-95 text-xs"
-              style={{ borderColor: theme.accent, color: theme.accent }}
+              style={{ borderColor: theme.accent, color: theme.text }}
               title={t(lang, 'quoteToEditor') || 'Quote to Editor'}
             >
               <Quote size={12} />
@@ -1017,7 +1016,7 @@ export default function ReferenceComparePanel({
               type="button"
               onClick={() => handleAddAsFootnote(selectedText)}
               className="flex items-center gap-1 px-2 py-1 rounded border shadow-xs font-medium transition-all hover:bg-white/40 active:scale-95 text-xs"
-              style={{ borderColor: theme.accent, color: theme.accent }}
+              style={{ borderColor: theme.accent, color: theme.text }}
               title={t(lang, 'addAsFootnote') || 'Add as Footnote'}
             >
               <Bookmark size={12} />
@@ -1027,7 +1026,7 @@ export default function ReferenceComparePanel({
               type="button"
               onClick={() => handleCopy(selectedText)}
               className="p-1 rounded border transition-all hover:bg-black/5 dark:hover:bg-white/10"
-              style={{ borderColor: theme.accentMid, color: theme.accent }}
+              style={{ borderColor: theme.accentMid, color: theme.text }}
               title={t(lang, 'copy') || 'Copy'}
             >
               {copied ? <Check size={13} /> : <Copy size={13} />}
@@ -1096,7 +1095,7 @@ export default function ReferenceComparePanel({
                         type="button"
                         onClick={() => setDisplayMode('extract')}
                         className="flex items-center gap-1 hover:underline font-medium"
-                        style={{ color: theme.accent }}
+                        style={{ color: theme.text }}
                       >
                         <FileCode size={11} />
                         <span>{t(lang, 'splitPdfSwitchExtract') || 'Switch to Extracted Text'}</span>
@@ -1133,7 +1132,7 @@ export default function ReferenceComparePanel({
                       type="button"
                       onClick={() => setDisplayMode('extract')}
                       className="flex items-center gap-1 hover:underline font-medium"
-                      style={{ color: theme.accent }}
+                      style={{ color: theme.text }}
                     >
                       <FileCode size={11} />
                       <span>{t(lang, 'splitWordSwitchPlain') || 'Switch to Plain Text'}</span>
@@ -1241,7 +1240,7 @@ export default function ReferenceComparePanel({
                     type="button"
                     onClick={() => handleExtractRichToDraft()}
                     className="flex items-center gap-1 hover:underline font-semibold"
-                    style={{ color: theme.accent }}
+                    style={{ color: theme.text }}
                     title="Trích xuất toàn bộ tài liệu sang bài viết chính (giữ 100% định dạng)"
                   >
                     <ArrowRight size={11} />
@@ -1286,7 +1285,7 @@ export default function ReferenceComparePanel({
                 <div className="w-full max-w-2xl mx-auto">
                   {!refContent.trim() ? (
                     <div className="flex flex-col items-center justify-center p-8 text-center rounded-xl border border-dashed my-8" style={{ borderColor: theme.borderFaint }}>
-                      <FileText size={36} className="mb-2 opacity-40" style={{ color: theme.accent }} />
+                      <FileText size={36} className="mb-2 opacity-40" style={{ color: theme.text }} />
                       <p className="font-medium text-sm mb-1">{t(lang, 'splitNoContentLoaded') || 'No reference content loaded'}</p>
                       <p className="text-xs opacity-60 max-w-xs mb-4">
                         {t(lang, 'splitUploadOrPasteDesc') || 'Upload document (.pdf, .docx, .txt, .md) or paste text from clipboard to start.'}
@@ -1295,8 +1294,8 @@ export default function ReferenceComparePanel({
                         <button
                           type="button"
                           onClick={() => fileInputRef.current?.click()}
-                          className="px-3 py-1.5 rounded-lg text-xs font-medium text-white shadow-xs"
-                          style={{ backgroundColor: theme.accent }}
+                          className="px-3 py-1.5 rounded-lg text-xs font-medium  shadow-xs"
+                          style={{ backgroundColor: theme.isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)', color: theme.text, border: `1px solid ${theme.border}` }}
                         >
                           {t(lang, 'splitUploadFile') || 'Upload File'}
                         </button>
@@ -1359,7 +1358,7 @@ export default function ReferenceComparePanel({
                 type="button"
                 onClick={handlePasteFromClipboard}
                 className="hover:underline font-medium flex items-center gap-1"
-                style={{ color: theme.accent }}
+                style={{ color: theme.text }}
               >
                 <Clipboard size={11} />
                 <span>{t(lang, 'splitPasteText') || 'Paste'}</span>
@@ -1438,7 +1437,7 @@ export default function ReferenceComparePanel({
                           type="button"
                           onClick={() => handleQuote(d.right)}
                           className="opacity-0 group-hover:opacity-100 p-0.5 rounded text-[10px] border transition-opacity shrink-0"
-                          style={{ borderColor: theme.borderFaint, color: theme.accent }}
+                          style={{ borderColor: theme.borderFaint, color: theme.text }}
                           title={t(lang, 'splitInsertLine') || 'Insert line into draft'}
                         >
                           <ArrowRight size={10} />
@@ -1467,7 +1466,7 @@ export default function ReferenceComparePanel({
           >
             <div className="flex items-center justify-between border-b pb-2" style={{ borderColor: theme.borderFaint }}>
               <div className="flex items-center gap-2">
-                <Clipboard size={16} style={{ color: theme.accent }} />
+                <Clipboard size={16} style={{ color: theme.text }} />
                 <h3 className="font-bold text-sm">
                   {t(lang, 'splitPasteModalTitle') || 'Paste Reference Text'}
                 </h3>
@@ -1590,8 +1589,8 @@ export default function ReferenceComparePanel({
 
                   showToast(t(lang, 'splitReplaceOpen') || 'Loaded pasted text!');
                 }}
-                className="px-4 py-1.5 rounded-lg text-xs font-medium text-white shadow-xs hover:opacity-90 active:scale-95 transition-all disabled:opacity-40"
-                style={{ backgroundColor: theme.accent }}
+                className="px-4 py-1.5 rounded-lg text-xs font-medium  shadow-xs hover:opacity-90 active:scale-95 transition-all disabled:opacity-40"
+                style={{ backgroundColor: theme.isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)', color: theme.text, border: `1px solid ${theme.border}` }}
               >
                 {t(lang, 'splitReplaceOpen') || 'Replace & Open'}
               </button>

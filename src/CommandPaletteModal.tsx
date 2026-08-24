@@ -281,9 +281,9 @@ export default function CommandPaletteModal({
                 }}
                 className={`px-2 py-0.5 rounded text-[11px] font-mono border transition-all hover:opacity-100 cursor-pointer shrink-0 ${isActive ? 'opacity-100 font-semibold' : 'opacity-60'}`}
                 style={{
-                  borderColor: isActive ? theme.accent : (theme.borderFaint || theme.border),
-                  backgroundColor: isActive ? theme.accentLight || 'rgba(0,0,0,0.05)' : 'transparent',
-                  color: isActive ? theme.accent : theme.text,
+                  borderColor: isActive ? theme.text : (theme.borderFaint || theme.border),
+                  backgroundColor: isActive ? (theme.isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)') : 'transparent',
+                  color: isActive ? theme.text : theme.text,
                 }}
               >
                 {quick.label}
@@ -327,7 +327,7 @@ export default function CommandPaletteModal({
                       className={`flex items-center justify-between px-3 py-2 rounded-xl cursor-pointer transition-all duration-100 ${isSelected ? 'shadow-sm' : ''}`}
                       style={{
                         backgroundColor: isSelected
-                          ? theme.isDark ? 'rgba(255, 255, 255, 0.08)' : theme.accentLight || 'rgba(0,0,0,0.04)'
+                          ? theme.isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0,0,0,0.04)'
                           : 'transparent',
                       }}
                     >

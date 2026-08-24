@@ -201,8 +201,8 @@ function LeftPanel(props: Record<string, unknown>) {
           margin: '4px 10px',
           marginLeft: 10 + indent * 14,
           borderRadius: 12,
-          border: `1px solid ${isHoveredOrActive ? c.accent : c.border}`,
-          background: isHoveredOrActive ? c.accentLight : c.surface,
+          border: `1px solid ${isHoveredOrActive ? c.border : 'transparent'}`,
+          background: isHoveredOrActive ? (c.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)') : 'transparent',
           padding: '12px 14px',
           cursor: 'pointer',
           transition: 'all 0.15s',
@@ -241,7 +241,7 @@ function LeftPanel(props: Record<string, unknown>) {
             </span>
           )}
           
-          <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1" style={{ background: isHoveredOrActive ? c.accentLight : c.surface, borderRadius: 4 }}>
+          <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1" style={{ background: isHoveredOrActive ? (c.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)') : c.surface, borderRadius: 4 }}>
             <button
               onClick={e => { e.stopPropagation(); onDeletePage(page.id) }}
               style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, color: c.textFaint }}
@@ -285,7 +285,7 @@ const renderFolder = (folder: Folder, depth = 0) => {
           }}
           style={{
             padding: '4px 6px', margin: '2px 6px', borderRadius: 6,
-            background: dragOverFolderId === folder.id ? c.accentLight : 'transparent',
+            background: dragOverFolderId === folder.id ? (c.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)') : 'transparent',
             transition: 'background 0.1s', cursor: 'pointer',
           }}
           onClick={() => {
@@ -351,7 +351,7 @@ const renderFolder = (folder: Folder, depth = 0) => {
                     <button
                       onClick={e => { e.stopPropagation(); onNewPage(activeTab === 'drafts', folder.id); setCollapsedFolders(prev => { const next = new Set(prev); next.delete(folder.id); return next; }); setFolderMenuOpenId(null); }}
                       style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '6px 8px', color: c.text, display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.75rem', fontFamily: uiFont, width: '100%', textAlign: 'left', borderRadius: 4 }}
-                      onMouseEnter={e => (e.currentTarget.style.backgroundColor = c.accentLight)}
+                      onMouseEnter={e => (e.currentTarget.style.backgroundColor = (c.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'))}
                       onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
                     >
                       <FileText size={12} /> {t(lang, 'newDocument')?.replace('+', '').trim() || 'New Document'}
@@ -360,7 +360,7 @@ const renderFolder = (folder: Folder, depth = 0) => {
                     <button
                       onClick={e => { e.stopPropagation(); setRenamingFolderId(folder.id); setFolderRenameVal(folder.name); setFolderMenuOpenId(null); }}
                       style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '6px 8px', color: c.text, display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.75rem', fontFamily: uiFont, width: '100%', textAlign: 'left', borderRadius: 4 }}
-                      onMouseEnter={e => (e.currentTarget.style.backgroundColor = c.accentLight)}
+                      onMouseEnter={e => (e.currentTarget.style.backgroundColor = (c.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'))}
                       onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
                     >
                       <Edit2 size={12} /> {t(lang, 'rename')}
@@ -432,7 +432,7 @@ const renderFolder = (folder: Folder, depth = 0) => {
             style={{
               padding: '10px 12px', fontFamily: uiFont, fontSize: '0.72rem',
               color: c.textFaint, fontStyle: 'italic',
-              background: dragOverFolderId === 'root' ? c.accentLight : 'transparent',
+              background: dragOverFolderId === 'root' ? (c.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)') : 'transparent',
               borderRadius: 6, margin: '2px 6px', transition: 'background 0.1s',
             }}
           >
@@ -448,7 +448,7 @@ const renderFolder = (folder: Folder, depth = 0) => {
               setDragOverFolderId(null)
             }}
             style={{
-              background: dragOverFolderId === 'root' ? c.accentLight : 'transparent',
+              background: dragOverFolderId === 'root' ? (c.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)') : 'transparent',
               border: dragOverFolderId === 'root' ? `1px dashed ${c.accentMid}` : 'none',
               borderRadius: 6, margin: '2px 4px', transition: 'all 0.1s',
             }}
@@ -515,8 +515,9 @@ const renderFolder = (folder: Folder, depth = 0) => {
                 width: 36, height: 36,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 border: 'none', borderRadius: 8,
-                background: active ? c.accentLight : 'transparent',
-                color: active ? c.accent : c.textFaint,
+                background: active ? (c.isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)') : 'transparent',
+                color: active ? c.text : c.textMuted,
+                boxShadow: active ? (c.isDark ? '0 1px 2px rgba(0,0,0,0.3)' : '0 1px 2px rgba(0,0,0,0.05)') : 'none',
                 cursor: 'pointer', transition: 'all 0.15s',
               }}
               onMouseEnter={e => {
@@ -638,7 +639,7 @@ const renderFolder = (folder: Folder, depth = 0) => {
             )}
           </div>
           <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
-            <button onClick={onNewProject} style={{ flex: 1, padding: '6px', background: c.accentLight, color: c.accent, borderRadius: 6, fontSize: '0.75rem', fontWeight: 500, border: 'none', cursor: 'pointer' }}>+ {t(lang, 'newProject') || 'New Project'}</button>
+            <button onClick={onNewProject} style={{ flex: 1, padding: '6px', background: (c.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'), color: c.accent, borderRadius: 6, fontSize: '0.75rem', fontWeight: 500, border: 'none', cursor: 'pointer' }}>+ {t(lang, 'newProject') || 'New Project'}</button>
             <button onClick={handleLeftPanelImport} style={{ flex: 1, padding: '6px', background: c.bg, color: c.text, border: `1px solid ${c.borderFaint}`, borderRadius: 6, fontSize: '0.75rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
               <Upload size={12} /> {t(lang, 'importFile') || 'Import'}
             </button>
@@ -675,7 +676,7 @@ const renderFolder = (folder: Folder, depth = 0) => {
               textMuted: c.textMuted,
               textFaint: c.textFaint,
               accent: c.accent,
-              accentLight: c.accentLight,
+              accentLight: (c.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'),
               border: c.border,
               borderFaint: c.borderFaint,
               surface: c.surface,
@@ -692,7 +693,7 @@ const renderFolder = (folder: Folder, depth = 0) => {
               textMuted: c.textMuted,
               textFaint: c.textFaint,
               accent: c.accent,
-              accentLight: c.accentLight,
+              accentLight: (c.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'),
               border: c.border,
               borderFaint: c.borderFaint,
               surface: c.surface,
@@ -719,7 +720,7 @@ const renderFolder = (folder: Folder, depth = 0) => {
               textMuted: c.textMuted,
               textFaint: c.textFaint,
               accent: c.accent,
-              accentLight: c.accentLight,
+              accentLight: (c.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'),
               border: c.border,
               borderFaint: c.borderFaint,
               surface: c.surface,
@@ -827,7 +828,7 @@ const renderFolder = (folder: Folder, depth = 0) => {
                 <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 6px', background: c.surface, borderRadius: 6 }}>
                   <span style={{ fontSize: '0.8rem', color: c.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1, paddingRight: 8 }}>{p.title}</span>
                   <div style={{ display: 'flex', gap: 4 }}>
-                    <button onClick={() => onRestorePage(p.id)} style={{ padding: 4, background: c.accentLight, color: c.accent, borderRadius: 4, border: 'none', cursor: 'pointer' }} title={t(lang, 'restore') || 'Restore'}><RotateCcw size={12} /></button>
+                    <button onClick={() => onRestorePage(p.id)} style={{ padding: 4, background: (c.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'), color: c.accent, borderRadius: 4, border: 'none', cursor: 'pointer' }} title={t(lang, 'restore') || 'Restore'}><RotateCcw size={12} /></button>
                     <button onClick={() => onPermanentDelete(p.id)} style={{ padding: 4, background: 'rgba(224, 80, 80, 0.1)', color: '#e05050', borderRadius: 4, border: 'none', cursor: 'pointer' }} title={t(lang, 'deleteForever') || 'Delete Forever'}><Trash2 size={12} /></button>
                   </div>
                 </div>

@@ -298,7 +298,7 @@ export default function HighlightsPanel({ theme, editor, lang, uiFont }: Props) 
         <button 
           onClick={generateMatrix}
           className="w-full mb-2 py-2 px-3 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 shadow-sm transition-all"
-          style={{ backgroundColor: theme.accent, color: '#fff' }}
+          style={{ backgroundColor: theme.isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)', color: theme.text, border: `1px solid ${theme.border}` }}
         >
           <Table size={14} />
           {t('synthesize')}
@@ -316,7 +316,7 @@ export default function HighlightsPanel({ theme, editor, lang, uiFont }: Props) 
             <div 
               key={hl.id}
               id={'hl-card-' + hl.id}
-              className={`rounded-xl border p-3 flex flex-col gap-2 transition-colors duration-200 shadow-sm ${activeId === hl.id ? 'ring-2 ring-accent/60' : ''}`}
+              className={`rounded-xl border p-3 flex flex-col gap-2 transition-colors duration-200 shadow-sm ${activeId === hl.id ? 'ring-2 ring-white/60' : ''}`}
               style={{ backgroundColor: theme.isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.01)', borderColor: theme.border }}
             >
               <div className="flex items-start justify-between gap-2">
@@ -352,7 +352,7 @@ export default function HighlightsPanel({ theme, editor, lang, uiFont }: Props) 
                   value={hl.memo}
                   onChange={(e) => updateMemo(hl.id, e.target.value)}
                   placeholder={t('placeholder')}
-                  className="w-full text-xs rounded-lg p-2.5 border outline-none resize-y min-h-[60px] transition-colors focus:ring-1 focus:ring-accent/50"
+                  className="w-full text-xs rounded-lg p-2.5 border outline-none resize-y min-h-[60px] transition-colors focus:ring-1 focus:ring-black/20 dark:focus:ring-white/20"
                   style={{ 
                     backgroundColor: theme.surface, 
                     color: theme.text, 

@@ -194,14 +194,14 @@ export default function TableCreatePanel({
         <div
           className="p-3 rounded-2xl border flex flex-col gap-2"
           style={{
-            backgroundColor: theme.accentLight || 'rgba(59, 130, 246, 0.1)',
-            borderColor: theme.accent || '#3b82f6',
+            backgroundColor: (theme.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'),
+            borderColor: theme.border,
             color: theme.text,
           }}
         >
           <div className="flex items-center justify-between gap-2 min-w-0">
             <div className="flex items-center gap-2 min-w-0">
-              <Table size={14} className="shrink-0" style={{ color: theme.accent }} />
+              <Table size={14} className="shrink-0" style={{ color: theme.text }} />
               <div className="truncate">
                 <span className="font-semibold block truncate">
                   {dict.selectedCell || (lang === 'vi' ? 'Đang chọn bảng' : 'Focused Table')}: {activeTableInfo.rowCount} × {activeTableInfo.colCount}
@@ -218,8 +218,7 @@ export default function TableCreatePanel({
               }}
               className="px-2.5 py-1 rounded-lg text-[10px] font-semibold shrink-0 cursor-pointer shadow-xs transition-all hover:scale-105 active:scale-95"
               style={{
-                backgroundColor: theme.accent || '#2563eb',
-                color: theme.isDark ? theme.bg : '#ffffff',
+                backgroundColor: theme.isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)', color: theme.text, border: `1px solid ${theme.border}`,
               }}
             >
               {dict.tableInspector || (lang === 'vi' ? 'Tùy biến' : 'Inspect')}
@@ -280,8 +279,8 @@ export default function TableCreatePanel({
             activeTab === 'grid' ? 'shadow-xs font-semibold' : 'opacity-60 hover:opacity-100'
           }`}
           style={{
-            backgroundColor: activeTab === 'grid' ? (theme.accentLight || 'rgba(59,130,246,0.15)') : 'transparent',
-            color: activeTab === 'grid' ? (theme.accent || '#3b82f6') : theme.text,
+            backgroundColor: activeTab === 'grid' ? (theme.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)') : 'transparent',
+            color: activeTab === 'grid' ? theme.text : theme.textMuted,
           }}
         >
           <Grid size={12} />
@@ -294,8 +293,8 @@ export default function TableCreatePanel({
             activeTab === 'custom' ? 'shadow-xs font-semibold' : 'opacity-60 hover:opacity-100'
           }`}
           style={{
-            backgroundColor: activeTab === 'custom' ? (theme.accentLight || 'rgba(59,130,246,0.15)') : 'transparent',
-            color: activeTab === 'custom' ? (theme.accent || '#3b82f6') : theme.text,
+            backgroundColor: activeTab === 'custom' ? (theme.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)') : 'transparent',
+            color: activeTab === 'custom' ? theme.text : theme.textMuted,
           }}
         >
           <Rows size={12} />
@@ -308,8 +307,8 @@ export default function TableCreatePanel({
             activeTab === 'templates' ? 'shadow-xs font-semibold' : 'opacity-60 hover:opacity-100'
           }`}
           style={{
-            backgroundColor: activeTab === 'templates' ? (theme.accentLight || 'rgba(59,130,246,0.15)') : 'transparent',
-            color: activeTab === 'templates' ? (theme.accent || '#3b82f6') : theme.text,
+            backgroundColor: activeTab === 'templates' ? (theme.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)') : 'transparent',
+            color: activeTab === 'templates' ? theme.text : theme.textMuted,
           }}
         >
           <LayoutTemplate size={12} />
@@ -327,8 +326,8 @@ export default function TableCreatePanel({
             <span
               className="font-mono font-bold text-xs px-2 py-0.5 rounded-md"
               style={{
-                backgroundColor: theme.accentLight || 'rgba(59,130,246,0.12)',
-                color: theme.accent || '#3b82f6',
+                backgroundColor: theme.isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)', border: `1px solid ${theme.border}`,
+                color: theme.text || '#3b82f6',
               }}
             >
               {hoveredCols} {dict.cols || (lang === 'vi' ? 'Cột' : 'Cols')} × {hoveredRows} {dict.rows || (lang === 'vi' ? 'Hàng' : 'Rows')}
@@ -390,7 +389,7 @@ export default function TableCreatePanel({
         <div className="space-y-3">
           <div className="space-y-1.5">
             <label className="text-[11px] font-semibold opacity-80 flex items-center gap-1">
-              <Rows size={12} style={{ color: theme.accent }} />
+              <Rows size={12} style={{ color: theme.text }} />
               <span>{dict.rows || (lang === 'vi' ? 'Số hàng (Rows):' : 'Rows:')}:</span>
             </label>
             <div className="flex items-center gap-1.5">
@@ -428,7 +427,7 @@ export default function TableCreatePanel({
 
           <div className="space-y-1.5">
             <label className="text-[11px] font-semibold opacity-80 flex items-center gap-1">
-              <Columns size={12} style={{ color: theme.accent }} />
+              <Columns size={12} style={{ color: theme.text }} />
               <span>{dict.cols || (lang === 'vi' ? 'Số cột (Columns):' : 'Columns:')}:</span>
             </label>
             <div className="flex items-center gap-1.5">
@@ -492,7 +491,7 @@ export default function TableCreatePanel({
                   className="font-mono text-[10px] px-1.5 py-0.5 rounded-md font-semibold"
                   style={{
                     backgroundColor: theme.accentLight || 'rgba(59,130,246,0.1)',
-                    color: theme.accent || '#3b82f6',
+                    color: theme.text || '#3b82f6',
                   }}
                 >
                   {preset.cols}×{preset.rows}
@@ -679,8 +678,7 @@ export default function TableCreatePanel({
         }}
         className="w-full py-2.5 px-4 rounded-xl font-semibold text-xs flex items-center justify-center gap-2 shadow-md hover:opacity-90 active:scale-98 transition-all cursor-pointer touch-manipulation"
         style={{
-          backgroundColor: theme.accent || '#2563eb',
-          color: theme.isDark ? theme.bg : '#ffffff',
+          backgroundColor: theme.isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)', color: theme.text, border: `1px solid ${theme.border}`,
         }}
       >
         {insertedSuccess ? (

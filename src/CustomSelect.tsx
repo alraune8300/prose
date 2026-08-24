@@ -26,9 +26,11 @@ interface CustomSelectProps {
   renderButtonContent?: (selectedOption: SelectOption | undefined) => React.ReactNode;
   onOpen?: () => void;
   footerNode?: React.ReactNode;
+  searchPlaceholder?: string;
 }
 
 export function CustomSelect({
+  searchPlaceholder = "Search...",
   value,
   onChange,
   options,
@@ -99,7 +101,7 @@ export function CustomSelect({
             minWidth: Math.max(200, coords.width),
             maxWidth: Math.max(260, coords.width),
             maxHeight: '320px',
-            top: coords.bottom + 4,
+            ...(coords.windowHeight - coords.bottom < 340 ? { top: coords.top - 8, transform: 'translateY(-100%)' } : { top: coords.bottom + 4 }),
             left: coords.left,
             ...dropdownStyle 
           }}
@@ -109,7 +111,7 @@ export function CustomSelect({
               <svg xmlns="http://www.w3.org/2000/svg" className="absolute left-2.5 w-3.5 h-3.5 opacity-40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
               <input
                 type="text"
-                placeholder="Search font..."
+                placeholder={searchPlaceholder}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="w-full pl-8 pr-3 py-1.5 text-[13px] rounded-lg border outline-none transition-all"

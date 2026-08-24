@@ -93,10 +93,10 @@ function Toolbar({
       type="button"
       onMouseDown={(e) => e.preventDefault()}
       onClick={onClick}
-      className={`min-h-[32px] min-w-[32px] flex items-center justify-center p-1.5 rounded-xl transition-all hover:scale-105 active:scale-95 cursor-pointer shrink-0 touch-manipulation`}
+      className={`min-h-[32px] min-w-[32px] flex items-center justify-center p-1.5 rounded-xl transition-all hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer shrink-0 touch-manipulation`}
       style={{
-        backgroundColor: active ? (theme.accentLight || 'rgba(59,130,246,0.18)') : "transparent",
-        color: active ? (theme.accent || '#3b82f6') : (theme.textMuted || theme.text)
+        backgroundColor: active ? (theme.isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)') : "transparent",
+        color: active ? theme.text : (theme.textMuted || theme.text)
       }}
       aria-label={label}
       title={label}
@@ -493,8 +493,7 @@ function Toolbar({
                 }}
                 className="px-4 py-2 text-xs font-medium rounded-xl shadow-md transition-all hover:opacity-90 cursor-pointer"
                 style={{
-                  backgroundColor: theme.accent,
-                  color: theme.isDark ? theme.bg : '#ffffff'
+                  backgroundColor: theme.isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)', color: theme.text, border: `1px solid ${theme.border}`
                 }}
               >
                 {t.apply}
@@ -587,8 +586,7 @@ function Toolbar({
                 }}
                 className="px-4 py-2 text-xs font-medium rounded-xl shadow-md transition-all hover:opacity-90 cursor-pointer"
                 style={{
-                  backgroundColor: theme.accent,
-                  color: theme.isDark ? theme.bg : '#ffffff'
+                  backgroundColor: theme.isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)', color: theme.text, border: `1px solid ${theme.border}`
                 }}
               >
                 {t.apply}
