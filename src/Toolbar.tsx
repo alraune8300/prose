@@ -38,6 +38,11 @@ type Props = {
   onZoomInputBlur?: () => void;
   isSplitView?: boolean;
   onToggleSplitView?: () => void;
+  bodyFont?: string;
+  headingFont?: string;
+  uiFontRole?: string;
+  apiKey?: string;
+  onSaveApiKey?: (key: string) => void;
 };
 
 function Toolbar({
@@ -48,7 +53,7 @@ function Toolbar({
   zoomPercent, zoomInput,
   onZoomIn, onZoomOut,
   onZoomInputChange, onZoomInputBlur,
-  isSplitView, onToggleSplitView,
+  isSplitView, onToggleSplitView, bodyFont, headingFont, uiFontRole, apiKey, onSaveApiKey,
 }: Props) {
   const [, forceUpdate] = useState({});
   const [savedSelection, setSavedSelection] = useState<any>(null);
@@ -203,6 +208,11 @@ function Toolbar({
           lang={lang}
           
           onAssignRole={(role, name) => onFontAssign?.(role as 'body' | 'heading' | 'mono' | 'ui', name)}
+          bodyFont={bodyFont}
+          headingFont={headingFont}
+          uiFontRole={uiFontRole}
+          apiKey={apiKey}
+          onSaveApiKey={onSaveApiKey}
         />,
         document.body
       )}

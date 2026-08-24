@@ -2373,6 +2373,11 @@ export default function App() {
               }
             }}
             onZoomInputBlur={commitZoomInput}
+            bodyFont={docFont}
+            headingFont={headingFont}
+            uiFontRole={uiFont}
+            apiKey={apiKey}
+            onSaveApiKey={handleSaveApiKey}
           />
         )}
 

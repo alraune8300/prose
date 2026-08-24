@@ -364,8 +364,9 @@ export default function GoogleFontsPanel(props: GoogleFontsPanelProps & { hideRo
           onClick={() => setActiveTab('catalog')}
           style={{
             flex: 1, padding: '7px 8px', borderRadius: 6, border: 'none',
-            background: activeTab === 'catalog' ? c.accent : 'transparent',
-            color: activeTab === 'catalog' ? (c.isDark ? c.bg : '#ffffff') : c.textMuted,
+            background: activeTab === 'catalog' ? (c.isDark ? 'rgba(255,255,255,0.1)' : '#ffffff') : 'transparent',
+            boxShadow: activeTab === 'catalog' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+            color: activeTab === 'catalog' ? c.text : c.textMuted,
             fontFamily: uiFont, fontSize: '0.78rem', fontWeight: 600,
             cursor: 'pointer', transition: 'all 0.15s',
           }}
@@ -378,8 +379,9 @@ export default function GoogleFontsPanel(props: GoogleFontsPanelProps & { hideRo
             onClick={() => setActiveTab('roles')}
             style={{
               flex: 1, padding: '7px 8px', borderRadius: 6, border: 'none',
-              background: activeTab === 'roles' ? c.accent : 'transparent',
-              color: activeTab === 'roles' ? (c.isDark ? c.bg : '#ffffff') : c.textMuted,
+              background: activeTab === 'roles' ? (c.isDark ? 'rgba(255,255,255,0.1)' : '#ffffff') : 'transparent',
+            boxShadow: activeTab === 'roles' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+              color: activeTab === 'roles' ? c.text : c.textMuted,
               fontFamily: uiFont, fontSize: '0.78rem', fontWeight: 600,
               cursor: 'pointer', transition: 'all 0.15s',
             }}
