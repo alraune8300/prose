@@ -59,15 +59,15 @@ export function CustomSelect({
 
   return (
     <div className="relative inline-block text-left" ref={containerRef}>
-      <div 
-        onClick={() => { setIsOpen(!isOpen); if (!isOpen && onOpen) onOpen(); }}
+      <button type="button" 
+        onPointerDown={(e) => { e.preventDefault(); setIsOpen(!isOpen); if (!isOpen && onOpen) onOpen(); }}
         className={`cursor-pointer ${buttonClassName}`}
         style={buttonStyle}
       >
         {renderButtonContent ? renderButtonContent(selectedOption) : (
           <span className="truncate">{selectedOption?.label || value}</span>
         )}
-      </div>
+      </button>
 
       {isOpen && (
         <div 
@@ -83,7 +83,7 @@ export function CustomSelect({
           {options && options.map((opt, i) => (
             <React.Fragment key={opt.value}>
               <button
-                onClick={() => { onChange(opt.value); setIsOpen(false); }}
+                onPointerDown={(e) => { e.preventDefault(); onChange(opt.value); setIsOpen(false); }}
                 className="w-full text-left px-4 py-3 text-[13px] md:text-sm transition-colors truncate flex-shrink-0"
                 style={{ 
                   color: theme.text,
@@ -109,7 +109,7 @@ export function CustomSelect({
               {group.options.map((opt) => (
                 <button
                   key={opt.value}
-                  onClick={() => { onChange(opt.value); setIsOpen(false); }}
+                  onPointerDown={(e) => { e.preventDefault(); onChange(opt.value); setIsOpen(false); }}
                   className="w-full text-left px-3 py-2 text-[13px] md:text-sm transition-colors truncate flex-shrink-0"
                   style={{ 
                     color: theme.text,

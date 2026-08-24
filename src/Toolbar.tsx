@@ -51,6 +51,7 @@ function Toolbar({
   isSplitView, onToggleSplitView,
 }: Props) {
   const [, forceUpdate] = useState({});
+  const [savedSelection, setSavedSelection] = useState<any>(null);
   const [showGoogleFonts, setShowGoogleFonts] = useState(false);
   const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
   const [linkInputValue, setLinkInputValue] = useState('https://');
@@ -155,7 +156,8 @@ function Toolbar({
         return (
           <CustomSelect
             value={currentFont}
-            onChange={onFontChange}
+            onOpen={() => setSavedSelection(editor?.state.selection)}
+            onChange={(fam) => { if(savedSelection && editor) { editor.commands.setTextSelection(savedSelection); } onFontChange(fam); }}
             groups={groups}
             theme={theme}
             buttonClassName="text-xs py-1 px-2 rounded-lg outline-none cursor-pointer hover:bg-black/5 dark:hover:bg-white/10 max-w-[110px] shrink-0 bg-transparent border-none transition-colors truncate"
@@ -163,7 +165,7 @@ function Toolbar({
             dropdownClassName="w-56 bottom-full mb-2 !mt-0"
             footerNode={
               <button
-                onClick={() => setShowGoogleFonts(true)}
+                onPointerDown={(e) => { e.preventDefault(); setSavedSelection(editor?.state.selection); setShowGoogleFonts(true); }}
                 className="w-full text-left px-4 py-2 text-xs font-semibold hover:opacity-80 transition-opacity"
                 style={{ color: theme.accent }}
               >
@@ -184,13 +186,13 @@ function Toolbar({
       {showGoogleFonts && createPortal(
         <GoogleFontsPanel
           onSelect={name => {
-            injectGoogleFont(name);
+            if (savedSelection && editor) { editor.commands.setTextSelection(savedSelection); } injectGoogleFont(name);
             onFontChange(name);
             window.dispatchEvent(new CustomEvent('kgv-apply-font-selection', { detail: name }));
             setShowGoogleFonts(false);
           }}
           onApplyToSelection={name => {
-            injectGoogleFont(name);
+            if (savedSelection && editor) { editor.commands.setTextSelection(savedSelection); } injectGoogleFont(name);
             onFontChange(name);
             window.dispatchEvent(new CustomEvent('kgv-apply-font-selection', { detail: name }));
             setShowGoogleFonts(false);
@@ -199,7 +201,7 @@ function Toolbar({
           theme={theme}
           uiFont={uiFont}
           lang={lang}
-          editor={editor}
+          
           onAssignRole={(role, name) => onFontAssign?.(role as 'body' | 'heading' | 'mono' | 'ui', name)}
         />,
         document.body

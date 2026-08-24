@@ -463,7 +463,7 @@ const renderFolder = (folder: Folder, depth = 0) => {
   return (
     <div
       style={{
-        width: '100%', flexShrink: 0, display: 'flex', flexDirection: 'row',
+        width: 320, flexShrink: 0, display: 'flex', flexDirection: 'row',
         height: '100%', maxHeight: '100%',
         background: c.panel,
         overflow: 'hidden',

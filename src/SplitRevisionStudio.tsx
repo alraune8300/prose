@@ -42,7 +42,6 @@ export default function SplitRevisionStudio({
   const [liveText, setLiveText] = useState<string>('');
   const [debouncedLiveText, setDebouncedLiveText] = useState<string>('');
   const [syncScroll, setSyncScroll] = useState<boolean>(true);
-  const [hoveredDiffIndex, setHoveredDiffIndex] = useState<number | null>(null);
 
   // Scroll synchronization refs
   const leftColRef = useRef<HTMLDivElement>(null);
@@ -107,7 +106,7 @@ export default function SplitRevisionStudio({
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedLiveText(liveText);
-    }, 100);
+    }, 300);
     return () => clearTimeout(timer);
   }, [liveText]);
 
@@ -449,18 +448,17 @@ export default function SplitRevisionStudio({
                     return (
                       <span
                         key={idx}
-                        onMouseEnter={() => setHoveredDiffIndex(idx)}
-                        onMouseLeave={() => setHoveredDiffIndex(null)}
+                        
+                        
                         className="relative group inline-block line-through text-rose-600 dark:text-rose-300 bg-rose-500/15 dark:bg-rose-950/50 px-1.5 py-0.5 rounded-md mx-0.5 transition-all shadow-xs"
                       >
                         {renderMarkdownSyntaxTokens(part.value)}
-                        {hoveredDiffIndex === idx && (
+                        
                           <span className="absolute -top-8 left-0 z-20 hidden group-hover:flex items-center gap-1.5 bg-black/90 text-white text-[11px] px-2.5 py-1 rounded-lg shadow-xl whitespace-nowrap">
                             <button onClick={() => handleRestoreChunk(part.value)} className="hover:underline text-rose-300 font-medium flex items-center gap-1">
                               <CornerDownLeft size={12} /> [{lang === 'vi' ? 'Khôi phục vào bản soạn' : 'Restore to Draft'}]
                             </button>
                           </span>
-                        )}
                       </span>
                     );
                   } else if (part.added) {
