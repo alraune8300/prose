@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect, useRef, useCallback } from 'react'
-import { PRESETS, buildHueTheme } from './theme'
+import { PRESETS, THEME_CATEGORIES, buildHueTheme } from './theme'
 import { FormatState, CustomFont, PageFormat, Panel } from './types'
 import GoogleFontsPanel from './GoogleFontsPanel'
 import SpellcheckPanel from './SpellcheckPanel'
@@ -215,6 +215,7 @@ function RightPanel(props: Record<string, unknown>) {
   const [timerDone, setTimerDone] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [flowToast, setFlowToast] = useState<string | null>(null);
+  const [themeCategoryFilter, setThemeCategoryFilter] = useState<string>('all');
 
   // Daily focus stats persistence in localStorage
   const todayStr = new Date().toISOString().slice(0, 10);
@@ -1960,28 +1961,119 @@ ${content.split('\n\n').map(para => {
 
             <div>
               <SectionLabel label={t(lang, 'themePresets')} uiFont={uiFont} c={c} />
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
-                {PRESETS.map(preset => (
-                  <button
-                    key={preset.name}
-                    onClick={() => onPresetSelect(activePresetName === preset.name ? null : preset.name)}
-                    style={{
-                      padding: '7px 9px', borderRadius: 7, textAlign: 'left',
-                      border: `1.5px solid ${activePresetName === preset.name ? c.accent : c.borderFaint}`,
-                      background: activePresetName === preset.name ? c.accentLight : (c.isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)'),
-                      cursor: 'pointer', transition: 'all 0.15s',
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 4 }}>
-                      <span style={{ fontFamily: uiFont, fontSize: '0.7rem', fontWeight: 600, color: activePresetName === preset.name ? c.accent : c.text }}>{preset.name}</span>
+              
+              {/* Category Filter Vertical List */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 12, maxHeight: 180, overflowY: 'auto', paddingRight: 4 }}>
+                <button
+                  onClick={() => setThemeCategoryFilter('all')}
+                  style={{
+                    padding: '6px 10px', borderRadius: 6, fontSize: '0.72rem', textAlign: 'left',
+                    background: themeCategoryFilter === 'all' ? c.accentLight : (c.isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)'),
+                    color: themeCategoryFilter === 'all' ? c.accent : c.text,
+                    border: `1px solid ${themeCategoryFilter === 'all' ? c.accent : c.borderFaint}`,
+                    cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                    fontFamily: uiFont, fontWeight: themeCategoryFilter === 'all' ? 600 : 400,
+                    transition: 'all 0.15s ease'
+                  }}
+                >
+                  <span>All Categories</span>
+                  <span style={{ fontSize: '0.62rem', opacity: 0.8, fontFamily: monoFont }}>{PRESETS.length}</span>
+                </button>
+                {THEME_CATEGORIES.map(cat => {
+                  const count = PRESETS.filter(p => cat.presetNames.includes(p.name)).length;
+                  const isActive = themeCategoryFilter === cat.id;
+                  return (
+                    <button
+                      key={cat.id}
+                      onClick={() => setThemeCategoryFilter(cat.id)}
+                      style={{
+                        padding: '6px 10px', borderRadius: 6, fontSize: '0.72rem', textAlign: 'left',
+                        background: isActive ? c.accentLight : (c.isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)'),
+                        color: isActive ? c.accent : c.text,
+                        border: `1px solid ${isActive ? c.accent : c.borderFaint}`,
+                        cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                        fontFamily: uiFont, fontWeight: isActive ? 600 : 400,
+                        transition: 'all 0.15s ease'
+                      }}
+                    >
+                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginRight: 8 }}>{cat.label}</span>
+                      <span style={{ fontSize: '0.62rem', opacity: 0.8, fontFamily: monoFont, flexShrink: 0 }}>{count}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Render Categories */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxHeight: 420, overflowY: 'auto', paddingRight: 4 }}>
+                {THEME_CATEGORIES.filter(cat => themeCategoryFilter === 'all' || themeCategoryFilter === cat.id).map(cat => {
+                  const catPresets = PRESETS.filter(p => cat.presetNames.includes(p.name));
+                  if (catPresets.length === 0) return null;
+                  return (
+                    <div key={cat.id}>
+                      <div style={{ fontSize: '0.7rem', fontWeight: 600, color: c.textMuted, marginBottom: 5, paddingBottom: 2, borderBottom: `1px solid ${c.borderFaint}` }}>
+                        {cat.label}
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        {catPresets.map(preset => (
+                          <button
+                            key={preset.name}
+                            onClick={() => onPresetSelect(activePresetName === preset.name ? null : preset.name)}
+                            style={{
+                              padding: '8px 12px', borderRadius: 8, textAlign: 'left',
+                              border: `1.5px solid ${activePresetName === preset.name ? c.accent : c.borderFaint}`,
+                              background: activePresetName === preset.name ? c.accentLight : (c.isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)'),
+                              cursor: 'pointer', transition: 'all 0.15s',
+                              display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10,
+                              width: '100%'
+                            }}
+                          >
+                            <span style={{ fontFamily: uiFont, fontSize: '0.75rem', fontWeight: 600, color: activePresetName === preset.name ? c.accent : c.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{preset.name}</span>
+                            <div style={{
+                              width: 90, height: 28, borderRadius: 6,
+                              background: preset.bg,
+                              border: `1px solid ${preset.border}`,
+                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              boxShadow: '0 1px 2px rgba(0,0,0,0.08)',
+                              position: 'relative', overflow: 'hidden', flexShrink: 0
+                            }}>
+                              <div style={{ display: 'flex', alignItems: 'center' }}>
+                                {[
+                                  { bg: preset.text, border: preset.bg },
+                                  { bg: preset.accent, border: preset.bg },
+                                  { bg: preset.accentMid, border: preset.bg },
+                                  { bg: preset.surface, border: preset.border }
+                                ].map((item, idx) => (
+                                  <div
+                                    key={idx}
+                                    style={{
+                                      width: 14, height: 14, borderRadius: '50%',
+                                      background: item.bg,
+                                      border: `1.5px solid ${item.border}`,
+                                      marginLeft: idx === 0 ? 0 : -5,
+                                      boxShadow: '0 1px 1px rgba(0,0,0,0.1)'
+                                    }}
+                                  />
+                                ))}
+                                <div style={{
+                                  width: 14, height: 14, borderRadius: '50%',
+                                  background: preset.surface,
+                                  color: preset.text,
+                                  border: `1.5px solid ${preset.accent}`,
+                                  marginLeft: -5,
+                                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                  fontSize: '0.45rem', fontWeight: 700, fontFamily: uiFont,
+                                  boxShadow: '0 1px 1px rgba(0,0,0,0.1)'
+                                }}>
+                                  A
+                                </div>
+                              </div>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                    <div style={{ display: 'flex', gap: 3 }}>
-                      {[preset.bg, preset.accent, preset.accentMid, preset.surface].map((clr, i) => (
-                        <div key={i} style={{ flex: 1, height: 5, borderRadius: 2, background: clr }} />
-                      ))}
-                    </div>
-                  </button>
-                ))}
+                  );
+                })}
               </div>
             </div>
 
