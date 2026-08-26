@@ -587,6 +587,7 @@ function WelcomeScreen({ theme, themeMode, onSelectTheme, uiFont, lang = 'vi', o
                   theme={theme}
                   buttonClassName="bg-transparent text-xs outline-none font-medium flex items-center gap-1 border rounded-full px-3 py-1.5 transition-all cursor-pointer"
                   options={LANGUAGES}
+                  disableSearch={true}
                 />
               </div>
             )}
