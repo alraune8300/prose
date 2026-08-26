@@ -55,6 +55,7 @@ export class WritingAppDexieDB extends Dexie {
   versions!: Table<VersionSnapshot, string>;
   referenceDocument!: Table<ReferenceDocumentState, string>;
   moodboard!: Table<MoodboardItem, string>;
+  notionPages!: Table<NotionPage, string>;
 
   constructor() {
     super('KgvWritingAppDexieDB');
@@ -80,6 +81,15 @@ export class WritingAppDexieDB extends Dexie {
       folders: 'id, name, isDeleted',
       versions: 'id, pageId, timestamp',
       referenceDocument: 'id'
+    });
+    this.version(6).stores({
+      projects: 'id, title, lastModified, folderId',
+      appSettings: 'id',
+      folders: 'id, name, isDeleted',
+      versions: 'id, pageId, timestamp',
+      referenceDocument: 'id',
+      moodboard: 'id, projectId, createdAt',
+      notionPages: 'id, parentId, title, createdAt, updatedAt, order, isFavorite'
     });
     this.version(5).stores({
       projects: 'id, title, lastModified, folderId',
@@ -258,5 +268,35 @@ export async function clearReferenceDocumentFromDB(): Promise<void> {
     await db.referenceDocument.delete('last_used');
   } catch (err) {
     console.warn('Error clearing reference document from Dexie:', err);
+  }
+}
+
+export async function getAllNotionPagesFromDB(): Promise<NotionPage[]> {
+  try {
+    return await db.notionPages.toArray();
+  } catch (err) {
+    console.error("Error fetching notion pages:", err);
+    return [];
+  }
+}
+
+export async function saveNotionPageToDB(page: NotionPage): Promise<void> {
+  try {
+    await db.notionPages.put(page);
+  } catch (err) {
+    console.error("Error saving notion page:", err);
+  }
+}
+
+export async function deleteNotionPageFromDB(id: string): Promise<void> {
+  try {
+    await db.notionPages.delete(id);
+    // Should also delete children, but handled in UI or here
+    const children = await db.notionPages.where('parentId').equals(id).toArray();
+    for (const child of children) {
+      await deleteNotionPageFromDB(child.id);
+    }
+  } catch (err) {
+    console.error("Error deleting notion page:", err);
   }
 }

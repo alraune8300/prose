@@ -160,3 +160,20 @@ export interface CodexEntity {
   bio: string;
   color?: string;
 }
+
+export type WorkspaceMode = 'document' | 'notion';
+
+
+export interface NotionPage {
+  id: string;
+  parentId: string | null;
+  title: string;
+  icon: string;
+  coverUrl?: string | null;
+  content: string;
+  properties: Record<string, string>;
+  createdAt: string;
+  updatedAt: string;
+  order: number;
+  isFavorite?: boolean;
+}

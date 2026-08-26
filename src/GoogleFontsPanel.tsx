@@ -186,7 +186,7 @@ function FontRow({
   );
 }
 
-export default function GoogleFontsPanel(props: GoogleFontsPanelProps & { hideRoles?: boolean }) {
+export function GoogleFontsPanel(props: GoogleFontsPanelProps & { hideRoles?: boolean }) {
   const {
     onSelect,
     uiFont = 'Inter',
@@ -728,7 +728,7 @@ export default function GoogleFontsPanel(props: GoogleFontsPanelProps & { hideRo
 
   if (onClose) {
     return (
-      <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+      <div className="fixed inset-0 bg-black/40 z-[100] flex items-center justify-center p-4">
         <div
           className="w-full max-w-lg rounded-xl shadow-2xl p-5 flex flex-col max-h-[85vh] overflow-hidden"
           style={{ background: c.surface, border: `1px solid ${c.border}`, color: c.text, fontFamily: uiFont }}
@@ -753,4 +753,6 @@ export default function GoogleFontsPanel(props: GoogleFontsPanelProps & { hideRo
 
   return panelContent;
 }
+
+export default GoogleFontsPanel;
 

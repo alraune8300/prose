@@ -6,7 +6,7 @@ import {
   AlignLeft, AlignCenter, AlignRight,
   Eraser, Plus, Minus,
   Link2, Bookmark, BookOpen, Quote,
-  Split, X, Copy, FileText, Code, Check
+  Split, X, Copy, FileText, Code, Check, Layers
 } from 'lucide-react';
 import type { Editor } from '@tiptap/react';
 import type { ThemeColors } from './types';
@@ -358,6 +358,18 @@ function Toolbar({
       )}
 
       <ToolBtn onClick={() => editor.chain().focus().unsetAllMarks().clearNodes().run()} icon={<Eraser size={14} />} label={t.clearFormat} />
+      
+      <Divider />
+      <button
+        type="button"
+        onMouseDown={(e) => e.preventDefault()}
+        onClick={() => window.dispatchEvent(new CustomEvent('export-to-notion'))}
+        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer shrink-0"
+        style={{ color: theme.text }}
+        title="Open as Notion Page"
+      >
+        <Layers size={14} />
+      </button>
       
       {zoomPercent !== undefined && onZoomIn && onZoomOut && (
         <>

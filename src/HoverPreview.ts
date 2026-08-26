@@ -1,4 +1,4 @@
-import tippy, { delegate } from 'tippy.js';
+import { delegate } from 'tippy.js';
 import type { CodexEntity } from './types';
 
 export function setupMentionHover(container: HTMLElement, getEntities: () => CodexEntity[]) {
