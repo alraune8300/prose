@@ -1965,6 +1965,34 @@ export default function App() {
     exportJson(activeProject?.folders || [], docsExport);
   }, [allPagesInActiveProj, activeProject]);
 
+  const touchStartX = useRef<number | null>(null);
+  const touchStartY = useRef<number | null>(null);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null || touchStartY.current === null) return;
+    const endX = e.changedTouches[0].clientX;
+    const endY = e.changedTouches[0].clientY;
+    const dx = endX - touchStartX.current;
+    const dy = endY - touchStartY.current;
+
+    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 50) {
+      if (dx > 0) {
+        if (rightOpen) setRightOpen(false);
+        else if (touchStartX.current < 40) setSidebarOpen(true);
+      } else {
+        if (sidebarOpen) setSidebarOpen(false);
+        else if (window.innerWidth - touchStartX.current < 40) setRightOpen(true);
+      }
+    }
+    touchStartX.current = null;
+    touchStartY.current = null;
+  };
+
   if (loading) {
     return (
       <div className="h-full w-full flex items-center justify-center" style={{ background: theme.bg, color: theme.muted, fontFamily: `'${uiFont}', sans-serif` }}>
@@ -2048,6 +2076,8 @@ export default function App() {
   return (
     <div
       className="h-full w-full flex overflow-hidden relative"
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
       style={{
         background: theme.bg,
         color: theme.text,
@@ -2066,7 +2096,7 @@ export default function App() {
         className={`
           fixed md:relative top-0 left-0 h-full z-40 flex-shrink-0
           transition-all duration-300 ease-in-out transform shadow-2xl md:shadow-none kgv-adaptive-panel kgv-hardware-accelerated
-          ${sidebarOpen && !isFocusMode && !isPreviewMode ? 'translate-x-0 opacity-100 w-[320px]' : '-translate-x-full opacity-0 w-0 pointer-events-none'}
+          ${sidebarOpen && !isFocusMode && !isPreviewMode ? 'translate-x-0 opacity-100 w-[85vw] sm:w-[320px]' : '-translate-x-full opacity-0 w-0 pointer-events-none'}
         `}
       >
         <LeftPanel
@@ -2486,7 +2516,7 @@ export default function App() {
                             isPreviewOrFocus
                               ? "w-full max-w-[640px] md:max-w-[700px] lg:max-w-3xl mt-2 sm:mt-4 mb-20 rounded-2xl md:rounded-3xl p-5 sm:p-8 md:p-12 border shadow-2xl relative transition-all duration-300 kgv-hardware-accelerated kgv-adaptive-paper mx-auto"
                               : isPageless
-                                ? "flex-1 flex flex-col w-full relative transition-all duration-300 ease-in-out kgv-hardware-accelerated max-w-4xl px-8 md:px-16 pt-12 pb-24 md:pt-16 md:pb-32 mx-auto"
+                                ? "flex-1 flex flex-col w-full relative transition-all duration-300 ease-in-out kgv-hardware-accelerated max-w-4xl px-4 sm:px-8 md:px-16 pt-6 sm:pt-12 pb-24 md:pt-16 md:pb-32 mx-auto"
                                 : "paper-page relative rounded-lg shadow-md transition-all duration-200 border"
                           }
                           style={
@@ -2581,7 +2611,7 @@ export default function App() {
         className={`
           fixed md:relative top-0 right-0 h-full z-40 flex-shrink-0
           transition-all duration-300 ease-in-out transform shadow-2xl md:shadow-none kgv-adaptive-panel kgv-hardware-accelerated
-          ${rightOpen && !isFocusMode && !isPreviewMode ? 'translate-x-0 opacity-100 w-[300px]' : 'translate-x-full opacity-0 w-0 pointer-events-none'}
+          ${rightOpen && !isFocusMode && !isPreviewMode ? 'translate-x-0 opacity-100 w-[85vw] sm:w-[300px]' : 'translate-x-full opacity-0 w-0 pointer-events-none'}
         `}
       >
         <RightPanel
