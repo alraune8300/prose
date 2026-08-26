@@ -1143,12 +1143,22 @@ function WelcomeScreen({ theme, themeMode, onSelectTheme, uiFont, lang = 'vi', o
                     border: `1px solid ${themeCategoryFilter === 'all' ? theme.accent : theme.borderFaint}`
                   }}
                 >
-                  <span>All themes</span>
+                  <span>{t(lang, 'allThemes') || 'All themes'}</span>
                   <span className="text-[10px] opacity-70 font-mono">{PRESETS.length}</span>
                 </button>
                 {THEME_CATEGORIES.map(cat => {
                   const count = PRESETS.filter(p => cat.presetNames.includes(p.name)).length;
                   const isActive = themeCategoryFilter === cat.id;
+                  const catLabelTranslated = (() => {
+                    switch (cat.id) {
+                      case 'lotus-natural-greens': return t(lang, 'categoryLotus') || cat.label;
+                      case 'cinematic-retro': return t(lang, 'categoryCinematic') || cat.label;
+                      case 'architectural-heritage': return t(lang, 'categoryArchitectural') || cat.label;
+                      case 'floral-gemstone-earth': return t(lang, 'categoryFloral') || cat.label;
+                      case 'global-cultural': return t(lang, 'categoryGlobal') || cat.label;
+                      default: return cat.label;
+                    }
+                  })();
                   return (
                     <button
                       key={cat.id}
@@ -1162,7 +1172,7 @@ function WelcomeScreen({ theme, themeMode, onSelectTheme, uiFont, lang = 'vi', o
                         border: `1px solid ${isActive ? theme.accent : theme.borderFaint}`
                       }}
                     >
-                      <span className="truncate mr-2">{cat.label}</span>
+                      <span className="truncate mr-2">{catLabelTranslated}</span>
                       <span className="text-[10px] opacity-70 font-mono flex-shrink-0">{count}</span>
                     </button>
                   );
@@ -1191,10 +1201,45 @@ function WelcomeScreen({ theme, themeMode, onSelectTheme, uiFont, lang = 'vi', o
                       }}
                     >
                       <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-1.5">
-                          {[preset.bg, preset.accent, preset.surface].map((clr, i) => (
-                            <div key={i} className="w-4 h-4 rounded-full border border-black/10 shadow-xs" style={{ backgroundColor: clr }} />
-                          ))}
+                        <div style={{
+                          width: 110, height: 34, borderRadius: 8,
+                          background: preset.bg,
+                          border: `1.5px solid ${preset.border}`,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                          position: 'relative', overflow: 'hidden', flexShrink: 0
+                        }}>
+                          <div style={{ display: 'flex', alignItems: 'center' }}>
+                            {[
+                              { bg: preset.text, border: preset.bg },
+                              { bg: preset.accent, border: preset.bg },
+                              { bg: preset.accentMid, border: preset.bg },
+                              { bg: preset.surface, border: preset.border }
+                            ].map((item, idx) => (
+                              <div
+                                key={idx}
+                                style={{
+                                  width: 17, height: 17, borderRadius: '50%',
+                                  background: item.bg,
+                                  border: `1.5px solid ${item.border}`,
+                                  marginLeft: idx === 0 ? 0 : -6,
+                                  boxShadow: '0 1px 2px rgba(0,0,0,0.15)'
+                                }}
+                              />
+                            ))}
+                            <div style={{
+                              width: 17, height: 17, borderRadius: '50%',
+                              background: preset.surface,
+                              color: isActive ? preset.accent : preset.text,
+                              border: `1.5px solid ${preset.accent}`,
+                              marginLeft: -6,
+                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              fontSize: '0.55rem', fontWeight: 700, fontFamily: uiFont,
+                              boxShadow: '0 1px 2px rgba(0,0,0,0.15)'
+                            }}>
+                              {isActive ? '✓' : ''}
+                            </div>
+                          </div>
                         </div>
                         {isActive && (
                           <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold text-white" style={{ backgroundColor: theme.accent }}>
@@ -1207,7 +1252,7 @@ function WelcomeScreen({ theme, themeMode, onSelectTheme, uiFont, lang = 'vi', o
                           {preset.name}
                         </span>
                         <span className="text-[10px] mt-0.5" style={{ color: theme.textFaint }}>
-                          {preset.isDark ? 'Dark Theme' : 'Light Theme'}
+                          {preset.isDark ? (t(lang, 'darkTheme') || 'Dark Theme') : (t(lang, 'lightTheme') || 'Light Theme')}
                         </span>
                       </div>
                     </div>
