@@ -84,7 +84,7 @@ export function computeProximityMatrix(text: string, lang: string) {
   return { frequencies, distances };
 }
 
-export function splitSentences(text: string, _lang?: string): { text: string, from: number, to: number }[] {
+export function splitSentences(text: string, lang: string): { text: string, from: number, to: number }[] {
   // Matches ., !, ?, ..., —, 。, ！, ？, ……
   const regex = /[^.!?—。！？……]+(?:[.!?—。！？……]+|$)/g;
   let match;

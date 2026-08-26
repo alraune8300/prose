@@ -116,6 +116,12 @@ export default function TableInspectorPanel({ editor, theme, lang = 'vi', uiFont
   const isVi = lang === 'vi';
 
   if (!editor || editor.isDestroyed || !editor.isActive('table') || !tableInfo) {
+    const getT = (vi: string, en: string, fr: string) => {
+      if (lang === 'vi') return vi;
+      if (lang === 'fr') return fr;
+      return en;
+    };
+
     return (
       <div className="flex flex-col items-center justify-center p-6 text-center h-full min-h-[340px]" style={{ fontFamily: uiFont }}>
         <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-3" style={{ backgroundColor: theme.surface, border: `1px solid ${theme.border}` }}>

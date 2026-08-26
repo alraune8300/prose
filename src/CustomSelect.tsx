@@ -172,7 +172,7 @@ export function CustomSelect({
             ))}
             {(!options || options.filter(opt => opt.label.toLowerCase().includes(search.toLowerCase())).length === 0) && (!groups || groups.filter(g => g.options.filter(opt => opt.label.toLowerCase().includes(search.toLowerCase())).length > 0).length === 0) && (
               <div className="px-3 py-4 text-center text-[12px] opacity-50" style={{ color: theme.text }}>
-                No options found
+                No fonts found
               </div>
             )}
           </div>

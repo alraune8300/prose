@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { FileText, FolderOpen, FolderInput, Plus, Download, Upload, Grid, List, Trash2, Edit2, Check, X, RotateCcw, Home, AlertCircle, Search, ArrowUpDown, FileJson, Clock, Layers } from 'lucide-react';
+import { FileText, FolderOpen, FolderInput, Plus, Download, Upload, Grid, List, Trash2, Edit2, Check, X, RotateCcw, Home, AlertCircle, Search, ArrowUpDown, FileJson, Clock } from 'lucide-react';
 
 import { Project, ThemeColors, Folder } from './types';
 import { db, getAllProjectsFromDB, saveProjectToDB, deleteProjectFromDB, getAllFoldersFromDB, saveFolderToDB } from './db';
@@ -22,7 +22,6 @@ interface WelcomeScreenProps {
   onEmptyAllTrash?: () => Promise<void> | void;
   onReloadProjects?: () => Promise<void> | void;
   refreshTrigger?: number;
-  workspaceMode?: 'document' | 'notion';
 }
 
 const LANGUAGES: {value: Lang, label: string}[] = [
@@ -486,32 +485,6 @@ function WelcomeScreen({ theme, themeMode, onSelectTheme, uiFont, lang = 'vi', o
               <Trash2 size={16} strokeWidth={tab === 'trash' ? 2 : 1.5} />
               <span className="font-medium text-xs md:text-sm">{t(lang, 'trash')}</span>
             </button>
-
-            {/* Notion Workspace button under Trash */}
-            <button
-              onClick={() => {
-                window.dispatchEvent(new CustomEvent('switch-workspace', { detail: 'notion' }));
-                window.dispatchEvent(new CustomEvent('reset-notion-page'));
-              }}
-              className="flex items-center gap-2 md:gap-3 px-3 py-1.5 md:py-2.5 rounded-full transition-all border mt-1 cursor-pointer"
-              style={{
-                borderColor: 'transparent',
-                color: theme.textMuted
-              }}
-              onMouseEnter={e => {
-                e.currentTarget.style.backgroundColor = theme.panel;
-                e.currentTarget.style.color = theme.text;
-                e.currentTarget.style.borderColor = theme.border;
-              }}
-              onMouseLeave={e => {
-                e.currentTarget.style.backgroundColor = 'transparent';
-                e.currentTarget.style.color = theme.textMuted;
-                e.currentTarget.style.borderColor = 'transparent';
-              }}
-            >
-              <Layers size={16} strokeWidth={1.5} />
-              <span className="font-medium text-xs md:text-sm">Notion Workspace</span>
-            </button>
           </nav>
 
           {/* Theme Selector UI */}
@@ -605,7 +578,7 @@ function WelcomeScreen({ theme, themeMode, onSelectTheme, uiFont, lang = 'vi', o
           </div>
           
           {/* Header Right Actions */}
-          <div className="flex flex-wrap items-center gap-2.5 pb-1">
+          <div className="flex flex-wrap items-center gap-2 pb-1">
             {onChangeLang && (
               <div className="flex items-center">
                 <CustomSelect
@@ -614,7 +587,6 @@ function WelcomeScreen({ theme, themeMode, onSelectTheme, uiFont, lang = 'vi', o
                   theme={theme}
                   buttonClassName="bg-transparent text-xs outline-none font-medium flex items-center gap-1 border rounded-full px-3 py-1.5 transition-all cursor-pointer"
                   options={LANGUAGES}
-                  disableSearch={true}
                 />
               </div>
             )}

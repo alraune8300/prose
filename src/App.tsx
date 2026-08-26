@@ -1,4 +1,3 @@
-import { extractTextFromJSON } from "./apps/notion-workspace/utils";
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import {
   THEMES, deriveCustomTheme, WELCOME_ID,
@@ -8,7 +7,7 @@ import { getDict, type Dict } from './i18n';
 import { exportTxt, exportJson } from './exportUtils';
 import { importFile, exportToPdf, exportToDocx, exportToHtmlFile, exportToMarkdownFile, exportToJsonBackup } from './fileHandlers';
 import { saveApiKey, loadApiKey, injectGoogleFont, reinjectSavedFonts } from './googleFontsApi';
-import {  X, Plus, Minus, ZoomIn, Eye, Maximize2, PanelLeft, Hourglass, Coffee, Settings, LayoutList, Columns, Brain, FileText, GitCompare, Table, FoldVertical, UnfoldVertical, Terminal, Sparkles, Trash2, ExternalLink , Activity, Type, Layers, FolderKanban } from 'lucide-react';
+import {  X, Plus, Minus, ZoomIn, Eye, Maximize2, PanelLeft, Hourglass, Coffee, Settings, LayoutList, Columns, Brain, FileText, GitCompare, Table, FoldVertical, UnfoldVertical, Terminal, Sparkles, Trash2 , Activity, Type } from 'lucide-react';
 import type { Editor as TiptapEditorType } from '@tiptap/react';
 import LeftPanel from './LeftPanel';
 import RightPanel from './RightPanel';
@@ -19,13 +18,11 @@ import SplitRevisionStudio from './SplitRevisionStudio';
 import CommandPaletteModal, { type CommandItem } from './CommandPaletteModal';
 import Editor from './Editor';
 import Toolbar from './Toolbar';
-import NotionWorkspaceRoot from './NotionWorkspaceRoot';
 import WelcomeScreen from './WelcomeScreen';
 import GithubCloudSaveModal from './GithubCloudSaveModal';
 import ReferenceComparePanel from './ReferenceComparePanel';
 import LinkHoverPreview from './LinkHoverPreview';
 import WordCountDropdown from './WordCountDropdown';
-
 import type { CitationSource, CitationStyle } from './citationsEngine';
 import type { Document, Folder, ThemeColors, ThemeMode, CustomTheme, CustomFont, Lang, Project, Page, FormatState, PageFormat, Panel } from './types';
 import { PAPER_SIZES_PX } from './types';
@@ -109,7 +106,6 @@ export default function App() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [activeProjectId, setActiveProjectId] = useState('');
   const [activePageId, setActivePageId] = useState('');
-  const [workspaceMode, setWorkspaceMode] = useState<'document' | 'notion'>('document');
   const [isWorkspaceActive, setIsWorkspaceActive] = useState(false);
 
   const activeProject = useMemo(() => {
@@ -989,42 +985,6 @@ export default function App() {
 
   // Load state, projects, and appSettings from IndexedDB / LocalStorage
   useEffect(() => {
-    const handleResetDocument = () => {
-      setActiveProjectId(null);
-      setActivePageId(null);
-    };
-    window.addEventListener('reset-document-workspace', handleResetDocument);
-    return () => window.removeEventListener('reset-document-workspace', handleResetDocument);
-  }, []);
-
-  useEffect(() => {
-    const handleSwitch = (e: any) => setWorkspaceMode(e.detail);
-    window.addEventListener('switch-workspace', handleSwitch);
-    return () => window.removeEventListener('switch-workspace', handleSwitch);
-  }, []);
-
-  useEffect(() => {
-    const handleExportToNotion = async () => {
-      if (!activePage) return;
-      const { useNotionStore } = await import('./apps/notion-workspace/stores/notionStore');
-      const newNotionId = 'notion-' + Date.now();
-      useNotionStore.getState().createPage(activePage.title || 'Untitled Document', undefined, activePage.content || '');
-      setWorkspaceMode('notion');
-      // The store updates its own state, but we need to set the newly created page as active.
-      // createPage unfortunately doesn't return the ID, but it pushes it to the store.
-      // So we wait a tick and get the latest created page.
-      setTimeout(() => {
-        const pages = useNotionStore.getState().pages;
-        if (pages.length > 0) {
-           useNotionStore.getState().setActivePageId(pages[pages.length - 1].id);
-        }
-      }, 50);
-    };
-    window.addEventListener('export-to-notion', handleExportToNotion);
-    return () => window.removeEventListener('export-to-notion', handleExportToNotion);
-  }, [activePage]);
-
-  useEffect(() => {
     const savedMode = loadThemeMode();
     setThemeMode(savedMode);
     if (savedMode === 'custom') { const ct = loadCustomTheme(); if (ct) setCustomTheme(ct); }
@@ -1067,7 +1027,6 @@ export default function App() {
         if (settings.isRightPanelOpen !== undefined) setRightOpen(settings.isRightPanelOpen);
         if (settings.isFocusMode !== undefined) setIsFocusMode(settings.isFocusMode);
         if (settings.isPreviewMode !== undefined) setIsPreviewMode(settings.isPreviewMode);
-        if (settings.workspaceMode) setWorkspaceMode(settings.workspaceMode);
         if (settings.typewriterMode !== undefined) setTypewriterMode(settings.typewriterMode);
         if (settings.language) {
           setLang(settings.language as Lang);
@@ -2014,81 +1973,10 @@ export default function App() {
     );
   }
 
-  
-  if (workspaceMode === 'notion') {
-    return <NotionWorkspaceRoot 
-      theme={theme} 
-      themeMode={themeMode}
-      onSelectTheme={handleSelectTheme}
-      lang={lang} 
-      onSelectLang={handleSelectLang}
-      uiFont={uiFont} 
-      docFont={docFont}
-      onSetUiFont={handleSelectUiFont}
-      onSetDocFont={handleSelectDocFont}
-      onOpenGoogleFonts={() => {
-        setFontExplorerOpen(true);
-      }}
-      onSwitchToDocument={() => setWorkspaceMode('document')} 
-      onExportToDocument={async (title, content, pageId) => {
-        const { saveProjectToDB, getAllProjectsFromDB } = await import('./db');
-        const { exportNotionToCoreDoc } = await import('./services/dataBridgeService');
-        
-        let targetContent = content || '<p></p>';
-        if (pageId) {
-          try {
-            await exportNotionToCoreDoc(pageId);
-            const projs = await getAllProjectsFromDB();
-            setProjects(projs);
-            if (projs.length > 0) {
-              const latestProj = projs[projs.length - 1];
-              setActiveProjectId(latestProj.id);
-              setActivePageId(latestProj.pages[0]?.id || '');
-              setWorkspaceMode('document');
-              setIsWorkspaceActive(true);
-              return;
-            }
-          } catch (err) {
-            console.error('Error bridging via exportNotionToCoreDoc:', err);
-          }
-        }
-        
-        const newProjId = 'proj-' + Date.now();
-        const newPageId = 'page-' + Date.now();
-        const newProj = {
-          id: newProjId,
-          title: title || 'Untitled Document',
-          pages: [{
-            id: newPageId,
-            title: title || 'Untitled Document',
-            content: targetContent,
-            isDraft: false,
-            createdAt: new Date().toISOString(),
-            lastModified: new Date().toISOString()
-          }],
-          drafts: [],
-          folders: [],
-          bin: [],
-          createdAt: new Date().toISOString(),
-          lastModified: new Date().toISOString(),
-          isDeleted: false,
-        };
-        await saveProjectToDB(newProj);
-        const projs = await getAllProjectsFromDB();
-        setProjects(projs);
-        
-        // Update state in App.tsx
-        setActiveProjectId(newProjId);
-        setActivePageId(newPageId);
-        setWorkspaceMode('document');
-        setIsWorkspaceActive(true);
-      }} />;
-  }
-
   if (!isWorkspaceActive) {
     return (
       <>
-        <WelcomeScreen workspaceMode={workspaceMode}
+        <WelcomeScreen
           theme={theme}
           themeMode={themeMode}
           onSelectTheme={handleSelectTheme}
@@ -2156,8 +2044,6 @@ export default function App() {
     updated_at: p.lastModified,
     folder_id: p.folderId || null,
   }));
-
-  
 
   return (
     <div
@@ -2300,25 +2186,6 @@ export default function App() {
               >
                 <Brain size={15} />
               </button>
-              <button
-                onClick={() => {
-                  const event = new CustomEvent('import-to-notion', {
-                    detail: { title: activePage?.title || 'Untitled', content: activePage?.content || '' }
-                  });
-                  window.dispatchEvent(event);
-                  setWorkspaceMode("notion");
-                }}
-                className="p-2 rounded-lg transition-all flex items-center justify-center cursor-pointer"
-                style={{
-                  backgroundColor: workspaceMode === 'notion' ? (theme.isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)') : 'transparent',
-                  color: workspaceMode === 'notion' ? theme.text : theme.textMuted
-                }}
-                onMouseEnter={e => { if (workspaceMode !== 'notion') e.currentTarget.style.color = theme.text; }}
-                onMouseLeave={e => { if (workspaceMode !== 'notion') e.currentTarget.style.color = theme.textMuted; }}
-                title={t.workspace || "Notion Workspace"}
-              >
-                <FolderKanban size={15} />
-              </button>
               <div className="w-px h-4 mx-1 opacity-20" style={{ backgroundColor: theme.textMuted }} />
               <button
                 onClick={() => setCommandPaletteOpen(true)}
@@ -2440,6 +2307,7 @@ export default function App() {
             style={{ backgroundColor: theme.bg, borderColor: theme.borderFaint }}
           >
             <div className="max-w-4xl mx-auto w-full px-6 md:px-8 pt-6 md:pt-8 pb-3 transition-all duration-300 flex items-center justify-between gap-4">
+              <div className="w-24 hidden md:block shrink-0" />
               <input
                 value={activePage?.title || ''}
                 onChange={(e) => {
@@ -2469,7 +2337,7 @@ export default function App() {
         )}
 
         {!isFocusMode && !isPreviewMode && editorInstance && (
-          <Toolbar onSwitchWorkspace={() => setWorkspaceMode("notion")}
+          <Toolbar
             editor={(activeBlockEditor || editorInstance) as TiptapEditorType}
             theme={theme}
             uiFont={uiFont}
