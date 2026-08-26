@@ -28,6 +28,7 @@ interface CustomSelectProps {
   footerNode?: React.ReactNode;
   searchPlaceholder?: string;
   disableSearch?: boolean;
+  fontFamily?: string;
 }
 
 export function CustomSelect({
@@ -44,7 +45,8 @@ export function CustomSelect({
   dropdownStyle = {},
   renderButtonContent,
   onOpen,
-  footerNode
+  footerNode,
+  fontFamily
 }: CustomSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -129,7 +131,7 @@ export function CustomSelect({
             </div>
           </div>}
           <div className="p-1.5 flex-1 overflow-y-auto overflow-x-hidden flex flex-col gap-0.5">
-            {options && options.filter(opt => opt.label.toLowerCase().includes(search.toLowerCase())).map((opt, i) => (
+            {options && options.filter(opt => opt.label.toLowerCase().includes(search.toLowerCase())).map((opt) => (
               <button
                 key={opt.value}
                 onClick={() => { onChange(opt.value); setIsOpen(false); }}
@@ -137,7 +139,7 @@ export function CustomSelect({
                 style={{ 
                   color: value === opt.value ? theme.accent : theme.text,
                   backgroundColor: value === opt.value ? (theme.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)') : 'transparent',
-                  fontFamily: opt.fontFamily
+                  fontFamily: opt.fontFamily || fontFamily
                 }}
                 onMouseEnter={e => e.currentTarget.style.backgroundColor = theme.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)'}
                 onMouseLeave={e => e.currentTarget.style.backgroundColor = value === opt.value ? (theme.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)') : 'transparent'}
@@ -146,7 +148,7 @@ export function CustomSelect({
                 {value === opt.value && <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>}
               </button>
             ))}
-            {groups && groups.map(g => ({ ...g, options: g.options.filter(opt => opt.label.toLowerCase().includes(search.toLowerCase())) })).filter(g => g.options.length > 0).map((group, groupIdx) => (
+            {groups && groups.map(g => ({ ...g, options: g.options.filter(opt => opt.label.toLowerCase().includes(search.toLowerCase())) })).filter(g => g.options.length > 0).map((group) => (
               <div key={group.label} className="flex-shrink-0 mb-1">
                 <div className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider mt-1 mb-0.5 flex-shrink-0 opacity-50" style={{ color: theme.text }}>
                   {group.label}
@@ -159,7 +161,7 @@ export function CustomSelect({
                     style={{ 
                       color: value === opt.value ? theme.accent : theme.text,
                       backgroundColor: value === opt.value ? (theme.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)') : 'transparent',
-                      fontFamily: opt.fontFamily
+                      fontFamily: opt.fontFamily || fontFamily
                     }}
                     onMouseEnter={e => e.currentTarget.style.backgroundColor = theme.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)'}
                     onMouseLeave={e => e.currentTarget.style.backgroundColor = value === opt.value ? (theme.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)') : 'transparent'}

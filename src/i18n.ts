@@ -58,6 +58,8 @@ interface Strings {
   firstLineIndent: string
   maxWidth: string
   themePresets: string
+  customizeWritingExperience?: string
+  searchThemes?: string
   advancedCustomTheme: string
   bgGradient: string
   textColor: string
@@ -687,6 +689,8 @@ export const translations: { en: Strings } & Record<Lang, Partial<Strings>> = {
     firstLineIndent: 'First line indent',
     maxWidth: 'Max width',
     themePresets: 'Theme presets',
+    customizeWritingExperience: 'Customize your writing experience and color palette.',
+    searchThemes: 'Search for themes...',
     advancedCustomTheme: 'Advanced Custom Theme',
     bgGradient: 'Background / Gradient',
     textColor: 'Text Color',
@@ -1317,6 +1321,8 @@ pageOf: 'of',
     firstLineIndent: 'Thụt lề đầu dòng',
     maxWidth: 'Chiều rộng tối đa',
     themePresets: 'Chủ đề có sẵn',
+    customizeWritingExperience: 'Tùy chỉnh trải nghiệm viết và bảng màu hiển thị.',
+    searchThemes: 'Tìm kiếm chủ đề...',
     advancedCustomTheme: 'Tùy chỉnh chủ đề nâng cao',
     bgGradient: 'Nền / Gradient',
     textColor: 'Màu chữ',

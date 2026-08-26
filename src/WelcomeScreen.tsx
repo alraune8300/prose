@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { FileText, FolderOpen, FolderInput, Plus, Download, Upload, Grid, List, Trash2, Edit2, Check, X, RotateCcw, Home, AlertCircle, Search, ArrowUpDown, FileJson, Clock } from 'lucide-react';
+import { FileText, FolderOpen, FolderInput, Plus, Download, Upload, Grid, List, Trash2, Edit2, Check, X, RotateCcw, Home, AlertCircle, Search, ArrowUpDown, FileJson, Clock, Palette } from 'lucide-react';
 
 import { Project, ThemeColors, Folder } from './types';
 import { db, getAllProjectsFromDB, saveProjectToDB, deleteProjectFromDB, getAllFoldersFromDB, saveFolderToDB } from './db';
 import { exportToJsonBackup, importJsonBackupFile } from './fileHandlers';
 import { Lang, t } from './i18n';
-import { PRESETS } from './theme';
+import { PRESETS, THEME_CATEGORIES } from './theme';
 import { CustomSelect } from './CustomSelect';
 
 interface WelcomeScreenProps {
@@ -63,6 +63,9 @@ function WelcomeScreen({ theme, themeMode, onSelectTheme, uiFont, lang = 'vi', o
   const [sortBy, setSortBy] = useState<SortOption>('updated');
   const [isNewMenuOpen, setIsNewMenuOpen] = useState(false);
   const [isDataMenuOpen, setIsDataMenuOpen] = useState(false);
+  const [isThemeModalOpen, setIsThemeModalOpen] = useState(false);
+  const [themeSearchQuery, setThemeSearchQuery] = useState('');
+  const [themeCategoryFilter, setThemeCategoryFilter] = useState('all');
   const [toastMsg, setToastMsg] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
   
   const [deleteConfirmDialog, setDeleteConfirmDialog] = useState<{ isOpen: boolean; type: 'project' | 'folder' | null; id: string | null; name: string }>({
@@ -483,59 +486,29 @@ function WelcomeScreen({ theme, themeMode, onSelectTheme, uiFont, lang = 'vi', o
               <span className="font-medium text-xs md:text-sm">{t(lang, 'trash')}</span>
             </button>
           </nav>
-
-          {/* Theme Selector UI */}
-          {onSelectTheme && (
-            <div className="w-full pt-4 mt-6 border-t hidden md:block" style={{ borderColor: theme.borderFaint }}>
-              <span className="text-[10px] font-semibold uppercase tracking-wider block mb-3 opacity-60" style={{ color: theme.textFaint }}>
-                {t(lang, 'themePresets')}
-              </span>
-              <div className="flex flex-wrap gap-1.5 max-h-48 overflow-y-auto pr-1 kgv-scroll" style={{ WebkitOverflowScrolling: 'touch' }}>
-                {PRESETS.map(preset => {
-                  const isActive = themeMode === preset.name;
-                  return (
-                    <button
-                      key={preset.name}
-                      onClick={() => onSelectTheme(preset.name)}
-                      className="flex items-center gap-2 w-full px-2 py-1.5 rounded-lg border text-xs font-medium transition-colors"
-                      style={{
-                        backgroundColor: isActive ? theme.accentLight : 'transparent',
-                        borderColor: isActive ? theme.border : 'transparent',
-                        color: isActive ? theme.text : theme.textMuted
-                      }}
-                      onMouseEnter={e => {
-                        if (!isActive) {
-                          e.currentTarget.style.backgroundColor = theme.surface;
-                          e.currentTarget.style.borderColor = theme.borderFaint;
-                        }
-                      }}
-                      onMouseLeave={e => {
-                        if (!isActive) {
-                          e.currentTarget.style.backgroundColor = 'transparent';
-                          e.currentTarget.style.borderColor = 'transparent';
-                        }
-                      }}
-                    >
-                      <div className="flex gap-1">
-                        {[preset.bg, preset.accent, preset.surface].map((clr, i) => (
-                          <div key={`${preset.name}-${i}`} className="w-2.5 h-2.5 rounded-full border border-black/10" style={{ backgroundColor: clr }} />
-                        ))}
-                      </div>
-                      <span>{preset.name}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
         </div>
 
-        {/* GitHub Cloud Save UI in bottom left area */}
-        {onOpenGithubCloudSave && (
-          <div className="w-full pt-4 mt-auto border-t" style={{ borderColor: theme.borderFaint }}>
-            <span className="text-[10px] font-semibold uppercase tracking-wider block mb-2 opacity-60 hidden md:block" style={{ color: theme.textFaint }}>
-              {t(lang, 'githubCloudSaveTitle')}
-            </span>
+        {/* Bottom Area: Theme Settings Button & GitHub Cloud Save */}
+        <div className="w-full pt-4 mt-auto border-t flex flex-col gap-2" style={{ borderColor: theme.borderFaint }}>
+          {onSelectTheme && (
+            <button
+              onClick={() => setIsThemeModalOpen(true)}
+              className="w-full px-3 py-2 rounded-lg border text-xs font-medium flex items-center gap-2 transition-all cursor-pointer shadow-sm"
+              style={{
+                borderColor: theme.border,
+                backgroundColor: theme.surface,
+                color: theme.text,
+                fontFamily: uiFont,
+              }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = theme.accent; e.currentTarget.style.backgroundColor = theme.panel; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = theme.border; e.currentTarget.style.backgroundColor = theme.surface; }}
+            >
+              <Palette size={14} style={{ color: theme.accent }} />
+              <span>{t(lang, 'themePresets') || 'Themes'}</span>
+            </button>
+          )}
+
+          {onOpenGithubCloudSave && (
             <button
               onClick={onOpenGithubCloudSave}
               className="w-full px-3 py-2 rounded-lg border text-xs font-medium flex items-center gap-2 transition-all cursor-pointer shadow-sm"
@@ -553,8 +526,8 @@ function WelcomeScreen({ theme, themeMode, onSelectTheme, uiFont, lang = 'vi', o
               </svg>
               <span>{t(lang, 'cloudSave')}</span>
             </button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Main Content Area */}
@@ -582,7 +555,9 @@ function WelcomeScreen({ theme, themeMode, onSelectTheme, uiFont, lang = 'vi', o
                   value={lang}
                   onChange={(val) => onChangeLang(val)}
                   theme={theme}
+                  fontFamily={uiFont}
                   buttonClassName="bg-transparent text-xs outline-none font-medium flex items-center gap-1 border rounded-full px-3 py-1.5 transition-all cursor-pointer"
+                  buttonStyle={{ fontFamily: uiFont, borderColor: theme.borderFaint, color: theme.text }}
                   options={LANGUAGES}
                   disableSearch={true}
                 />
@@ -1106,6 +1081,143 @@ function WelcomeScreen({ theme, themeMode, onSelectTheme, uiFont, lang = 'vi', o
           {toastMsg.type === 'success' ? <Check size={16} /> : <AlertCircle size={16} />}
           <span>{toastMsg.text}</span>
           <button onClick={() => setToastMsg(null)} className="ml-2 hover:opacity-75"><X size={14} /></button>
+        </div>
+      )}
+
+      {/* Theme Modal Popup */}
+      {isThemeModalOpen && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }} onClick={() => setIsThemeModalOpen(false)}>
+          <div className="w-full max-w-3xl max-h-[85vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-fade-in-up" style={{ backgroundColor: theme.surface, border: `1px solid ${theme.border}` }} onClick={e => e.stopPropagation()}>
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b" style={{ borderColor: theme.borderFaint }}>
+              <div>
+                <h2 className="text-xl font-serif" style={{ color: theme.text, fontFamily: `'${uiFont}', Georgia, serif` }}>
+                  {t(lang, 'themePresets') || 'Themes'}
+                </h2>
+                <p className="text-xs mt-0.5" style={{ color: theme.textFaint }}>
+                  {t(lang, 'customizeWritingExperience') || 'Customize your writing experience and color palette.'}
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="relative w-48 sm:w-64">
+                  <Search size={14} className="absolute left-3 top-2.5" style={{ color: theme.textFaint }} />
+                  <input
+                    type="text"
+                    placeholder={t(lang, 'searchThemes') || 'Search for themes...'}
+                    value={themeSearchQuery}
+                    onChange={e => setThemeSearchQuery(e.target.value)}
+                    className="w-full pl-9 pr-8 py-1.5 rounded-lg text-xs border outline-none"
+                    style={{ 
+                      backgroundColor: theme.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)', 
+                      borderColor: theme.border, 
+                      color: theme.text,
+                      fontFamily: uiFont
+                    }}
+                  />
+                  {themeSearchQuery && (
+                    <button onClick={() => setThemeSearchQuery('')} className="absolute right-2.5 top-2.5 text-xs" style={{ color: theme.textMuted }}>
+                      <X size={12} />
+                    </button>
+                  )}
+                </div>
+                <button
+                  onClick={() => setIsThemeModalOpen(false)}
+                  className="p-1.5 rounded-lg hover:opacity-80 transition-colors cursor-pointer"
+                  style={{ color: theme.textMuted }}
+                >
+                  <X size={18} />
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Body: Categories + Theme Grid */}
+            <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
+              {/* Sidebar categories */}
+              <div className="w-full md:w-56 p-4 border-r overflow-y-auto flex md:flex-col gap-1.5 flex-shrink-0" style={{ borderColor: theme.borderFaint, backgroundColor: theme.bg }}>
+                <button
+                  onClick={() => setThemeCategoryFilter('all')}
+                  className="flex items-center justify-between px-3 py-2 rounded-lg text-xs transition-all text-left cursor-pointer"
+                  style={{
+                    backgroundColor: themeCategoryFilter === 'all' ? theme.accentLight : 'transparent',
+                    color: themeCategoryFilter === 'all' ? theme.accent : theme.text,
+                    fontWeight: themeCategoryFilter === 'all' ? 600 : 400,
+                    fontFamily: uiFont,
+                    border: `1px solid ${themeCategoryFilter === 'all' ? theme.accent : theme.borderFaint}`
+                  }}
+                >
+                  <span>All themes</span>
+                  <span className="text-[10px] opacity-70 font-mono">{PRESETS.length}</span>
+                </button>
+                {THEME_CATEGORIES.map(cat => {
+                  const count = PRESETS.filter(p => cat.presetNames.includes(p.name)).length;
+                  const isActive = themeCategoryFilter === cat.id;
+                  return (
+                    <button
+                      key={cat.id}
+                      onClick={() => setThemeCategoryFilter(cat.id)}
+                      className="flex items-center justify-between px-3 py-2 rounded-lg text-xs transition-all text-left truncate cursor-pointer"
+                      style={{
+                        backgroundColor: isActive ? theme.accentLight : 'transparent',
+                        color: isActive ? theme.accent : theme.text,
+                        fontWeight: isActive ? 600 : 400,
+                        fontFamily: uiFont,
+                        border: `1px solid ${isActive ? theme.accent : theme.borderFaint}`
+                      }}
+                    >
+                      <span className="truncate mr-2">{cat.label}</span>
+                      <span className="text-[10px] opacity-70 font-mono flex-shrink-0">{count}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Theme Grid */}
+              <div className="flex-1 p-6 overflow-y-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" style={{ backgroundColor: theme.surface }}>
+                {PRESETS.filter(preset => {
+                  const matchesCategory = themeCategoryFilter === 'all' || 
+                    THEME_CATEGORIES.find(c => c.id === themeCategoryFilter)?.presetNames.includes(preset.name);
+                  const matchesSearch = !themeSearchQuery.trim() || preset.name.toLowerCase().includes(themeSearchQuery.toLowerCase());
+                  return matchesCategory && matchesSearch;
+                }).map(preset => {
+                  const isActive = themeMode === preset.name;
+                  return (
+                    <div
+                      key={preset.name}
+                      onClick={() => {
+                        if (onSelectTheme) onSelectTheme(preset.name);
+                      }}
+                      className="group relative p-4 rounded-xl border flex flex-col justify-between cursor-pointer transition-all hover:-translate-y-0.5 shadow-xs"
+                      style={{
+                        backgroundColor: isActive ? theme.accentLight : theme.bg,
+                        borderColor: isActive ? theme.accent : theme.border,
+                      }}
+                    >
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-1.5">
+                          {[preset.bg, preset.accent, preset.surface].map((clr, i) => (
+                            <div key={i} className="w-4 h-4 rounded-full border border-black/10 shadow-xs" style={{ backgroundColor: clr }} />
+                          ))}
+                        </div>
+                        {isActive && (
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold text-white" style={{ backgroundColor: theme.accent }}>
+                            Active
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-xs font-semibold tracking-wide truncate" style={{ color: theme.text, fontFamily: uiFont }}>
+                          {preset.name}
+                        </span>
+                        <span className="text-[10px] mt-0.5" style={{ color: theme.textFaint }}>
+                          {preset.isDark ? 'Dark Theme' : 'Light Theme'}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>
