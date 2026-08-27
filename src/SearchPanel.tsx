@@ -34,7 +34,7 @@ export default function SearchPanel({ c, uiFont, lang, }: SearchPanelProps) {
     <div style={{
       fontFamily: uiFont, fontSize: '0.6rem', fontWeight: 700,
       textTransform: 'uppercase', letterSpacing: '0.12em',
-      color: c.textFaint, marginBottom: 8, marginTop: 4,
+      color: c.textMuted, marginBottom: 8, marginTop: 4,
     }}>
       {label}
     </div>
@@ -44,9 +44,9 @@ export default function SearchPanel({ c, uiFont, lang, }: SearchPanelProps) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
       <div style={{ padding: '0 4px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-          <Search size={16} color={c.textFaint} />
+          <Search size={16} color={c.textMuted} />
           <span style={{ fontFamily: uiFont, fontSize: '0.9rem', color: c.text }}>{t(lang, 'find')}</span>
-          <span style={{ fontFamily: uiFont, fontSize: '0.75rem', color: c.textFaint, marginLeft: 'auto', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '120px', textAlign: 'right' }}>
+          <span style={{ fontFamily: uiFont, fontSize: '0.75rem', color: c.textMuted, marginLeft: 'auto', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '120px', textAlign: 'right' }}>
             {findText ? (resultsCount > 0 ? (resultsCount === 1 ? t(lang, 'resultCount').replace('{count}', '1') : t(lang, 'resultsCount').replace('{count}', String(resultsCount))) : t(lang, 'noResults')) : ''}
           </span>
         </div>
@@ -90,7 +90,7 @@ export default function SearchPanel({ c, uiFont, lang, }: SearchPanelProps) {
               <button
                 onClick={() => setFindText('')}
                 style={{
-                  background: 'none', border: 'none', color: c.textFaint,
+                  background: 'none', border: 'none', color: c.textMuted,
                   cursor: 'pointer', padding: '4px 2px', display: 'flex', marginLeft: 2
                 }}
               >
@@ -103,7 +103,7 @@ export default function SearchPanel({ c, uiFont, lang, }: SearchPanelProps) {
 
       <div style={{ padding: '0 4px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-          <RotateCw size={16} color={c.textFaint} />
+          <RotateCw size={16} color={c.textMuted} />
           <span style={{ fontFamily: uiFont, fontSize: '0.9rem', color: c.text }}>{t(lang, 'replace')}</span>
         </div>
         <input
@@ -195,7 +195,7 @@ export default function SearchPanel({ c, uiFont, lang, }: SearchPanelProps) {
               <div style={{
                 position: 'absolute', top: 2, left: matchCase ? 22 : 2,
                 width: 18, height: 18, borderRadius: '50%',
-                background: matchCase ? '#fff' : c.textFaint,
+                background: matchCase ? '#fff' : c.textMuted,
                 transition: 'all 0.2s',
               }} />
             </div>
@@ -212,7 +212,7 @@ export default function SearchPanel({ c, uiFont, lang, }: SearchPanelProps) {
               <div style={{
                 position: 'absolute', top: 2, left: wholeWord ? 22 : 2,
                 width: 18, height: 18, borderRadius: '50%',
-                background: wholeWord ? '#fff' : c.textFaint,
+                background: wholeWord ? '#fff' : c.textMuted,
                 transition: 'all 0.2s',
               }} />
             </div>
@@ -229,7 +229,7 @@ export default function SearchPanel({ c, uiFont, lang, }: SearchPanelProps) {
               <div style={{
                 position: 'absolute', top: 2, left: regex ? 22 : 2,
                 width: 18, height: 18, borderRadius: '50%',
-                background: regex ? '#fff' : c.textFaint,
+                background: regex ? '#fff' : c.textMuted,
                 transition: 'all 0.2s',
               }} />
             </div>

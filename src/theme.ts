@@ -46,7 +46,7 @@ export interface ThemeCategory {
 export const THEME_CATEGORIES: ThemeCategory[] = [
   {
     id: 'tet-trung-thu',
-    label: 'Tết Trung Thu (Nguyệt Dạ - Sâu Thẳm)',
+    label: 'Mid-Autumn Festival',
     presetNames: [
       'Deep Midnight Navy & Gold Light', 'Deep Midnight Navy & Gold Dark',
       'Obsidian Celadon & Vermilion Light', 'Obsidian Celadon & Vermilion Dark',
@@ -55,7 +55,7 @@ export const THEME_CATEGORIES: ThemeCategory[] = [
   },
   {
     id: 'tet-nguyen-dan',
-    label: 'Tết Nguyên Đán (Xuân Dạ - Trầm Mặc)',
+    label: 'Lunar New Year',
     presetNames: [
       'Dark Lacquer & Gold Dust Light', 'Dark Lacquer & Gold Dust Dark',
       'Midnight Teak & Spring Peach Light', 'Midnight Teak & Spring Peach Dark',
@@ -4437,33 +4437,35 @@ function isHexDark(color: string): boolean {
   return (0.2126 * r + 0.7152 * g + 0.0722 * b) < 0.45
 }
 
-export function deriveCustomTheme(bg: string, text: string, accent: string): Theme {
-  const isDark = isHexDark(bg)
-  let textColor = text
-  if (isDark && isHexDark(text)) {
+import { ThemeConfig } from './types'
+
+export function deriveCustomTheme(config: ThemeConfig): Theme {
+  const isDark = isHexDark(config.bg)
+  let textColor = config.text
+  if (isDark && isHexDark(config.text)) {
     textColor = '#f8fafc'
-  } else if (!isDark && !isHexDark(text)) {
+  } else if (!isDark && !isHexDark(config.text)) {
     textColor = '#0f172a'
   }
-  const muted = isDark ? '#cbd5e1' : '#475569'
-  const faint = isDark ? '#94a3b8' : '#64748b'
-  const accentSoft = isDark ? 'rgba(255, 255, 255, 0.12)' : (accent.startsWith('#') ? accent + '22' : 'rgba(37, 99, 235, 0.12)')
+  const muted = config.textMuted || (isDark ? '#cbd5e1' : '#475569')
+  const faint = isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)'
+  const accentSoft = isDark ? 'rgba(255, 255, 255, 0.12)' : (config.accent.startsWith('#') ? config.accent + '22' : 'rgba(37, 99, 235, 0.12)')
   return {
-    bg,
-    heroGrad: bg,
-    cardGrad: bg,
+    bg: config.bg,
+    heroGrad: config.bg,
+    cardGrad: config.bg,
     text: textColor,
     textMuted: muted,
     textFaint: faint,
-    accent,
+    accent: config.accent,
     accentLight: accentSoft,
-    accentMid: accent.startsWith('#') ? accent + '88' : accent,
-    border: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.12)',
+    accentMid: config.accent.startsWith('#') ? config.accent + '88' : config.accent,
+    border: config.border || (isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.12)'),
     borderFaint: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)',
-    surface: isDark ? 'rgba(255, 255, 255, 0.04)' : bg,
-    header: bg,
-    panel: isDark ? '#18181b' : bg,
-    status: bg,
+    surface: config.surface || (isDark ? 'rgba(255, 255, 255, 0.04)' : config.bg),
+    header: config.bg,
+    panel: config.surface || (isDark ? '#18181b' : config.bg),
+    status: config.bg,
     isDark,
     muted,
     faint,

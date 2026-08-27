@@ -68,7 +68,7 @@ export function StoryCodexPanel({
           <button 
             key={tab} 
             onClick={() => setActiveTab(tab as any)}
-            style={{ background: activeTab === tab ? theme.surface : 'transparent', color: activeTab === tab ? theme.text : theme.textFaint, boxShadow: activeTab === tab ? '0 1px 2px rgba(0,0,0,0.05)' : 'none' }} className={`flex-1 text-[10px] uppercase font-bold py-1.5 rounded-md transition-colors ${activeTab !== tab ? 'opacity-60 hover:opacity-100' : ''}`}
+            style={{ background: activeTab === tab ? theme.surface : 'transparent', color: activeTab === tab ? theme.text : theme.textMuted, boxShadow: activeTab === tab ? '0 1px 2px rgba(0,0,0,0.05)' : 'none' }} className={`flex-1 text-[10px] uppercase font-bold py-1.5 rounded-md transition-colors ${activeTab !== tab ? 'opacity-60 hover:opacity-100' : ''}`}
           >
             {t(lang as Lang, tab.toLowerCase() as any)}
           </button>

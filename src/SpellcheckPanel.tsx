@@ -93,7 +93,7 @@ export default function SpellcheckPanel({ c, uiFont, headingFont, lang, }: Spell
           <div style={{
             position: 'absolute', top: 2, left: enabled ? 22 : 2,
             width: 18, height: 18, borderRadius: '50%',
-            background: enabled ? '#fff' : c.textFaint,
+            background: enabled ? '#fff' : c.textMuted,
             transition: 'all 0.2s',
           }} />
         </div>
@@ -182,7 +182,7 @@ export default function SpellcheckPanel({ c, uiFont, headingFont, lang, }: Spell
                 {s}
               </button>
             )) : (
-              <div style={{ padding: '8px 12px', fontSize: '0.85rem', color: c.textFaint, fontStyle: 'italic', fontFamily: uiFont }}>
+              <div style={{ padding: '8px 12px', fontSize: '0.85rem', color: c.textMuted, fontStyle: 'italic', fontFamily: uiFont }}>
                 {t(lang, 'noSuggestions')}
               </div>
             )}

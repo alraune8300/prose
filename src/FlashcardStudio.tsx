@@ -341,7 +341,7 @@ export default function FlashcardStudio({
   return (
     <div 
       className="absolute inset-0 z-50 flex flex-col backdrop-blur-xl animate-in fade-in duration-200 overflow-hidden"
-      style={{ backgroundColor: theme.bg, color: theme.text, fontFamily: `'${uiFont}', sans-serif` }}
+      style={{ background: theme.bg, color: theme.text, fontFamily: `'${uiFont}', sans-serif` }}
     >
       {/* Toast Notification */}
       {toastMessage && (
@@ -777,7 +777,7 @@ export default function FlashcardStudio({
                   ]}
                   theme={theme}
                   buttonClassName="w-full px-3 py-2 rounded-lg border text-xs flex items-center justify-between transition-colors"
-                  buttonStyle={{ borderColor: theme.border, backgroundColor: theme.bg, color: theme.text }}
+                  buttonStyle={{ borderColor: theme.border, background: theme.bg, color: theme.text }}
                 />
               </div>
 
@@ -793,7 +793,7 @@ export default function FlashcardStudio({
                   ]}
                   theme={theme}
                   buttonClassName="w-full px-3 py-2 rounded-lg border text-xs flex items-center justify-between transition-colors"
-                  buttonStyle={{ borderColor: theme.border, backgroundColor: theme.bg, color: theme.text }}
+                  buttonStyle={{ borderColor: theme.border, background: theme.bg, color: theme.text }}
                 />
               </div>
 

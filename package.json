@@ -51,6 +51,7 @@
     "prosemirror-view": "^1.42.2",
     "puppeteer": "^25.9.0",
     "react": "^18.3.1",
+    "react-colorful": "^5.8.0",
     "react-dom": "^18.3.1",
     "tippy.js": "^6.3.7",
     "turndown": "^7.2.4"

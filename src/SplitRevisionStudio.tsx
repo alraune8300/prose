@@ -263,7 +263,7 @@ export default function SplitRevisionStudio({
           <div>
             <h2 className="text-[15px] font-semibold tracking-tight flex items-center gap-2">
               <span className="truncate" style={{ color: theme.text }}>{t(lang, 'splitRevisionStudio') || 'Split Revision Studio'}</span>
-              <span className="text-[9px] px-1.5 py-0.5 rounded uppercase tracking-widest font-bold" style={{ backgroundColor: theme.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)', color: theme.textFaint }}>
+              <span className="text-[9px] px-1.5 py-0.5 rounded uppercase tracking-widest font-bold" style={{ backgroundColor: theme.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)', color: theme.textMuted }}>
                 {t(lang, 'liveDiffAndRevisions') || 'Live Diff & Revisions'}
               </span>
             </h2>
@@ -308,7 +308,7 @@ export default function SplitRevisionStudio({
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-[11px] font-medium flex items-center gap-1 shrink-0" style={{ color: theme.textFaint }}>
+            <span className="text-[11px] font-medium flex items-center gap-1 shrink-0" style={{ color: theme.textMuted }}>
               <Clock size={12} /> {t(lang, 'snapshotLabel') || 'Snapshot:'}
             </span>
             <CustomSelect

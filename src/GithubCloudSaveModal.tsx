@@ -55,7 +55,7 @@ export default function GithubCloudSaveModal({
   const isDark = theme?.isDark ?? true;
   const textColor = theme?.text || (isDark ? '#f8fafc' : '#0f172a');
   const textMuted = theme?.textMuted || (isDark ? '#94a3b8' : '#64748b');
-  const textFaint = theme?.textFaint || (isDark ? '#64748b' : '#94a3b8');
+  const textFaint = theme?.textMuted || (isDark ? '#64748b' : '#94a3b8');
   const borderColor = theme?.border || (isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)');
   const borderFaint = theme?.borderFaint || (isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(0, 0, 0, 0.05)');
   const modalBg = theme?.surface || (isDark ? '#0f172a' : '#ffffff');

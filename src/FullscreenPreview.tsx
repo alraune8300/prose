@@ -184,7 +184,7 @@ export default function FullscreenPreview({
           <span style={{ fontFamily: `'${headingFont}', serif`, fontSize: '1rem', fontWeight: 600, color: c.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 240 }}>
             {currentPage.title}
           </span>
-          <span style={{ fontSize: '0.7rem', color: c.textFaint, fontFamily: "'Source Sans 3', sans-serif", flexShrink: 0 }}>
+          <span style={{ fontSize: '0.7rem', color: c.textMuted, fontFamily: "'Source Sans 3', sans-serif", flexShrink: 0 }}>
             ~{readMin} min
           </span>
         </div>
@@ -202,7 +202,7 @@ export default function FullscreenPreview({
               >
                 ← Prev
               </button>
-              <span style={{ fontFamily: "'Source Sans 3', sans-serif", fontSize: '0.7rem', color: c.textFaint }}>
+              <span style={{ fontFamily: "'Source Sans 3', sans-serif", fontSize: '0.7rem', color: c.textMuted }}>
                 {currentIndex + 1}/{pages.length}
               </span>
               <button

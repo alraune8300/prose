@@ -28,7 +28,6 @@ interface Strings {
   arrange: string
   timer: string
   preview: string
-  blockView?: string
   language: string
   pages: string
   drafts: string
@@ -70,6 +69,19 @@ interface Strings {
   categoryArchitectural?: string
   categoryFloral?: string
   categoryGlobal?: string
+  
+  editTheme: string
+  themeStudio: string
+  themeName: string
+  saveTheme: string
+  bgDesc: string
+  surfaceDesc: string
+  textDesc: string
+  textMutedDesc: string
+  accentDesc: string
+  writingSurface: string
+  mainBackground: string
+  mutedText: string
   advancedCustomTheme: string
   bgGradient: string
   textColor: string
@@ -79,7 +91,6 @@ interface Strings {
   resetToDefault: string
   fontRoles: string
   availableFonts: string
-  importFile: string
   exportPdf: string
   exportDocx: string
   exportHtml: string
@@ -96,16 +107,12 @@ interface Strings {
   exit: string
   exitFocusMode: string
   exitPreviewMode: string
-  preview: string
-  blockView?: string
   customFonts: string
   dropFontHere: string
   orClickToBrowse: string
   copyToClipboard: string
   copied: string
   downloadAs: string
-  duration: string
-  min: string
   focusSessionInProgress: string
   sessionComplete: string
   reset: string
@@ -122,7 +129,6 @@ interface Strings {
   pageless: string
   pages2: string
   dragToReorder: string
-  done: string
   arrangeMode: string
   dndMode: string
   exitDndMode: string
@@ -220,7 +226,6 @@ interface Strings {
   sortNameAZ: string
   sortNameZA: string
   sortPagesCount: string
-  searchProjects: string
   viewGrid: string
   viewList: string
   quickExportBackup: string
@@ -484,7 +489,6 @@ interface Strings {
   enterWebAddress?: string
   targetUrl?: string
   applyLink?: string
-  cancel?: string
   insertMarginFootnote?: string
   createNoteLabel?: string
   footnoteNumberLabel?: string
@@ -553,9 +557,7 @@ interface Strings {
   editableAndLive?: string
   startTypingPlaceholder?: string
   restoreTimer?: string
-  revertToSnapshot?: string
   noSnapshotsFound?: string
-  add?: string
   pageNumbering?: string
   showPageNumbers?: string
   showPageNumbersDesc?: string
@@ -612,13 +614,11 @@ interface Strings {
   pasteFromClipboard?: string
   dangerZone?: string
   customGrid?: string
-  spellCheck?: string
   spellCheckDesc?: string
   readability?: string
   thesaurus?: string
   wordCount?: string
   characterCount?: string
-  readingTime?: string
   readingTimeMinutes?: string
   storyCodex?: string
   editorial?: string
@@ -633,9 +633,13 @@ interface Strings {
   noTableSelected?: string
   clickCursorIntoTable?: string
   convertListToTable?: string
+  newCustomTheme?: string
+  searchForThemes?: string
+  borderColor?: string
+  borderDesc?: string
 }
 
-export const translations: { en: Strings } & Record<Lang, Partial<Strings>> = {
+export const translations = {
   en: {
     goodMorning: 'Good morning',
     goodAfternoon: 'Good afternoon',
@@ -709,10 +713,23 @@ export const translations: { en: Strings } & Record<Lang, Partial<Strings>> = {
     categoryArchitectural: 'Architectural & Heritage Tiles',
     categoryFloral: 'Floral, Gemstone & Earth Elements',
     categoryGlobal: 'Global & Traditional Heritage',
+    
+    editTheme: 'Edit Theme',
+    themeStudio: 'Theme Studio',
+    themeName: 'Theme name',
+    saveTheme: 'Save Theme',
+    bgDesc: 'Overall app background',
+    surfaceDesc: 'Writing surface & panels',
+    textDesc: 'Main text, headings & icons',
+    textMutedDesc: 'Secondary text & muted icons',
+    accentDesc: 'Buttons & focus highlights',
+    writingSurface: 'Writing surface',
+    mainBackground: 'Main background',
+    mutedText: 'Muted text',
     advancedCustomTheme: 'Advanced Custom Theme',
     bgGradient: 'Background / Gradient',
-    textColor: 'Text Color',
-    accentColor: 'Accent Color',
+    textColor: 'Text color',
+    accentColor: 'Accent color',
     custom: 'Custom',
     hueSlider: 'Hue slider',
     resetToDefault: 'Reset to default',
@@ -1277,7 +1294,18 @@ pageOf: 'of',
     noTableSelected: "No Table Selected",
     clickCursorIntoTable: "Click cursor into any table cell to open Table Inspector.",
     convertListToTable: "Convert List to Table",
+    newCustomTheme: 'New Custom Theme',
+    searchForThemes: 'Search for themes...',
+    borderColor: 'Border color',
+    borderDesc: 'Menu & layout borders',
+    cannotDeleteActiveTheme: 'Please select another theme before deleting the active theme.',
+    confirmDeleteTheme: 'Are you sure you want to delete this custom theme?',
+    deleteTheme: 'Delete Theme',
+    customThemeLabel: 'Custom Theme',
+    subtextColor: 'Subtext color',
+    subtextDesc: 'Muted text & secondary icons'
   },
+
   vi: {
     goodMorning: 'Chào buổi sáng',
     goodAfternoon: 'Chào buổi chiều',
@@ -1351,6 +1379,19 @@ pageOf: 'of',
     categoryArchitectural: 'Gạch kiến trúc & Di sản',
     categoryFloral: 'Hoa, Đá quý & Đất',
     categoryGlobal: 'Di sản toàn cầu & Truyền thống',
+    
+    editTheme: 'Chỉnh sửa theme',
+    themeStudio: 'Giao diện Chủ đề',
+    themeName: 'Tên theme',
+    saveTheme: 'Lưu Theme',
+    bgDesc: 'Nền tổng thể ứng dụng',
+    surfaceDesc: 'Trang giấy soạn thảo & panels',
+    textDesc: 'Màu chữ chính, tiêu đề & icon',
+    textMutedDesc: 'Màu chữ phụ & icon mờ',
+    accentDesc: 'Màu nhấn nút bấm & tiêu điểm',
+    writingSurface: 'Mặt giấy',
+    mainBackground: 'Nền chính',
+    mutedText: 'Chữ mờ',
     advancedCustomTheme: 'Tùy chỉnh chủ đề nâng cao',
     bgGradient: 'Nền / Gradient',
     textColor: 'Màu chữ',
@@ -1919,7 +1960,18 @@ pageOf: 'trong',
     noTableSelected: "Chưa chọn Bảng",
     clickCursorIntoTable: "Bấm con trỏ vào ô bất kỳ để mở Trình quản lý Bảng.",
     convertListToTable: "Chuyển danh sách thành Bảng",
+    newCustomTheme: 'Theme tùy chỉnh mới',
+    searchForThemes: 'Tìm kiếm theme...',
+    borderColor: 'Màu viền',
+    borderDesc: 'Viền menu & giao diện',
+    cannotDeleteActiveTheme: 'Vui lòng chọn 1 theme khác trước khi xoá theme đang sử dụng.',
+    confirmDeleteTheme: 'Bạn có chắc chắn muốn xoá theme tuỳ chỉnh này không?',
+    deleteTheme: 'Xoá Theme',
+    customThemeLabel: 'Theme tuỳ chỉnh',
+    subtextColor: 'Màu chữ phụ',
+    subtextDesc: 'Chữ nhạt & icon phụ'
   },
+
   fr: {
     goodMorning: 'Bonjour',
     goodAfternoon: 'Bon après-midi',
@@ -2500,7 +2552,28 @@ pageOf: 'de',
     noTableSelected: "Aucun tableau sélectionné",
     clickCursorIntoTable: "Cliquez dans une cellule pour ouvrir l'inspecteur de tableau.",
     convertListToTable: "Convertir la liste en tableau",
+    editTheme: 'Modifier le thème',
+    themeStudio: 'Studio de thèmes',
+    themeName: 'Nom du thème',
+    saveTheme: 'Enregistrer',
+    mainBackground: 'Arrière-plan principal',
+    bgDesc: 'Arrière-plan global de l\'application',
+    writingSurface: 'Surface d\'écriture',
+    surfaceDesc: 'Surface d\'écriture et panneaux',
+    textDesc: 'Texte principal, en-têtes et icônes',
+    accentDesc: 'Boutons et surbrillances',
+    newCustomTheme: 'Nouveau thème personnalisé',
+    searchForThemes: 'Rechercher des thèmes...',
+    borderColor: 'Couleur de bordure',
+    borderDesc: 'Bordures de menu et disposition',
+    cannotDeleteActiveTheme: 'Veuillez sélectionner un autre thème avant de supprimer le thème actif.',
+    confirmDeleteTheme: 'Êtes-vous sûr de vouloir supprimer ce thème personnalisé ?',
+    deleteTheme: 'Supprimer le thème',
+    customThemeLabel: 'Thème personnalisé',
+    subtextColor: 'Couleur du sous-texte',
+    subtextDesc: 'Texte atténué et icônes secondaires'
   },
+
   de: {
     goodMorning: 'Guten Morgen',
     goodAfternoon: 'Guten Nachmittag',
@@ -3082,7 +3155,28 @@ pageOf: 'von',
     noTableSelected: "Keine Tabelle ausgewählt",
     clickCursorIntoTable: "Klicken Sie in eine Tabellenzelle, um den Tabelleninspektor zu öffnen.",
     convertListToTable: "Liste in Tabelle umwandeln",
+    editTheme: 'Thema bearbeiten',
+    themeStudio: 'Themen-Studio',
+    themeName: 'Themenname',
+    saveTheme: 'Thema speichern',
+    mainBackground: 'Haupthintergrund',
+    bgDesc: 'Gesamter App-Hintergrund',
+    writingSurface: 'Schreibfläche',
+    surfaceDesc: 'Schreibfläche & Paneele',
+    textDesc: 'Haupttext, Überschriften & Symbole',
+    accentDesc: 'Schaltflächen & Fokus-Highlights',
+    newCustomTheme: 'Neues benutzerdefiniertes Thema',
+    searchForThemes: 'Themen suchen...',
+    borderColor: 'Rahmenfarbe',
+    borderDesc: 'Menü- & Layout-Rahmen',
+    cannotDeleteActiveTheme: 'Bitte wählen Sie ein anderes Thema, bevor Sie das aktive Thema löschen.',
+    confirmDeleteTheme: 'Sind Sie sicher, dass Sie dieses benutzerdefinierte Thema löschen möchten?',
+    deleteTheme: 'Thema löschen',
+    customThemeLabel: 'Benutzerdefiniertes Thema',
+    subtextColor: 'Untertextfarbe',
+    subtextDesc: 'Gedämpfter Text und sekundäre Symbole'
   },
+
   it: {
     goodMorning: 'Buongiorno',
     goodAfternoon: 'Buon pomeriggio',
@@ -3154,8 +3248,8 @@ pageOf: 'von',
     categoryGlobal: 'Patrimonio globale e tradizionale',
     advancedCustomTheme: 'Tema personalizzato avanzato',
     bgGradient: 'Sfondo / Gradiente',
-    textColor: 'Colore testo',
-    accentColor: 'Colore accento',
+    textColor: 'Colore del testo',
+    accentColor: 'Colore d\'accento',
     custom: 'Personalizzato',
     hueSlider: 'Cursore tonalità',
     resetToDefault: 'Ripristina',
@@ -3664,7 +3758,28 @@ pageOf: 'di',
     noTableSelected: "Nessuna tabella selezionata",
     clickCursorIntoTable: "Fai clic in una cella per aprire l'Ispettore Tabella.",
     convertListToTable: "Converti elenco in tabella",
+    editTheme: 'Modifica tema',
+    themeStudio: 'Studio dei temi',
+    themeName: 'Nome del tema',
+    saveTheme: 'Salva tema',
+    mainBackground: 'Sfondo principale',
+    bgDesc: 'Sfondo generale dell\'app',
+    writingSurface: 'Superficie di scrittura',
+    surfaceDesc: 'Superficie di scrittura e pannelli',
+    textDesc: 'Testo principale, intestazioni e icone',
+    accentDesc: 'Pulsanti e luci di messa a fuoco',
+    newCustomTheme: 'Nuovo tema personalizzato',
+    searchForThemes: 'Cerca temi...',
+    borderColor: 'Colore del bordo',
+    borderDesc: 'Bordi di menu e layout',
+    cannotDeleteActiveTheme: 'Seleziona un altro tema prima di eliminare il tema attivo.',
+    confirmDeleteTheme: 'Sei sicuro di voler eliminare questo tema personalizzato?',
+    deleteTheme: 'Elimina tema',
+    customThemeLabel: 'Tema personalizzato',
+    subtextColor: 'Colore del sottotesto',
+    subtextDesc: 'Testo attenuato e icone secondarie'
   },
+
   es: {
     goodMorning: 'Buenos días',
     goodAfternoon: 'Buenas tardes',
@@ -4246,7 +4361,28 @@ pageOf: 'de',
     noTableSelected: "Ninguna tabla seleccionada",
     clickCursorIntoTable: "Haga clic en una celda para abrir el Inspector de tablas.",
     convertListToTable: "Convertir lista en tabla",
+    editTheme: 'Editar tema',
+    themeStudio: 'Estudio de temas',
+    themeName: 'Nombre del tema',
+    saveTheme: 'Guardar tema',
+    mainBackground: 'Fondo principal',
+    bgDesc: 'Fondo general de la aplicación',
+    writingSurface: 'Superficie de escritura',
+    surfaceDesc: 'Superficie de escritura y paneles',
+    textDesc: 'Texto principal, encabezados e iconos',
+    accentDesc: 'Botones y resaltados de enfoque',
+    newCustomTheme: 'Nuevo tema personalizado',
+    searchForThemes: 'Buscar temas...',
+    borderColor: 'Color del borde',
+    borderDesc: 'Bordes del menú y diseño',
+    cannotDeleteActiveTheme: 'Por favor, selecciona otro tema antes de eliminar el tema activo.',
+    confirmDeleteTheme: '¿Estás seguro de que quieres eliminar este tema personalizado?',
+    deleteTheme: 'Eliminar tema',
+    customThemeLabel: 'Tema personalizado',
+    subtextColor: 'Color del subtexto',
+    subtextDesc: 'Texto atenuado e iconos secundarios'
   },
+
   ko: {
     goodMorning: '좋은 아침이에요',
     goodAfternoon: '좋은 오후예요',
@@ -4828,7 +4964,28 @@ pageOf: '/',
     noTableSelected: "선택된 표 없음",
     clickCursorIntoTable: "표 셀을 클릭하여 표 검사기를 엽니다.",
     convertListToTable: "목록을 표로 변환",
+    editTheme: '테마 편집',
+    themeStudio: '테마 스튜디오',
+    themeName: '테마 이름',
+    saveTheme: '테마 저장',
+    mainBackground: '기본 배경',
+    bgDesc: '전체 앱 배경',
+    writingSurface: '작성 표면',
+    surfaceDesc: '작성 표면 및 패널',
+    textDesc: '본문 텍스트, 제목 및 아이콘',
+    accentDesc: '버튼 및 포커스 하이라이트',
+    newCustomTheme: '새 사용자 지정 테마',
+    searchForThemes: '테마 검색...',
+    borderColor: '테두리 색상',
+    borderDesc: '메뉴 및 레이아웃 테두리',
+    cannotDeleteActiveTheme: '활성 테마를 삭제하기 전에 다른 테마를 선택해주세요.',
+    confirmDeleteTheme: '이 사용자 지정 테마를 삭제하시겠습니까?',
+    deleteTheme: '테마 삭제',
+    customThemeLabel: '사용자 지정 테마',
+    subtextColor: '서브텍스트 색상',
+    subtextDesc: '흐린 텍스트 및 보조 아이콘'
   },
+
   zh: {
     goodMorning: '早上好',
     goodAfternoon: '下午好',
@@ -4901,7 +5058,7 @@ pageOf: '/',
     advancedCustomTheme: '高级自定义主题',
     bgGradient: '背景 / 渐变',
     textColor: '文本颜色',
-    accentColor: '强调颜色',
+    accentColor: '强调色',
     custom: '自定义',
     hueSlider: '色调滑块',
     resetToDefault: '重置为默认',
@@ -5410,7 +5567,28 @@ pageOf: '/',
     noTableSelected: "未选择表格",
     clickCursorIntoTable: "点击任意单元格以打开表格检查器。",
     convertListToTable: "将列表转换为表格",
+    editTheme: '编辑主题',
+    themeStudio: '主题工作室',
+    themeName: '主题名称',
+    saveTheme: '保存主题',
+    mainBackground: '主要背景',
+    bgDesc: '整体应用背景',
+    writingSurface: '书写表面',
+    surfaceDesc: '书写表面和面板',
+    textDesc: '正文文字、标题和图标',
+    accentDesc: '按钮和焦点高亮',
+    newCustomTheme: '新建自定义主题',
+    searchForThemes: '搜索主题...',
+    borderColor: '边框颜色',
+    borderDesc: '菜单和布局边框',
+    cannotDeleteActiveTheme: '在删除当前主题之前，请先选择另一个主题。',
+    confirmDeleteTheme: '您确定要删除此自定义主题吗？',
+    deleteTheme: '删除主题',
+    customThemeLabel: '自定义主题',
+    subtextColor: '副文本颜色',
+    subtextDesc: '静音文本和次要图标'
   },
+
   ja: {
     goodMorning: 'おはようございます',
     goodAfternoon: 'こんにちは',
@@ -5992,8 +6170,28 @@ pageOf: '/',
     noTableSelected: "表が選択されていません",
     clickCursorIntoTable: "セルの内側をクリックして表インスペクターを開きます。",
     convertListToTable: "リストを表に変換",
-  },
-}
+    editTheme: 'テーマを編集',
+    themeStudio: 'テーマスタジオ',
+    themeName: 'テーマ名',
+    saveTheme: 'テーマを保存',
+    mainBackground: 'メインの背景',
+    bgDesc: 'アプリ全体の背景',
+    writingSurface: '執筆エリア',
+    surfaceDesc: '執筆エリアとパネル',
+    textDesc: 'メインテキスト、見出し、アイコン',
+    accentDesc: 'ボタンとフォーカスハイライト',
+    newCustomTheme: '新しいカスタムテーマ',
+    searchForThemes: 'テーマを検索...',
+    borderColor: 'ボーダー色',
+    borderDesc: 'メニューとレイアウトの境界線',
+    cannotDeleteActiveTheme: 'アクティブなテーマを削除する前に、別のテーマを選択してください。',
+    confirmDeleteTheme: 'このカスタムテーマを削除してもよろしいですか？',
+    deleteTheme: 'テーマを削除',
+    customThemeLabel: 'カスタムテーマ',
+    subtextColor: 'サブテキストの色',
+    subtextDesc: 'ミュートされたテキストとセカンダリアイコン'
+  }
+} as Record<Lang, Strings>;
 
 export function t(lang: Lang, key: keyof Strings): string {
   return translations[lang]?.[key] ?? translations.en[key] ?? translations.vi?.[key] ?? (key as string)

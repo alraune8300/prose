@@ -141,7 +141,7 @@ function FontRow({
         </div>
         <div style={{
           fontFamily: uiFont, fontSize: '0.66rem',
-          color: isSelected ? c.accentMid : c.textFaint,
+          color: isSelected ? c.accentMid : c.textMuted,
           marginTop: 1,
           display: 'flex', alignItems: 'center', gap: 4,
         }}>
@@ -158,7 +158,7 @@ function FontRow({
             padding: '3px 6px', borderRadius: 4,
             border: `1px solid ${isFav ? '#f59e0b' : c.border}`,
             background: isFav ? (c.isDark ? 'rgba(245,158,11,0.2)' : '#fef3c7') : 'transparent',
-            color: isFav ? '#f59e0b' : c.textFaint,
+            color: isFav ? '#f59e0b' : c.textMuted,
             fontSize: '0.75rem', cursor: 'pointer',
           }}
         >
@@ -215,7 +215,7 @@ export default function GoogleFontsPanel(props: GoogleFontsPanelProps & { hideRo
     isDark: Boolean(rawTheme?.isDark ?? false),
     surface: (rawTheme?.surface || '#ffffff') as string,
     textMuted: (rawTheme?.textMuted || rawTheme?.muted || '#4b5563') as string,
-    textFaint: (rawTheme?.textFaint || rawTheme?.faint || '#9ca3af') as string,
+    textFaint: (rawTheme?.textMuted || rawTheme?.faint || '#9ca3af') as string,
   };
 
   const [search, setSearch] = useState('');
@@ -471,7 +471,7 @@ export default function GoogleFontsPanel(props: GoogleFontsPanelProps & { hideRo
                   transform: 'translateY(-50%)',
                   background: 'none',
                   border: 'none',
-                  color: c.textFaint,
+                  color: c.textMuted,
                   cursor: 'pointer',
                   padding: 4,
                   display: 'flex',
@@ -541,7 +541,7 @@ export default function GoogleFontsPanel(props: GoogleFontsPanelProps & { hideRo
               </div>
             )}
 
-            <div style={{ fontSize: '0.68rem', color: c.textFaint, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ fontSize: '0.68rem', color: c.textMuted, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span>{t(lang, 'freeFromGoogle')}</span>
               <a
                 href="https://developers.google.com/fonts/docs/developer_api"
@@ -623,7 +623,7 @@ export default function GoogleFontsPanel(props: GoogleFontsPanelProps & { hideRo
                   onClick={() => setSearch('')}
                   style={{
                     position: 'absolute', right: 6, top: '50%', transform: 'translateY(-50%)',
-                    background: 'none', border: 'none', color: c.textFaint, cursor: 'pointer', padding: 2
+                    background: 'none', border: 'none', color: c.textMuted, cursor: 'pointer', padding: 2
                   }}
                 >
                   ✕
@@ -693,7 +693,7 @@ export default function GoogleFontsPanel(props: GoogleFontsPanelProps & { hideRo
                   display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                 }}>
                   <span>[{cat.category === 'FAVORITES' ? t(lang, 'favorites').toUpperCase() : cat.category}]</span>
-                  <span style={{ fontSize: '0.65rem', color: c.textFaint, fontWeight: 'normal' }}>{cat.fonts.length}</span>
+                  <span style={{ fontSize: '0.65rem', color: c.textMuted, fontWeight: 'normal' }}>{cat.fonts.length}</span>
                 </div>
 
                 {cat.fonts.map(name => (
@@ -716,7 +716,7 @@ export default function GoogleFontsPanel(props: GoogleFontsPanelProps & { hideRo
             ))}
 
             {filteredCategories.length === 0 && (
-              <div style={{ padding: '20px 10px', fontFamily: uiFont, fontSize: '0.78rem', color: c.textFaint, textAlign: 'center' }}>
+              <div style={{ padding: '20px 10px', fontFamily: uiFont, fontSize: '0.78rem', color: c.textMuted, textAlign: 'center' }}>
                 {t(lang, 'noMatchingFonts')} "{search}"
               </div>
             )}
@@ -738,7 +738,7 @@ export default function GoogleFontsPanel(props: GoogleFontsPanelProps & { hideRo
             <button
               onClick={onClose}
               className="px-2 py-1 rounded-md text-sm hover:opacity-75 transition-opacity"
-              style={{ color: c.textFaint, background: 'transparent', border: 'none', cursor: 'pointer' }}
+              style={{ color: c.textMuted, background: 'transparent', border: 'none', cursor: 'pointer' }}
             >
               ✕
             </button>

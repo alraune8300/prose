@@ -793,7 +793,7 @@ export default function ReferenceComparePanel({
       {/* Top Header */}
       <div 
         className="flex items-center justify-between px-3 py-2 border-b shrink-0 gap-2 select-none"
-        style={{ borderColor: theme.borderFaint, backgroundColor: theme.bg }}
+        style={{ borderColor: theme.borderFaint, background: theme.bg }}
       >
         {/* Tab switcher: Reference vs Compare */}
         <div className="flex items-center gap-1.5 min-w-0">
@@ -1348,7 +1348,7 @@ export default function ReferenceComparePanel({
           {/* Bottom Footer Helper & Quick Actions */}
           <div 
             className="px-3 py-1.5 border-t text-[11px] flex items-center justify-between shrink-0 select-none gap-2"
-            style={{ borderColor: theme.borderFaint, color: theme.textFaint }}
+            style={{ borderColor: theme.borderFaint, color: theme.textMuted }}
           >
             <span className="truncate">
               {t(lang, 'splitTip') || 'Tip: Press Ctrl+V to paste or select text to quote'}

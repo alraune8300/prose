@@ -596,7 +596,7 @@ export default function BlockOrganizerPanel({
                                 }}
                               >
                                 <div style={{ padding: '8px', borderBottom: `1px solid ${theme.borderFaint}` }}>
-                                  <div style={{ fontSize: '0.7rem', color: theme.textFaint, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px', paddingLeft: '8px' }}>
+                                  <div style={{ fontSize: '0.7rem', color: theme.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px', paddingLeft: '8px' }}>
                                     {getBlockT(lang, 'turnInto')}
                                   </div>
                                   <button onClick={() => handleTurnInto(block, 'paragraph')} style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '6px 8px', background: 'none', border: 'none', color: theme.text, cursor: 'pointer', borderRadius: '4px', fontSize: '0.85rem' }} className="hover:bg-black/5 dark:hover:bg-white/10"><Type size={14} /> {getBlockT(lang, 'paragraph')}</button>

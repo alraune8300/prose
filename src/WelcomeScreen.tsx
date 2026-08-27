@@ -12,6 +12,7 @@ interface WelcomeScreenProps {
   theme: ThemeColors;
   themeMode?: string;
   onSelectTheme?: (themeId: string) => void;
+  onOpenThemeModal?: () => void;
   uiFont: string;
   lang?: Lang;
   onChangeLang?: (l: Lang) => void;
@@ -38,7 +39,7 @@ const LANGUAGES: {value: Lang, label: string}[] = [
 
 type SortOption = 'updated' | 'newest' | 'oldest' | 'nameAZ' | 'nameZA' | 'pages';
 
-function WelcomeScreen({ theme, themeMode, onSelectTheme, uiFont, lang = 'vi', onChangeLang, onOpenProject, onImport, onExportAll, onOpenGithubCloudSave, onEmptyAllTrash, onReloadProjects, refreshTrigger }: WelcomeScreenProps) {
+function WelcomeScreen({ theme, themeMode, onSelectTheme, onOpenThemeModal, uiFont, lang = 'vi', onChangeLang, onOpenProject, onImport, onExportAll, onOpenGithubCloudSave, onEmptyAllTrash, onReloadProjects, refreshTrigger }: WelcomeScreenProps) {
     
   const [projects, setProjects] = useState<Project[]>([]);
   const activeProjects = projects.filter(p => !p.isDeleted);
@@ -63,7 +64,7 @@ function WelcomeScreen({ theme, themeMode, onSelectTheme, uiFont, lang = 'vi', o
   const [sortBy, setSortBy] = useState<SortOption>('updated');
   const [isNewMenuOpen, setIsNewMenuOpen] = useState(false);
   const [isDataMenuOpen, setIsDataMenuOpen] = useState(false);
-  const [isThemeModalOpen, setIsThemeModalOpen] = useState(false);
+  
   const [themeSearchQuery, setThemeSearchQuery] = useState('');
   const [themeCategoryFilter, setThemeCategoryFilter] = useState('all');
   const [toastMsg, setToastMsg] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
@@ -492,7 +493,7 @@ function WelcomeScreen({ theme, themeMode, onSelectTheme, uiFont, lang = 'vi', o
         <div className="w-full pt-4 mt-auto border-t flex items-center gap-2" style={{ borderColor: theme.borderFaint }}>
           {onSelectTheme && (
             <button
-              onClick={() => setIsThemeModalOpen(true)}
+              onClick={() => { if (onOpenThemeModal) onOpenThemeModal(); }}
               title={t(lang, 'themePresets') || 'Themes'}
               className="flex-1 p-2.5 rounded-lg border text-xs font-medium flex items-center justify-center transition-all cursor-pointer shadow-sm"
               style={{
@@ -540,7 +541,7 @@ function WelcomeScreen({ theme, themeMode, onSelectTheme, uiFont, lang = 'vi', o
             <h1 className="text-4xl md:text-5xl tracking-tight" style={{ color: theme.text, fontFamily: `'${uiFont}', Georgia, serif` }}>
               {timeGreeting},
             </h1>
-            <p className="text-lg md:text-xl font-light" style={{ color: theme.textFaint }}>
+            <p className="text-lg md:text-xl font-light" style={{ color: theme.textMuted }}>
               {t(lang, 'whatAreWeWriting')}
             </p>
           </div>
@@ -584,7 +585,7 @@ function WelcomeScreen({ theme, themeMode, onSelectTheme, uiFont, lang = 'vi', o
                       className="absolute top-full right-0 mt-2 w-56 rounded-xl shadow-xl py-2 z-50 animate-fade-in-up flex flex-col"
                       style={{ backgroundColor: theme.surface, border: `1px solid ${theme.border}` }}
                     >
-                      <div className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider" style={{ color: theme.textFaint }}>
+                      <div className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider" style={{ color: theme.textMuted }}>
                         Import
                       </div>
                       <button onClick={() => { onImport(); setIsDataMenuOpen(false); }} className="flex items-center gap-3 w-full text-left px-3 py-2 text-sm transition-colors" style={{ color: theme.text }} onMouseEnter={e => e.currentTarget.style.backgroundColor = theme.panel} onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}>
@@ -598,7 +599,7 @@ function WelcomeScreen({ theme, themeMode, onSelectTheme, uiFont, lang = 'vi', o
                       
                       <div className="h-[1px] w-full my-1" style={{ backgroundColor: theme.borderFaint }} />
                       
-                      <div className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider" style={{ color: theme.textFaint }}>
+                      <div className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider" style={{ color: theme.textMuted }}>
                         Export
                       </div>
                       <button onClick={() => { onExportAll(); setIsDataMenuOpen(false); }} className="flex items-center gap-3 w-full text-left px-3 py-2 text-sm transition-colors" style={{ color: theme.text }} onMouseEnter={e => e.currentTarget.style.backgroundColor = theme.panel} onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}>
@@ -632,7 +633,7 @@ function WelcomeScreen({ theme, themeMode, onSelectTheme, uiFont, lang = 'vi', o
                       className="absolute top-full right-0 mt-2 w-56 rounded-xl shadow-xl py-2 z-50 animate-fade-in-up flex flex-col"
                       style={{ backgroundColor: theme.surface, border: `1px solid ${theme.border}` }}
                     >
-                      <div className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider" style={{ color: theme.textFaint }}>
+                      <div className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider" style={{ color: theme.textMuted }}>
                         Documents
                       </div>
                       <button onClick={() => { handleNewProject(); setIsNewMenuOpen(false); }} className="flex items-center gap-3 w-full text-left px-3 py-2 text-sm transition-colors" style={{ color: theme.text }} onMouseEnter={e => e.currentTarget.style.backgroundColor = theme.panel} onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}>
@@ -642,7 +643,7 @@ function WelcomeScreen({ theme, themeMode, onSelectTheme, uiFont, lang = 'vi', o
                       
                       <div className="h-[1px] w-full my-1" style={{ backgroundColor: theme.borderFaint }} />
                       
-                      <div className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider" style={{ color: theme.textFaint }}>
+                      <div className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider" style={{ color: theme.textMuted }}>
                         Folders
                       </div>
                       <button onClick={() => { handleNewFolder(); setIsNewMenuOpen(false); }} className="flex items-center gap-3 w-full text-left px-3 py-2 text-sm transition-colors" style={{ color: theme.text }} onMouseEnter={e => e.currentTarget.style.backgroundColor = theme.panel} onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}>
@@ -663,7 +664,7 @@ function WelcomeScreen({ theme, themeMode, onSelectTheme, uiFont, lang = 'vi', o
           <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t" style={{ borderColor: theme.borderFaint }}>
             {/* Search Input */}
             <div className="flex-1 min-w-[220px] max-w-md relative flex items-center">
-              <Search size={14} className="absolute left-3 pointer-events-none" style={{ color: theme.textFaint }} />
+              <Search size={14} className="absolute left-3 pointer-events-none" style={{ color: theme.textMuted }} />
               <input 
                 type="text"
                 placeholder={t(lang, 'searchProjects')}
@@ -693,7 +694,7 @@ function WelcomeScreen({ theme, themeMode, onSelectTheme, uiFont, lang = 'vi', o
             <div className="flex items-center gap-2">
               {/* Sort Selector */}
               <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs" style={{ backgroundColor: theme.surface, borderColor: theme.borderFaint }}>
-                <ArrowUpDown size={13} style={{ color: theme.textFaint }} />
+                <ArrowUpDown size={13} style={{ color: theme.textMuted }} />
                 <span className="text-[11px] font-medium hidden sm:inline" style={{ color: theme.textMuted }}>{t(lang, 'sortBy')}:</span>
                 <CustomSelect
                   value={sortBy}
@@ -719,8 +720,8 @@ function WelcomeScreen({ theme, themeMode, onSelectTheme, uiFont, lang = 'vi', o
                   className="p-1.5 rounded-lg transition-all cursor-pointer"
                   title={t(lang, 'viewGrid')}
                   style={{ 
-                    backgroundColor: viewMode === 'grid' ? theme.bg : 'transparent',
-                    color: viewMode === 'grid' ? theme.text : theme.textFaint
+                    background: viewMode === 'grid' ? theme.bg : 'transparent',
+                    color: viewMode === 'grid' ? theme.text : theme.textMuted
                   }}
                 >
                   <Grid size={15} strokeWidth={1.5} />
@@ -730,8 +731,8 @@ function WelcomeScreen({ theme, themeMode, onSelectTheme, uiFont, lang = 'vi', o
                   className="p-1.5 rounded-lg transition-all cursor-pointer"
                   title={t(lang, 'viewList')}
                   style={{ 
-                    backgroundColor: viewMode === 'list' ? theme.bg : 'transparent',
-                    color: viewMode === 'list' ? theme.text : theme.textFaint
+                    background: viewMode === 'list' ? theme.bg : 'transparent',
+                    color: viewMode === 'list' ? theme.text : theme.textMuted
                   }}
                 >
                   <List size={15} strokeWidth={1.5} />
@@ -792,7 +793,7 @@ function WelcomeScreen({ theme, themeMode, onSelectTheme, uiFont, lang = 'vi', o
               className="w-full py-24 flex flex-col items-center justify-center border border-dashed rounded-2xl"
               style={{ borderColor: theme.border, backgroundColor: theme.surface }}
             >
-              <FileText size={32} className="mb-4" strokeWidth={1.5} style={{ color: theme.textFaint }} />
+              <FileText size={32} className="mb-4" strokeWidth={1.5} style={{ color: theme.textMuted }} />
               <p className="font-light text-sm" style={{ color: theme.textMuted }}>
                 {tab === 'active' ? t(lang, 'noProjectsFound') : t(lang, 'trashIsEmpty')}
               </p>
@@ -997,7 +998,7 @@ function WelcomeScreen({ theme, themeMode, onSelectTheme, uiFont, lang = 'vi', o
                 >
                   {/* Single Stream Line: Icon + Title */}
                   <div className="flex items-center space-x-2 w-full pr-24">
-                    <div className="flex-shrink-0" style={{ color: theme.textFaint }}>
+                    <div className="flex-shrink-0" style={{ color: theme.textMuted }}>
                       <FileText size={14} strokeWidth={1.5} />
                     </div>
 
@@ -1025,7 +1026,7 @@ function WelcomeScreen({ theme, themeMode, onSelectTheme, uiFont, lang = 'vi', o
                   </div>
 
                   {/* Sub-Metadata Line */}
-                  <div className="mt-3 flex items-center gap-2 text-[10px] font-light tracking-wider uppercase ml-6" style={{ color: theme.textFaint }}>
+                  <div className="mt-3 flex items-center gap-2 text-[10px] font-light tracking-wider uppercase ml-6" style={{ color: theme.textMuted }}>
                     <span>{project.pages.length} {project.pages.length === 1 ? t(lang, 'pageSingular') : t(lang, 'pagePlural')}</span>
                     <span>•</span>
                     <span>{Intl.DateTimeFormat(lang, { month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(project.lastModified || project.createdAt || Date.now()))}</span>
@@ -1082,187 +1083,7 @@ function WelcomeScreen({ theme, themeMode, onSelectTheme, uiFont, lang = 'vi', o
         </div>
       )}
 
-      {/* Theme Modal Popup */}
-      {isThemeModalOpen && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }} onClick={() => setIsThemeModalOpen(false)}>
-          <div className="w-full max-w-3xl max-h-[85vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-fade-in-up" style={{ backgroundColor: theme.surface, border: `1px solid ${theme.border}` }} onClick={e => e.stopPropagation()}>
-            {/* Modal Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b" style={{ borderColor: theme.borderFaint }}>
-              <div>
-                <h2 className="text-xl font-serif" style={{ color: theme.text, fontFamily: `'${uiFont}', Georgia, serif` }}>
-                  {t(lang, 'themePresets') || 'Themes'}
-                </h2>
-                <p className="text-xs mt-0.5" style={{ color: theme.textFaint }}>
-                  {t(lang, 'customizeWritingExperience') || 'Customize your writing experience and color palette.'}
-                </p>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="relative w-48 sm:w-64">
-                  <Search size={14} className="absolute left-3 top-2.5" style={{ color: theme.textFaint }} />
-                  <input
-                    type="text"
-                    placeholder={t(lang, 'searchThemes') || 'Search for themes...'}
-                    value={themeSearchQuery}
-                    onChange={e => setThemeSearchQuery(e.target.value)}
-                    className="w-full pl-9 pr-8 py-1.5 rounded-lg text-xs border outline-none"
-                    style={{ 
-                      backgroundColor: theme.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)', 
-                      borderColor: theme.border, 
-                      color: theme.text,
-                      fontFamily: uiFont
-                    }}
-                  />
-                  {themeSearchQuery && (
-                    <button onClick={() => setThemeSearchQuery('')} className="absolute right-2.5 top-2.5 text-xs" style={{ color: theme.textMuted }}>
-                      <X size={12} />
-                    </button>
-                  )}
-                </div>
-                <button
-                  onClick={() => setIsThemeModalOpen(false)}
-                  className="p-1.5 rounded-lg hover:opacity-80 transition-colors cursor-pointer"
-                  style={{ color: theme.textMuted }}
-                >
-                  <X size={18} />
-                </button>
-              </div>
-            </div>
-
-            {/* Modal Body: Categories + Theme Grid */}
-            <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
-              {/* Sidebar categories */}
-              <div className="w-full md:w-56 p-4 border-r overflow-y-auto flex md:flex-col gap-1.5 flex-shrink-0" style={{ borderColor: theme.borderFaint, backgroundColor: theme.bg }}>
-                <button
-                  onClick={() => setThemeCategoryFilter('all')}
-                  className="flex items-center justify-between px-3 py-2 rounded-lg text-xs transition-all text-left cursor-pointer"
-                  style={{
-                    backgroundColor: themeCategoryFilter === 'all' ? theme.accentLight : 'transparent',
-                    color: themeCategoryFilter === 'all' ? theme.accent : theme.text,
-                    fontWeight: themeCategoryFilter === 'all' ? 600 : 400,
-                    fontFamily: uiFont,
-                    border: `1px solid ${themeCategoryFilter === 'all' ? theme.accent : theme.borderFaint}`
-                  }}
-                >
-                  <span>{t(lang, 'allThemes') || 'All themes'}</span>
-                  <span className="text-[10px] opacity-70 font-mono">{PRESETS.length}</span>
-                </button>
-                {THEME_CATEGORIES.map(cat => {
-                  const count = PRESETS.filter(p => cat.presetNames.includes(p.name)).length;
-                  const isActive = themeCategoryFilter === cat.id;
-                  const catLabelTranslated = (() => {
-                    switch (cat.id) {
-                      case 'lotus-natural-greens': return t(lang, 'categoryLotus') || cat.label;
-                      case 'cinematic-retro': return t(lang, 'categoryCinematic') || cat.label;
-                      case 'architectural-heritage': return t(lang, 'categoryArchitectural') || cat.label;
-                      case 'floral-gemstone-earth': return t(lang, 'categoryFloral') || cat.label;
-                      case 'global-cultural': return t(lang, 'categoryGlobal') || cat.label;
-                      default: return cat.label;
-                    }
-                  })();
-                  return (
-                    <button
-                      key={cat.id}
-                      onClick={() => setThemeCategoryFilter(cat.id)}
-                      className="flex items-center justify-between px-3 py-2 rounded-lg text-xs transition-all text-left truncate cursor-pointer"
-                      style={{
-                        backgroundColor: isActive ? theme.accentLight : 'transparent',
-                        color: isActive ? theme.accent : theme.text,
-                        fontWeight: isActive ? 600 : 400,
-                        fontFamily: uiFont,
-                        border: `1px solid ${isActive ? theme.accent : theme.borderFaint}`
-                      }}
-                    >
-                      <span className="truncate mr-2">{catLabelTranslated}</span>
-                      <span className="text-[10px] opacity-70 font-mono flex-shrink-0">{count}</span>
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Theme Grid */}
-              <div className="flex-1 p-6 overflow-y-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" style={{ backgroundColor: theme.surface }}>
-                {PRESETS.filter(preset => {
-                  const matchesCategory = themeCategoryFilter === 'all' || 
-                    THEME_CATEGORIES.find(c => c.id === themeCategoryFilter)?.presetNames.includes(preset.name);
-                  const matchesSearch = !themeSearchQuery.trim() || preset.name.toLowerCase().includes(themeSearchQuery.toLowerCase());
-                  return matchesCategory && matchesSearch;
-                }).map(preset => {
-                  const isActive = themeMode === preset.name;
-                  return (
-                    <div
-                      key={preset.name}
-                      onClick={() => {
-                        if (onSelectTheme) onSelectTheme(preset.name);
-                      }}
-                      className="group relative p-4 rounded-xl border flex flex-col justify-between cursor-pointer transition-all hover:-translate-y-0.5 shadow-xs"
-                      style={{
-                        backgroundColor: isActive ? theme.accentLight : theme.bg,
-                        borderColor: isActive ? theme.accent : theme.border,
-                      }}
-                    >
-                      <div className="flex items-center justify-between mb-3">
-                        <div style={{
-                          width: 110, height: 34, borderRadius: 8,
-                          background: preset.bg,
-                          border: `1.5px solid ${preset.border}`,
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                          position: 'relative', overflow: 'hidden', flexShrink: 0
-                        }}>
-                          <div style={{ display: 'flex', alignItems: 'center' }}>
-                            {[
-                              { bg: preset.text, border: preset.bg },
-                              { bg: preset.accent, border: preset.bg },
-                              { bg: preset.accentMid, border: preset.bg },
-                              { bg: preset.surface, border: preset.border }
-                            ].map((item, idx) => (
-                              <div
-                                key={idx}
-                                style={{
-                                  width: 17, height: 17, borderRadius: '50%',
-                                  background: item.bg,
-                                  border: `1.5px solid ${item.border}`,
-                                  marginLeft: idx === 0 ? 0 : -6,
-                                  boxShadow: '0 1px 2px rgba(0,0,0,0.15)'
-                                }}
-                              />
-                            ))}
-                            <div style={{
-                              width: 17, height: 17, borderRadius: '50%',
-                              background: preset.surface,
-                              color: isActive ? preset.accent : preset.text,
-                              border: `1.5px solid ${preset.accent}`,
-                              marginLeft: -6,
-                              display: 'flex', alignItems: 'center', justifyContent: 'center',
-                              fontSize: '0.55rem', fontWeight: 700, fontFamily: uiFont,
-                              boxShadow: '0 1px 2px rgba(0,0,0,0.15)'
-                            }}>
-                              {isActive ? '✓' : ''}
-                            </div>
-                          </div>
-                        </div>
-                        {isActive && (
-                          <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold text-white" style={{ backgroundColor: theme.accent }}>
-                            Active
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-xs font-semibold tracking-wide truncate" style={{ color: theme.text, fontFamily: uiFont }}>
-                          {preset.name}
-                        </span>
-                        <span className="text-[10px] mt-0.5" style={{ color: theme.textFaint }}>
-                          {preset.isDark ? (t(lang, 'darkTheme') || 'Dark Theme') : (t(lang, 'lightTheme') || 'Light Theme')}
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      
     </div>
   );
 }

@@ -44,7 +44,7 @@ function LeftPanel(props: Record<string, unknown>) {
     cardGrad: (cProp?.cardGrad || themeProp?.cardGrad || '#ffffff') as string,
     text: (cProp?.text || themeProp?.text || '#111827') as string,
     textMuted: (cProp?.textMuted || themeProp?.textMuted || themeProp?.muted || '#4b5563') as string,
-    textFaint: (cProp?.textFaint || themeProp?.textFaint || themeProp?.faint || '#9ca3af') as string,
+    textFaint: (cProp?.textMuted || themeProp?.textMuted || themeProp?.faint || '#9ca3af') as string,
     accent: (cProp?.accent || themeProp?.accent || '#2563eb') as string,
     accentLight: (cProp?.accentLight || themeProp?.accentLight || themeProp?.accentSoft || '#dbeafe') as string,
     accentMid: (cProp?.accentMid || themeProp?.accentMid || '#60a5fa') as string,
@@ -169,7 +169,7 @@ function LeftPanel(props: Record<string, unknown>) {
   const nonDrafts = activeProject ? activeProject.pages : pages.filter(p => !p.isDraft)
   const drafts = activeProject ? activeProject.drafts : pages.filter(p => p.isDraft)
 
-  const syncDotColor = { saved: '#4caf72', saving: '#f0a030', unsaved: c.textFaint, error: '#e05050' }[syncStatus]
+  const syncDotColor = { saved: '#4caf72', saving: '#f0a030', unsaved: c.textMuted, error: '#e05050' }[syncStatus]
   const syncLabel = {
     saved: `${t(lang, 'saved')} ${timeSince(lastSaved, lang)}`,
     saving: t(lang, 'saving'),
@@ -244,9 +244,9 @@ function LeftPanel(props: Record<string, unknown>) {
           <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1" style={{ background: isHoveredOrActive ? (c.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)') : c.surface, borderRadius: 4 }}>
             <button
               onClick={e => { e.stopPropagation(); onDeletePage(page.id) }}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, color: c.textFaint }}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, color: c.textMuted }}
               onMouseEnter={e => (e.currentTarget.style.color = '#e05050')}
-              onMouseLeave={e => (e.currentTarget.style.color = c.textFaint)}
+              onMouseLeave={e => (e.currentTarget.style.color = c.textMuted)}
               title="Delete"
             >
               <Trash2 size={14} />
@@ -255,7 +255,7 @@ function LeftPanel(props: Record<string, unknown>) {
         </div>
         
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4, color: c.textFaint }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4, color: c.textMuted }}>
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
             <span style={{ fontSize: '0.65rem', fontFamily: uiFont }}>{timeSince(new Date(page.updatedAt || Date.now()), lang)}</span>
           </div>
@@ -320,7 +320,7 @@ const renderFolder = (folder: Folder, depth = 0) => {
               <ChevronDown
                 size={14}
                 style={{
-                  color: c.textFaint, transition: 'transform 0.2s',
+                  color: c.textMuted, transition: 'transform 0.2s',
                   transform: isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)',
                   flexShrink: 0
                 }}
@@ -339,9 +339,9 @@ const renderFolder = (folder: Folder, depth = 0) => {
               <div style={{ position: 'relative' }}>
                 <button
                   onClick={e => { e.stopPropagation(); setFolderMenuOpenId(folderMenuOpenId === folder.id ? null : folder.id); }}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, color: c.textFaint }}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, color: c.textMuted }}
                   onMouseEnter={e => (e.currentTarget.style.color = c.text)}
-                  onMouseLeave={e => (e.currentTarget.style.color = c.textFaint)}
+                  onMouseLeave={e => (e.currentTarget.style.color = c.textMuted)}
                 >
                   <MoreHorizontal size={14} />
                 </button>
@@ -397,7 +397,7 @@ const renderFolder = (folder: Folder, depth = 0) => {
                 }}
                 style={{
                   marginLeft: 6 + (depth + 1) * 14 + 6, padding: '4px 10px',
-                  fontFamily: uiFont, fontSize: '0.68rem', color: c.textFaint, fontStyle: 'italic',
+                  fontFamily: uiFont, fontSize: '0.68rem', color: c.textMuted, fontStyle: 'italic',
                 }}
               >
                 {t(lang, 'dropFilesHere')}
@@ -431,7 +431,7 @@ const renderFolder = (folder: Folder, depth = 0) => {
             }}
             style={{
               padding: '10px 12px', fontFamily: uiFont, fontSize: '0.72rem',
-              color: c.textFaint, fontStyle: 'italic',
+              color: c.textMuted, fontStyle: 'italic',
               background: dragOverFolderId === 'root' ? (c.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)') : 'transparent',
               borderRadius: 6, margin: '2px 6px', transition: 'background 0.1s',
             }}
@@ -486,11 +486,11 @@ const renderFolder = (folder: Folder, depth = 0) => {
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               border: 'none', borderRadius: 8,
               background: 'transparent',
-              color: c.textFaint,
+              color: c.textMuted,
               cursor: 'pointer', transition: 'all 0.15s',
             }}
             onMouseEnter={e => { e.currentTarget.style.color = c.text; e.currentTarget.style.background = c.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)' }}
-            onMouseLeave={e => { e.currentTarget.style.color = c.textFaint; e.currentTarget.style.background = 'transparent' }}
+            onMouseLeave={e => { e.currentTarget.style.color = c.textMuted; e.currentTarget.style.background = 'transparent' }}
           >
             <Home size={18} />
           </button>
@@ -524,7 +524,7 @@ const renderFolder = (folder: Folder, depth = 0) => {
                 if (!active) { e.currentTarget.style.color = c.text; e.currentTarget.style.background = c.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)' }
               }}
               onMouseLeave={e => {
-                if (!active) { e.currentTarget.style.color = c.textFaint; e.currentTarget.style.background = 'transparent' }
+                if (!active) { e.currentTarget.style.color = c.textMuted; e.currentTarget.style.background = 'transparent' }
               }}
             >
               <tab.icon size={18} />
@@ -604,7 +604,7 @@ const renderFolder = (folder: Folder, depth = 0) => {
                   type="button"
                   title={t(lang, 'renameProject') || 'Rename Project'}
                   onClick={() => { setRenamingProjId(activeProjectId); setProjRenameVal(activeProject?.title || '') }}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: c.textFaint, padding: '3px' }}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: c.textMuted, padding: '3px' }}
                 >
                   <Edit2 size={13} />
                 </button>
@@ -613,7 +613,7 @@ const renderFolder = (folder: Folder, depth = 0) => {
                     type="button"
                     title={t(lang, 'deleteProject') || 'Delete Project'}
                     onClick={() => { if (window.confirm('Delete project?')) onDeleteProject(activeProjectId) }}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: c.textFaint, padding: '3px' }}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: c.textMuted, padding: '3px' }}
                   >
                     <Trash2 size={13} />
                   </button>
@@ -633,7 +633,7 @@ const renderFolder = (folder: Folder, depth = 0) => {
               }}
             />
             {projSearchQuery && (
-              <button onClick={() => setProjSearchQuery('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: c.textFaint, padding: '2px' }} title="Clear search">
+              <button onClick={() => setProjSearchQuery('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: c.textMuted, padding: '2px' }} title="Clear search">
                 <X size={12} />
               </button>
             )}
@@ -674,7 +674,7 @@ const renderFolder = (folder: Folder, depth = 0) => {
               bg: c.bg,
               text: c.text,
               textMuted: c.textMuted,
-              textFaint: c.textFaint,
+              textFaint: c.textMuted,
               accent: c.accent,
               accentLight: (c.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'),
               border: c.border,
@@ -691,7 +691,7 @@ const renderFolder = (folder: Folder, depth = 0) => {
               bg: c.bg,
               text: c.text,
               textMuted: c.textMuted,
-              textFaint: c.textFaint,
+              textFaint: c.textMuted,
               accent: c.accent,
               accentLight: (c.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'),
               border: c.border,
@@ -718,7 +718,7 @@ const renderFolder = (folder: Folder, depth = 0) => {
               bg: c.bg,
               text: c.text,
               textMuted: c.textMuted,
-              textFaint: c.textFaint,
+              textFaint: c.textMuted,
               accent: c.accent,
               accentLight: (c.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'),
               border: c.border,
@@ -745,7 +745,7 @@ const renderFolder = (folder: Folder, depth = 0) => {
                 </div>
                 <button 
                   onClick={() => { setActiveTab('pages'); onNewPage(false); }} 
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: c.textFaint }}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: c.textMuted }}
                 >
                   <Plus size={16} />
                 </button>
@@ -762,7 +762,7 @@ const renderFolder = (folder: Folder, depth = 0) => {
                  </div>
                  <button 
                    onClick={() => { setActiveTab('drafts'); onNewPage(true); }} 
-                   style={{ background: 'none', border: 'none', cursor: 'pointer', color: c.textFaint }}
+                   style={{ background: 'none', border: 'none', cursor: 'pointer', color: c.textMuted }}
                  >
                    <Plus size={16} />
                  </button>
@@ -798,14 +798,14 @@ const renderFolder = (folder: Folder, depth = 0) => {
         
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <button onClick={() => setBinOpen(v => !v)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: c.textFaint, display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.7rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }} title="Bin">
+            <button onClick={() => setBinOpen(v => !v)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: c.textMuted, display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.7rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }} title="Bin">
               <Trash2 size={16} /> {t(lang, 'bin')?.toUpperCase() || 'BIN'}
             </button>
           </div>
           
           {/* Sync Status */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ fontSize: '0.65rem', color: c.textFaint, fontFamily: uiFont }}>{syncLabel}</span>
+            <span style={{ fontSize: '0.65rem', color: c.textMuted, fontFamily: uiFont }}>{syncLabel}</span>
             <div style={{ width: 6, height: 6, borderRadius: '50%', background: syncDotColor, boxShadow: syncStatus === 'saving' ? `0 0 0 3px ${syncDotColor}44` : 'none', transition: 'all 0.3s' }} />
           </div>
         </div>
@@ -821,7 +821,7 @@ const renderFolder = (folder: Folder, depth = 0) => {
             )}
           </div>
           {bin.length === 0 ? (
-            <div style={{ fontSize: '0.8rem', color: c.textFaint, textAlign: 'center', padding: '16px 0' }}>{t(lang, 'noDeletedItems') || 'No deleted items'}</div>
+            <div style={{ fontSize: '0.8rem', color: c.textMuted, textAlign: 'center', padding: '16px 0' }}>{t(lang, 'noDeletedItems') || 'No deleted items'}</div>
           ) : (
             <div style={{ maxHeight: 240, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 8 }}>
               {bin.map(p => (

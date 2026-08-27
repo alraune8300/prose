@@ -163,7 +163,7 @@ export default function VersionHistoryPanel({
               </div>
 
               {selectedVersionId === v.id && (
-                <div className="mt-2 mb-4 p-4 rounded-lg border shadow-inner animate-fade-in-up" style={{ backgroundColor: theme.bg, borderColor: theme.borderFaint }}>
+                <div className="mt-2 mb-4 p-4 rounded-lg border shadow-inner animate-fade-in-up" style={{ background: theme.bg, borderColor: theme.borderFaint }}>
                   <div className="flex items-center justify-between mb-3 pb-3 border-b" style={{ borderColor: theme.borderFaint }}>
                     <h5 className="text-xs font-semibold tracking-wider uppercase opacity-60" style={{ color: theme.text }}>{t(lang, 'preview') || 'Preview'}</h5>
                     <button

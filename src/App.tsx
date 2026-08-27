@@ -19,6 +19,7 @@ import CommandPaletteModal, { type CommandItem } from './CommandPaletteModal';
 import Editor from './Editor';
 import Toolbar from './Toolbar';
 import WelcomeScreen from './WelcomeScreen';
+import ThemeStudioModal from './ThemeStudioModal';
 import GithubCloudSaveModal from './GithubCloudSaveModal';
 import ReferenceComparePanel from './ReferenceComparePanel';
 import { ZenReader } from "./ZenReader";
@@ -41,9 +42,27 @@ function loadThemeMode(): ThemeMode {
   const v = LS.get('kgv-theme');
   return v || 'light';
 }
-function loadCustomTheme(): CustomTheme | null {
-  const p = LS.getJSON<CustomTheme>('kgv-custom-theme');
-  return p && p.bg && p.text ? { bg: p.bg, text: p.text, accent: p.accent || '#2563EB' } : null;
+function loadCustomThemes(): CustomTheme[] {
+  const p = LS.getJSON<CustomTheme[]>('kgv-custom-themes');
+  if (Array.isArray(p)) return p;
+  
+  // Migration from old single custom theme
+  const single = LS.getJSON<any>('kgv-custom-theme');
+  if (single && single.bg && single.text) {
+    const migrated: CustomTheme = {
+      id: 'custom-legacy',
+      name: 'Legacy Custom',
+      isCustom: true,
+      bg: single.bg,
+      text: single.text,
+      accent: single.accent || '#2563EB',
+      surface: single.bg,
+      textMuted: single.text,
+      border: single.text
+    };
+    return [migrated];
+  }
+  return [];
 }
 function loadFont(): string { return LS.get('kgv-font') || 'Merriweather'; }
 function loadHeadingFont(): string { return LS.get('kgv-heading-font') || 'Playfair Display'; }
@@ -125,7 +144,10 @@ export default function App() {
   }, [activeProject, allPagesInActiveProj, activePageId]);
 
   const [themeMode, setThemeMode] = useState<ThemeMode>('light');
+  const [customThemes, setCustomThemes] = useState<CustomTheme[]>([]);
+  // We can still use customTheme state for the CURRENT active custom theme if themeMode === 'custom' or its id
   const [customTheme, setCustomTheme] = useState<CustomTheme | null>(null);
+  const [isThemeModalOpen, setIsThemeModalOpen] = useState(false);
   const [docFont, setDocFont] = useState(() => loadFont());
   const [headingFont, setHeadingFont] = useState(() => loadHeadingFont());
   const [monoFont, setMonoFont] = useState(() => loadMonoFont());
@@ -681,10 +703,12 @@ export default function App() {
   const t: Dict = useMemo(() => getDict(lang), [lang]);
 
   const theme: ThemeColors = useMemo(() => {
-    if (themeMode === 'custom' && customTheme) return deriveCustomTheme(customTheme.bg, customTheme.text, customTheme.accent);
+    if (themeMode === 'custom' && customTheme) return deriveCustomTheme(customTheme);
+    const customMatch = customThemes.find(c => c.id === themeMode);
+    if (customMatch) return deriveCustomTheme(customMatch);
     const key = (themeMode || 'light').toLowerCase();
     return THEMES[key] || THEMES.light;
-  }, [themeMode, customTheme]);
+  }, [themeMode, customTheme, customThemes]);
 
 
 
@@ -991,7 +1015,16 @@ export default function App() {
   useEffect(() => {
     const savedMode = loadThemeMode();
     setThemeMode(savedMode);
-    if (savedMode === 'custom') { const ct = loadCustomTheme(); if (ct) setCustomTheme(ct); }
+    
+    const cts = loadCustomThemes();
+    if (cts.length > 0) {
+      setCustomThemes(cts);
+    }
+    
+    if (savedMode === 'custom' || cts.some(c => c.id === savedMode)) {
+      const activeCt = cts.find(c => c.id === savedMode) || cts[0];
+      if (activeCt) setCustomTheme(activeCt);
+    }
     setDocFont(loadFont());
     setUiFont(loadUiFont());
     setLang(loadLang());
@@ -1642,8 +1675,51 @@ export default function App() {
   }, [activeProjectId, scheduleSaveProject]);
 
   const handleSelectTheme = useCallback((mode: ThemeMode) => { setThemeMode(mode); LS.set('kgv-theme', mode); }, []);
-  const handleCustomThemeChange = useCallback((c: CustomTheme) => {
-    setCustomTheme(c); LS.setJSON('kgv-custom-theme', c); setThemeMode('custom'); LS.set('kgv-theme', 'custom');
+  
+  const handleDeleteCustomTheme = useCallback((themeId: string) => {
+    setCustomThemes(prev => {
+      const next = prev.filter(c => c.id !== themeId);
+      LS.setJSON('kgv-custom-themes', next);
+      return next;
+    });
+    // Auto switch if deleting active theme
+    if (themeMode === themeId) {
+      setThemeMode('light');
+      LS.set('kgv-theme', 'light');
+    }
+  }, [themeMode]);
+
+  const handleSaveCustomTheme = useCallback((themeConf: CustomTheme, overwrite: boolean) => {
+    setCustomThemes(prev => {
+      let next = [...prev];
+      if (overwrite) {
+        next = next.map(c => c.id === themeConf.id ? themeConf : c);
+      } else {
+        next.push(themeConf);
+      }
+      LS.setJSON('kgv-custom-themes', next);
+      return next;
+    });
+    setCustomTheme(themeConf);
+    setThemeMode(themeConf.id);
+    LS.set('kgv-theme', themeConf.id);
+  }, []);
+
+  const handlePreviewTheme = useCallback((themeConf: CustomTheme | null) => {
+    setCustomTheme(themeConf);
+    if (themeConf) {
+      setThemeMode('custom');
+    } else {
+      // Revert to saved active theme when preview ends
+      const savedMode = LS.get('kgv-theme') || 'light';
+      setThemeMode(savedMode);
+      const cts = LS.getJSON<CustomTheme[]>('kgv-custom-themes') || [];
+      if (cts.some(c => c.id === savedMode)) {
+        setCustomTheme(cts.find(c => c.id === savedMode) || null);
+      } else {
+        setCustomTheme(null);
+      }
+    }
   }, []);
   const handleSelectDocFont = useCallback((family: string) => { injectGoogleFont(family); 
     setDocFont(family);
@@ -2022,6 +2098,7 @@ export default function App() {
           theme={theme}
           themeMode={themeMode}
           onSelectTheme={handleSelectTheme}
+          onOpenThemeModal={() => setIsThemeModalOpen(true)}
           uiFont={uiFont}
           lang={lang}
           onChangeLang={handleSelectLang}
@@ -2074,6 +2151,29 @@ export default function App() {
             }
             setRefreshTrigger(prev => prev + 1);
           }}
+        />
+        
+        <ThemeStudioModal
+          isOpen={isThemeModalOpen}
+          onClose={() => setIsThemeModalOpen(false)}
+          theme={theme}
+          themeMode={themeMode}
+          onSelectTheme={handleSelectTheme}
+          uiFont={uiFont}
+          lang={lang}
+          customThemes={customThemes}
+          onSaveCustomTheme={handleSaveCustomTheme}
+          onDeleteCustomTheme={handleDeleteCustomTheme}
+          onPreviewTheme={handlePreviewTheme}
+        />
+        
+        <CommandPaletteModal
+          isOpen={commandPaletteOpen}
+          onClose={() => setCommandPaletteOpen(false)}
+          theme={theme}
+          lang={lang}
+          uiFont={uiFont}
+          commands={commandActions}
         />
       </>
     );
@@ -2348,7 +2448,7 @@ export default function App() {
         {!isFocusMode && !isPreviewMode && (
           <div 
             className="relative z-30 w-full flex flex-col items-center select-none shrink-0 border-b"
-            style={{ backgroundColor: theme.bg, borderColor: theme.borderFaint }}
+            style={{ background: theme.bg, borderColor: theme.borderFaint }}
           >
             <div className="max-w-4xl mx-auto w-full px-6 md:px-8 pt-6 md:pt-8 pb-3 transition-all duration-300 flex items-center justify-between gap-4">
               <div className="w-24 hidden md:block shrink-0" />
@@ -2660,7 +2760,7 @@ export default function App() {
           wordCount={wordCount}
           charCount={charCount}
           onSelectTheme={handleSelectTheme}
-          onCustomThemeChange={handleCustomThemeChange}
+          onOpenThemeModal={() => setIsThemeModalOpen(true)}
           onSelectDocFont={handleSelectDocFont}
           onSelectHeadingFont={handleSelectHeadingFont}
           onSelectMonoFont={handleSelectMonoFont}
@@ -2779,7 +2879,7 @@ export default function App() {
               fontFamily: uiFont,
             }}
           >
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border shrink-0" style={{ backgroundColor: theme.bg, borderColor: theme.border }}>
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border shrink-0" style={{ background: theme.bg, borderColor: theme.border }}>
               {isPreviewMode ? <Eye size={13} style={{ color: theme.text, opacity: 0.7 }} /> : <Maximize2 size={13} style={{ color: theme.text, opacity: 0.7 }} />}
               <span>{isFocusMode ? (t.focusMode || 'Focus Mode') : (t.previewMode || 'Preview Mode')}</span>
               {isPreviewMode && (
@@ -2797,7 +2897,7 @@ export default function App() {
                 </button>
               )}
               <span className="opacity-40 ml-1">·</span>
-              <span className="font-mono font-semibold" style={{ color: theme.accent }}>{wordCount.toLocaleString()} {t.words || 'words'}</span>
+              <span className="font-mono font-semibold" style={{ color: theme.textMuted }}>{wordCount.toLocaleString()} {t.words || 'words'}</span>
             </div>
 
             <div className="w-px h-3.5 shrink-0 mx-0.5" style={{ backgroundColor: theme.border }} />
@@ -2859,7 +2959,7 @@ export default function App() {
                 type="button"
                 onClick={() => setZoomPercent(100)}
                 className="ml-0.5 text-[10px] font-semibold px-2 py-0.5 rounded-full transition-all cursor-pointer shrink-0"
-                style={{ backgroundColor: theme.bg, color: theme.text, border: `1px solid ${theme.border}` }}
+                style={{ background: theme.bg, color: theme.text, border: `1px solid ${theme.border}` }}
                 title="Đặt lại 100%"
               >
                 100%
@@ -2961,6 +3061,19 @@ export default function App() {
       )}
 
       {/* Universal Command Palette Modal */}
+      <ThemeStudioModal
+        isOpen={isThemeModalOpen}
+        onClose={() => setIsThemeModalOpen(false)}
+        theme={theme}
+        themeMode={themeMode}
+        onSelectTheme={handleSelectTheme}
+        uiFont={uiFont}
+        lang={lang}
+        customThemes={customThemes}
+        onSaveCustomTheme={handleSaveCustomTheme}
+        onDeleteCustomTheme={handleDeleteCustomTheme}
+        onPreviewTheme={handlePreviewTheme}
+      />
       <CommandPaletteModal
         isOpen={commandPaletteOpen}
         onClose={() => setCommandPaletteOpen(false)}

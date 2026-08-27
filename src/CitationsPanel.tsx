@@ -178,7 +178,7 @@ export default function CitationsPanel({
         </div>
 
         <div className="relative">
-          <Search size={14} className="absolute left-2.5 top-2.5" style={{ color: theme.textFaint }} />
+          <Search size={14} className="absolute left-2.5 top-2.5" style={{ color: theme.textMuted }} />
           <input
             type="text"
             placeholder={t(lang, 'searchLibrary') || 'Search library...'}
@@ -193,7 +193,7 @@ export default function CitationsPanel({
       {/* Sources List */}
       <div className="flex-1 overflow-y-auto p-3 space-y-2.5">
         {filtered.length === 0 ? (
-          <div className="text-center py-12 px-4 space-y-2" style={{ color: theme.textFaint }}>
+          <div className="text-center py-12 px-4 space-y-2" style={{ color: theme.textMuted }}>
             <FileText size={32} className="mx-auto opacity-40" />
             <p className="text-xs font-medium">
               {searchQuery ? (t(lang, 'noSourcesFound') || 'No sources found') : (t(lang, 'emptyLibrary') || 'Empty library. Add a source or import BibTeX.')}
@@ -242,7 +242,7 @@ export default function CitationsPanel({
                     <button
                       onClick={() => handleDelete(s.id)}
                       className="p-1 rounded-md border hover:bg-rose-500/10 hover:text-rose-500 transition-colors cursor-pointer"
-                      style={{ borderColor: theme.border, color: theme.textFaint }}
+                      style={{ borderColor: theme.border, color: theme.textMuted }}
                       title={t(lang, 'delete') || 'Delete'}
                     >
                       <Trash2 size={13} />
@@ -420,7 +420,7 @@ export default function CitationsPanel({
 
                 <div className="relative flex py-2 items-center">
                   <div className="flex-grow border-t" style={{ borderColor: theme.border }}></div>
-                  <span className="flex-shrink mx-4 text-[10px] uppercase font-mono" style={{ color: theme.textFaint }}>{t(lang, 'orPasteBibtex') || 'or paste bibtex'}</span>
+                  <span className="flex-shrink mx-4 text-[10px] uppercase font-mono" style={{ color: theme.textMuted }}>{t(lang, 'orPasteBibtex') || 'or paste bibtex'}</span>
                   <div className="flex-grow border-t" style={{ borderColor: theme.border }}></div>
                 </div>
 

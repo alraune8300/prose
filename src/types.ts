@@ -51,11 +51,20 @@ export interface CustomFont {
 
 export type ThemeMode = 'light' | 'dark' | 'sepia' | 'custom' | string
 
-export interface CustomTheme {
-  bg: string
-  text: string
-  accent: string
+export interface ThemeConfig {
+  id: string;
+  name: string;
+  isCustom?: boolean;
+  isDefaultOverridden?: boolean;
+  bg: string;
+  surface: string;
+  text: string;
+  textMuted: string;
+  accent: string;
+  border: string;
 }
+
+export type CustomTheme = ThemeConfig; // Keep alias for backward compatibility for now
 
 export interface ThemeColors {
   bg: string
