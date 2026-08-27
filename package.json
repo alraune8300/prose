@@ -49,6 +49,7 @@
     "prosemirror-state": "^1.4.4",
     "prosemirror-transform": "^1.12.0",
     "prosemirror-view": "^1.42.2",
+    "puppeteer": "^25.9.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "tippy.js": "^6.3.7",

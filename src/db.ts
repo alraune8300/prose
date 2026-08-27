@@ -16,6 +16,7 @@ export interface AppSettings {
   typewriterMode?: boolean;
   isFocusMode?: boolean;
   isPreviewMode?: boolean;
+  readerStyle?: "classic" | "zen";
   language?: string;
   updatedAt?: string;
 }

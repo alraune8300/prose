@@ -21,6 +21,7 @@ import Toolbar from './Toolbar';
 import WelcomeScreen from './WelcomeScreen';
 import GithubCloudSaveModal from './GithubCloudSaveModal';
 import ReferenceComparePanel from './ReferenceComparePanel';
+import { ZenReader } from "./ZenReader";
 import LinkHoverPreview from './LinkHoverPreview';
 import WordCountDropdown from './WordCountDropdown';
 import type { CitationSource, CitationStyle } from './citationsEngine';
@@ -157,6 +158,7 @@ export default function App() {
 
   const [isFocusMode, setIsFocusMode] = useState(false);
   const [isPreviewMode, setIsPreviewMode] = useState(false);
+  const [readerStyle, setReaderStyle] = useState<"classic" | "zen">("zen");
   const [typewriterMode, setTypewriterMode] = useState(false);
   const [isSplitView, setIsSplitView] = useState(false);
   const [isSplitRevisionOpen, setIsSplitRevisionOpen] = useState(false);
@@ -979,9 +981,11 @@ export default function App() {
       isRightPanelOpen: rightOpen,
       isFocusMode,
       isPreviewMode,
+      readerStyle,
       language: lang,
     });
-  }, [activeProjectId, activePageId, themeMode, docFont, fontSize, formatState.lineH, pageFormat, sidebarOpen, rightOpen, isFocusMode, isPreviewMode, lang, loading]);
+  }, [activeProjectId, activePageId, themeMode, docFont, fontSize, formatState.lineH, pageFormat, sidebarOpen, rightOpen, isFocusMode, isPreviewMode,
+      readerStyle, lang, loading]);
 
   // Load state, projects, and appSettings from IndexedDB / LocalStorage
   useEffect(() => {
@@ -1027,6 +1031,7 @@ export default function App() {
         if (settings.isRightPanelOpen !== undefined) setRightOpen(settings.isRightPanelOpen);
         if (settings.isFocusMode !== undefined) setIsFocusMode(settings.isFocusMode);
         if (settings.isPreviewMode !== undefined) setIsPreviewMode(settings.isPreviewMode);
+        if (settings.readerStyle !== undefined) setReaderStyle(settings.readerStyle);
         if (settings.typewriterMode !== undefined) setTypewriterMode(settings.typewriterMode);
         if (settings.language) {
           setLang(settings.language as Lang);
@@ -1981,12 +1986,21 @@ export default function App() {
     const dy = endY - touchStartY.current;
 
     if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 50) {
-      if (dx > 0) {
-        if (rightOpen) setRightOpen(false);
-        else if (touchStartX.current < 40) setSidebarOpen(true);
+      if (isPreviewMode) {
+        const currentIndex = allPagesInActiveProj.findIndex(p => p.id === activePageId);
+        if (dx > 0 && currentIndex > 0) { 
+          setActivePageId(allPagesInActiveProj[currentIndex - 1].id);
+        } else if (dx < 0 && currentIndex !== -1 && currentIndex < allPagesInActiveProj.length - 1) { 
+          setActivePageId(allPagesInActiveProj[currentIndex + 1].id);
+        }
       } else {
-        if (sidebarOpen) setSidebarOpen(false);
-        else if (window.innerWidth - touchStartX.current < 40) setRightOpen(true);
+        if (dx > 0) {
+          if (rightOpen) setRightOpen(false);
+          else if (touchStartX.current < 40) setSidebarOpen(true);
+        } else {
+          if (sidebarOpen) setSidebarOpen(false);
+          else if (window.innerWidth - touchStartX.current < 40) setRightOpen(true);
+        }
       }
     }
     touchStartX.current = null;
@@ -2759,27 +2773,42 @@ export default function App() {
           <div
             className="flex items-center gap-2 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-full shadow-2xl border backdrop-blur-md"
             style={{
-              backgroundColor: 'rgba(30, 41, 59, 0.92)',
-              borderColor: 'rgba(255, 255, 255, 0.15)',
-              color: '#f8fafc',
+              backgroundColor: theme.surface,
+              borderColor: theme.border,
+              color: theme.text,
               fontFamily: uiFont,
             }}
           >
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-800/90 text-slate-200 text-xs font-medium border border-slate-700/50 shrink-0">
-              {isPreviewMode ? <Eye size={13} className="text-slate-300" /> : <Maximize2 size={13} className="text-slate-300" />}
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border shrink-0" style={{ backgroundColor: theme.bg, borderColor: theme.border }}>
+              {isPreviewMode ? <Eye size={13} style={{ color: theme.text, opacity: 0.7 }} /> : <Maximize2 size={13} style={{ color: theme.text, opacity: 0.7 }} />}
               <span>{isFocusMode ? (t.focusMode || 'Focus Mode') : (t.previewMode || 'Preview Mode')}</span>
-              <span className="opacity-40">·</span>
-              <span className="font-mono text-emerald-400 font-semibold">{wordCount.toLocaleString()} {t.words || 'words'}</span>
+              {isPreviewMode && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const next = readerStyle === 'zen' ? 'classic' : 'zen';
+                    setReaderStyle(next);
+                    saveAppSettings({ readerStyle: next });
+                  }}
+                  className="ml-0.5 px-2 py-0.5 rounded-full transition-colors text-[10px] uppercase font-bold"
+                  style={{ backgroundColor: `${theme.accent}22`, color: theme.accent, border: `1px solid ${theme.accent}44` }}
+                >
+                  {readerStyle === 'zen' ? (t.zenStyle || 'Zen') : (t.classicStyle || 'Classic')}
+                </button>
+              )}
+              <span className="opacity-40 ml-1">·</span>
+              <span className="font-mono font-semibold" style={{ color: theme.accent }}>{wordCount.toLocaleString()} {t.words || 'words'}</span>
             </div>
 
-            <div className="w-px h-3.5 bg-slate-700/60 shrink-0 mx-0.5" />
+            <div className="w-px h-3.5 shrink-0 mx-0.5" style={{ backgroundColor: theme.border }} />
 
-            <ZoomIn size={14} className="text-slate-400 shrink-0" />
+            <ZoomIn size={14} className="shrink-0" style={{ color: theme.text, opacity: 0.5 }} />
             
             <button
               type="button"
               onClick={() => setZoomPercent(prev => Math.max(50, prev - 10))}
-              className="w-6 h-6 flex items-center justify-center rounded-full text-slate-300 hover:bg-slate-700/70 hover:text-white active:scale-95 transition-all cursor-pointer shrink-0"
+              className="w-6 h-6 flex items-center justify-center rounded-full hover:opacity-80 active:scale-95 transition-all cursor-pointer shrink-0"
+              style={{ color: theme.text, opacity: 0.8 }}
               title="Thu nhỏ (-10%)"
               aria-label="Zoom Out"
             >
@@ -2807,16 +2836,18 @@ export default function App() {
                     commitZoomInput();
                   }
                 }}
-                className="w-8 text-center text-xs font-bold text-white bg-transparent outline-none cursor-text"
+                className="w-8 text-center text-xs font-bold bg-transparent outline-none cursor-text"
+                style={{ color: theme.text }}
                 title="Tỉ lệ phóng to/thu nhỏ (50% - 250%)"
               />
-              <span className="text-xs font-semibold text-slate-300 -ml-0.5">%</span>
+              <span className="text-xs font-semibold -ml-0.5" style={{ color: theme.text, opacity: 0.7 }}>%</span>
             </div>
 
             <button
               type="button"
               onClick={() => setZoomPercent(prev => Math.min(250, prev + 10))}
-              className="w-6 h-6 flex items-center justify-center rounded-full text-slate-300 hover:bg-slate-700/70 hover:text-white active:scale-95 transition-all cursor-pointer shrink-0"
+              className="w-6 h-6 flex items-center justify-center rounded-full hover:opacity-80 active:scale-95 transition-all cursor-pointer shrink-0"
+              style={{ color: theme.text, opacity: 0.8 }}
               title="Phóng to (+10%)"
               aria-label="Zoom In"
             >
@@ -2827,30 +2858,30 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => setZoomPercent(100)}
-                className="ml-0.5 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-200 transition-all cursor-pointer shrink-0"
+                className="ml-0.5 text-[10px] font-semibold px-2 py-0.5 rounded-full transition-all cursor-pointer shrink-0"
+                style={{ backgroundColor: theme.bg, color: theme.text, border: `1px solid ${theme.border}` }}
                 title="Đặt lại 100%"
               >
                 100%
               </button>
             )}
 
-            <div className="w-px h-3.5 bg-slate-700/60 shrink-0 mx-0.5" />
+            <div className="w-px h-3.5 shrink-0 mx-0.5" style={{ backgroundColor: theme.border }} />
 
             <button
               type="button"
               onClick={handleExitFocusOrPreview}
-              className="px-2.5 py-1 text-xs font-semibold rounded-full text-red-400 hover:text-red-300 hover:bg-red-500/20 active:scale-95 transition-all cursor-pointer shrink-0 flex items-center gap-1"
+              className="px-2.5 py-1 text-xs font-semibold rounded-full hover:bg-red-500/10 active:scale-95 transition-all cursor-pointer shrink-0 flex items-center gap-1"
+              style={{ color: theme.accent }}
               title={isFocusMode ? (t.exitFocusMode || "Exit Focus Mode") : (t.exitPreviewMode || "Exit Preview")}
               aria-label="Exit Mode"
             >
-              <X size={13} className="text-red-400" />
+              <X size={13} style={{ color: theme.accent }} />
               <span>{(t.exit || 'Exit')}</span>
             </button>
           </div>
         </div>
       )}
-
-
 
       {/* GitHub Cloud Save Modal */}
       <GithubCloudSaveModal
@@ -2915,6 +2946,19 @@ export default function App() {
           }
         }}
       />
+
+      {isPreviewMode && readerStyle === "zen" && activePage && (
+        <ZenReader
+          content={activePage.content || ""}
+          title={activePage.title || ""}
+          theme={theme}
+          docFont={docFont}
+          zoomPercent={zoomPercent}
+          onClose={() => setIsPreviewMode(false)}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+        />
+      )}
 
       {/* Universal Command Palette Modal */}
       <CommandPaletteModal
