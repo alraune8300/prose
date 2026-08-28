@@ -7,6 +7,7 @@ import SpellcheckPanel from './SpellcheckPanel'
 import SearchPanel from './SearchPanel'
 import VersionHistoryPanel from './VersionHistoryPanel'
 import TableCreatePanel from './TableCreatePanel'
+import { DocumentOutlinePanel } from './DocumentOutlinePanel'
 import { Lang, t as i18nT, LANG_LABELS, LANG_FLAGS } from './i18n'
 import { CustomSelect } from './CustomSelect'
 import { Download, Upload, FileText, Printer, Copy, Check, FileCode, FileSpreadsheet, FileDown } from 'lucide-react';
@@ -1866,7 +1867,7 @@ ${content.split('\n\n').map(para => {
             lang={lang}
           />
         )}
-
+        
         {/* SETTINGS PANEL */}
         {panel === 'settings' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 24, paddingBottom: 32 }}>

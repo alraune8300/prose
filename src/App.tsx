@@ -173,8 +173,8 @@ export default function App() {
   const [fontSize, setFontSize] = useState(18);
   const [apiKey, setApiKey] = useState('');
 
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [rightOpen, setRightOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [rightOpen, setRightOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -202,7 +202,7 @@ export default function App() {
     } catch { return []; }
   });
   const [citationStyle, setCitationStyle] = useState<CitationStyle>('apa');
-  const [leftSidebarMainTab, setLeftSidebarMainTab] = useState<'files' | 'footnotes' | 'citations' | 'table' | 'highlights'>('files');
+  const [leftSidebarMainTab, setLeftSidebarMainTab] = useState<'files' | 'footnotes' | 'citations' | 'table' | 'highlights' | 'editorial' | 'codex' | 'outline'>('files');
   const previousLeftSidebarTabRef = useRef<'files' | 'footnotes' | 'citations'>('files');
 
   // Command Palette states
@@ -232,6 +232,11 @@ export default function App() {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
         setCommandPaletteOpen(prev => !prev);
+      }
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'o') {
+        e.preventDefault();
+        setSidebarOpen(true);
+        setLeftSidebarMainTab('outline');
       }
     };
     const handleOpenTable = () => {
@@ -1060,8 +1065,6 @@ export default function App() {
         if (settings.fontSize) { setFontSize(settings.fontSize); LS.set('kgv-font-size', String(settings.fontSize)); }
         if (settings.lineHeight) { setFormatState(prev => ({ ...prev, lineH: settings.lineHeight! })); }
         if (settings.pageFormat) { setPageFormat(settings.pageFormat); }
-        if (settings.isLeftPanelOpen !== undefined) setSidebarOpen(settings.isLeftPanelOpen);
-        if (settings.isRightPanelOpen !== undefined) setRightOpen(settings.isRightPanelOpen);
         if (settings.isFocusMode !== undefined) setIsFocusMode(settings.isFocusMode);
         if (settings.isPreviewMode !== undefined) setIsPreviewMode(settings.isPreviewMode);
         if (settings.readerStyle !== undefined) setReaderStyle(settings.readerStyle);
@@ -2108,6 +2111,8 @@ export default function App() {
           onOpenProject={(projectId, pageId) => {
             handleSelectProject(projectId);
             if (pageId) setActivePageId(pageId);
+            setSidebarOpen(false);
+            setRightOpen(false);
             setIsWorkspaceActive(true);
           }}
           onReloadProjects={async () => {
@@ -2123,6 +2128,8 @@ export default function App() {
               const file = target.files?.[0];
               if (file) {
                 await handleImportFile(file);
+                setSidebarOpen(false);
+                setRightOpen(false);
                 setIsWorkspaceActive(true);
               }
             };
