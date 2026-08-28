@@ -1878,6 +1878,8 @@ ${content.split('\n\n').map(para => {
                 options={Object.entries(LANG_LABELS).map(([k, v]) => ({ value: k, label: `${LANG_FLAGS[k as Lang] || ''} ${v}` }))}
                 theme={c as any}
                 disableSearch={true}
+                fontFamily={uiFont}
+                buttonStyle={{ fontFamily: uiFont }}
               />
             </div>
             <div>

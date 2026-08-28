@@ -700,7 +700,10 @@ function WelcomeScreen({ theme, themeMode, onSelectTheme, onOpenThemeModal, uiFo
                   value={sortBy}
                   onChange={(val) => setSortBy(val as SortOption)}
                   theme={theme}
+                  disableSearch={true}
+                  fontFamily={uiFont}
                   buttonClassName="bg-transparent text-xs outline-none font-medium flex items-center gap-1"
+                  buttonStyle={{ fontFamily: uiFont }}
                   options={[
                     { value: 'updated', label: t(lang, 'sortUpdated') },
                     { value: 'newest', label: t(lang, 'sortNewest') },
