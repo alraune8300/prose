@@ -5,7 +5,7 @@ import {
   List, ListOrdered,
   AlignLeft, AlignCenter, AlignRight,
   Eraser, Plus, Minus,
-  Link2, Bookmark, BookOpen, Quote,
+  Link2, Bookmark, BookOpen, Quote, SeparatorHorizontal,
   Split, X, Copy, FileText, Code, Check
 } from 'lucide-react';
 import type { Editor } from '@tiptap/react';
@@ -264,6 +264,11 @@ function Toolbar({
         icon={<Quote size={14} />} 
         label={lang === 'vi' ? 'Đoạn trích dẫn' : 'Blockquote'} 
         active={editor.isActive('blockquote')} 
+      />
+      <ToolBtn 
+        onClick={() => editor.chain().focus().setHorizontalRule().run()} 
+        icon={<SeparatorHorizontal size={14} />} 
+        label={t.divider || (lang === 'vi' ? 'Đường kẻ ngang phân cách (---)' : 'Horizontal divider (---)')} 
       />
 
       <Divider />

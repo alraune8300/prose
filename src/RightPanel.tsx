@@ -1,13 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect, useRef, useCallback } from 'react'
-import { PRESETS, THEME_CATEGORIES, buildHueTheme } from './theme'
+import { PRESETS, THEME_CATEGORIES } from './theme'
 import { FormatState, CustomFont, PageFormat, Panel } from './types'
 import GoogleFontsPanel from './GoogleFontsPanel'
 import SpellcheckPanel from './SpellcheckPanel'
 import SearchPanel from './SearchPanel'
 import VersionHistoryPanel from './VersionHistoryPanel'
 import TableCreatePanel from './TableCreatePanel'
-import { DocumentOutlinePanel } from './DocumentOutlinePanel'
 import { Lang, t as i18nT, LANG_LABELS, LANG_FLAGS } from './i18n'
 import { CustomSelect } from './CustomSelect'
 import { Download, Upload, FileText, Printer, Copy, Check, FileCode, FileSpreadsheet, FileDown } from 'lucide-react';
@@ -768,7 +767,7 @@ ${content.split('\n\n').map(para => {
                 </div>
                 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: `1px solid ${c.borderFaint}` }}>
-                  <span style={{ fontFamily: uiFont, fontSize: '0.78rem', color: c.text, flex: 1, paddingRight: 12, textAlign: 'left', lineHeight: 1.35 }}>{t(lang, 'smartEllipses') || 'Ellipses'}</span>
+                  <span style={{ fontFamily: uiFont, fontSize: '0.78rem', color: c.text, flex: 1, paddingRight: 12, textAlign: 'left', lineHeight: 1.35 }}>{t(lang, 'smartEllipses') || 'Smart Ellipses (... to …)'}</span>
                   <button onClick={() => onFormatChange({ smartEllipses: !formatState.smartEllipses })}
                     style={{ width: 44, height: 24, borderRadius: 12, background: formatState.smartEllipses ? c.accent : 'transparent', border: `1px solid ${formatState.smartEllipses ? c.accent : c.border}`, cursor: 'pointer', position: 'relative', transition: 'all 0.2s', flexShrink: 0 }}>
                     <div style={{ position: 'absolute', top: 2, left: formatState.smartEllipses ? 22 : 2, width: 18, height: 18, borderRadius: '50%', background: formatState.smartEllipses ? c.surface : c.border, transition: 'left 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -778,7 +777,7 @@ ${content.split('\n\n').map(para => {
                 </div>
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: `1px solid ${c.borderFaint}` }}>
-                  <span style={{ fontFamily: uiFont, fontSize: '0.78rem', color: c.text, flex: 1, paddingRight: 12, textAlign: 'left', lineHeight: 1.35 }}>{t(lang, 'markdownShortcuts') || 'Markdown shortcuts'}</span>
+                  <span style={{ fontFamily: uiFont, fontSize: '0.78rem', color: c.text, flex: 1, paddingRight: 12, textAlign: 'left', lineHeight: 1.35 }}>{t(lang, 'markdownShortcuts') || 'Markdown Shortcuts'}</span>
                   <button onClick={() => onFormatChange({ markdownShortcuts: !formatState.markdownShortcuts })}
                     style={{ width: 44, height: 24, borderRadius: 12, background: formatState.markdownShortcuts ? c.accent : 'transparent', border: `1px solid ${formatState.markdownShortcuts ? c.accent : c.border}`, cursor: 'pointer', position: 'relative', transition: 'all 0.2s', flexShrink: 0 }}>
                     <div style={{ position: 'absolute', top: 2, left: formatState.markdownShortcuts ? 22 : 2, width: 18, height: 18, borderRadius: '50%', background: formatState.markdownShortcuts ? c.surface : c.border, transition: 'left 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -789,7 +788,7 @@ ${content.split('\n\n').map(para => {
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: `1px solid ${c.borderFaint}` }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flex: 1, paddingRight: 12 }}>
-                    <span style={{ fontFamily: uiFont, fontSize: '0.78rem', color: c.text, lineHeight: 1.35 }}>{t(lang, 'doubleSpacePeriod') || 'Double-space inserts period'}</span>
+                    <span style={{ fontFamily: uiFont, fontSize: '0.78rem', color: c.text, lineHeight: 1.35 }}>{t(lang, 'doubleSpacePeriod') || 'Double-Space Inserts Period'}</span>
                     <span style={{ fontFamily: uiFont, fontSize: '0.65rem', color: c.textMuted, lineHeight: 1.3 }}>{t(lang, 'doubleSpacePeriodDesc') || 'Double tap the space bar after text to insert a period. When disabled, Prose follows your device settings.'}</span>
                   </div>
                   <button onClick={() => onFormatChange({ doubleSpacePeriod: !formatState.doubleSpacePeriod })}
@@ -801,7 +800,7 @@ ${content.split('\n\n').map(para => {
                 </div>
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: `1px solid ${c.borderFaint}` }}>
-                  <span style={{ fontFamily: uiFont, fontSize: '0.78rem', color: c.text, flex: 1, paddingRight: 12, textAlign: 'left', lineHeight: 1.35 }}>{t(lang, 'toggleHeadings') || 'Toggle headings'}</span>
+                  <span style={{ fontFamily: uiFont, fontSize: '0.78rem', color: c.text, flex: 1, paddingRight: 12, textAlign: 'left', lineHeight: 1.35 }}>{t(lang, 'toggleHeadings') || 'Toggle Headings (Collapsible)'}</span>
                   <button onClick={() => onFormatChange({ toggleHeadings: !formatState.toggleHeadings })}
                     style={{ width: 44, height: 24, borderRadius: 12, background: formatState.toggleHeadings ? c.accent : 'transparent', border: `1px solid ${formatState.toggleHeadings ? c.accent : c.border}`, cursor: 'pointer', position: 'relative', transition: 'all 0.2s', flexShrink: 0 }}>
                     <div style={{ position: 'absolute', top: 2, left: formatState.toggleHeadings ? 22 : 2, width: 18, height: 18, borderRadius: '50%', background: formatState.toggleHeadings ? c.surface : c.border, transition: 'left 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -818,11 +817,11 @@ ${content.split('\n\n').map(para => {
                     </label>
                     <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer' }}>
                       <input type="radio" name="dashesMode" value="em" checked={formatState.dashesMode === 'em'} onChange={() => onFormatChange({ dashesMode: 'em' })} style={{ accentColor: c.accent, marginTop: 2 }} />
-                      <span style={{ fontFamily: uiFont, fontSize: '0.78rem', color: c.text, lineHeight: 1.35 }}>{t(lang, 'emDashOption') || '[ - - ] for em dash'}</span>
+                      <span style={{ fontFamily: uiFont, fontSize: '0.78rem', color: c.text, lineHeight: 1.35 }}>{t(lang, 'emDashOption') || '[ - - ] for Em Dash (—)'}</span>
                     </label>
                     <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer' }}>
                       <input type="radio" name="dashesMode" value="en-em" checked={formatState.dashesMode === 'en-em'} onChange={() => onFormatChange({ dashesMode: 'en-em' })} style={{ accentColor: c.accent, marginTop: 2 }} />
-                      <span style={{ fontFamily: uiFont, fontSize: '0.78rem', color: c.text, lineHeight: 1.35 }}>{t(lang, 'enEmDashOption') || '[ - - ] for en dash, [ - - - ] for em dash'}</span>
+                      <span style={{ fontFamily: uiFont, fontSize: '0.78rem', color: c.text, lineHeight: 1.35 }}>{t(lang, 'enEmDashOption') || '[ - - ] for En Dash (–), [ - - - ] for Em Dash (—)'}</span>
                     </label>
                   </div>
                 </Accordion>
