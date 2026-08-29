@@ -2457,42 +2457,6 @@ export default function App() {
           </>
         )}
 
-        {/* Document Title Header (Editable in standard mode, stylized book header in Preview mode) */}
-        {!isFocusMode && !isPreviewMode && (
-          <div 
-            className="relative z-30 w-full flex flex-col items-center select-none shrink-0 border-b"
-            style={{ background: theme.bg, borderColor: theme.borderFaint }}
-          >
-            <div className="max-w-4xl mx-auto w-full px-6 md:px-8 pt-6 md:pt-8 pb-3 transition-all duration-300 flex items-center justify-between gap-4">
-              <div className="w-24 hidden md:block shrink-0" />
-              <input
-                value={activePage?.title || ''}
-                onChange={(e) => {
-                  updateActivePage({ title: e.target.value });
-                  if (activeProjectId) {
-                    handleRenameProject(activeProjectId, e.target.value);
-                  }
-                }}
-                placeholder={t.titlePlaceholder}
-                className="flex-1 bg-transparent outline-none border-none text-2xl md:text-3xl font-normal min-w-0 text-center"
-                style={{ fontFamily: `'${docFont}', Georgia, serif`, color: theme.text }}
-              />
-              {activePage?.isDraft && activePage?.originalPageId && (
-                <div className="flex items-center gap-2 shrink-0">
-                  <button
-                    onClick={handleCommitDraft}
-                    className="px-3 py-1.5 rounded-md text-sm font-medium transition-colors"
-                    style={{ backgroundColor: theme.isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)', color: theme.text, border: `1px solid ${theme.border}` }}
-                    title="Update original document with these changes"
-                  >
-                    Commit to Original
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
         {!isFocusMode && !isPreviewMode && editorInstance && (
           <Toolbar
             editor={(activeBlockEditor || editorInstance) as TiptapEditorType}
@@ -2670,31 +2634,7 @@ export default function App() {
                                   }
                           }
                         >
-                          {isPreviewOrFocus && (
-                            <div className="text-center mb-6 pt-2">
-                              <h1
-                                className="text-2xl sm:text-3xl font-serif font-semibold tracking-tight"
-                                style={{ fontFamily: `'${docFont}', Georgia, serif`, color: theme.text }}
-                              >
-                                {activePage?.title || 'Untitled Document'}
-                              </h1>
-                              <div className="w-12 h-0.5 mx-auto mt-3 rounded opacity-30" style={{ backgroundColor: theme.text }} />
-                            </div>
-                          )}
 
-                          {!isPreviewOrFocus && !isPageless && (
-                            <div
-                              className="absolute left-0 w-full text-center flex items-center justify-center text-[10px] uppercase tracking-wider opacity-40 font-semibold pointer-events-none select-none"
-                              style={{
-                                top: '48px',
-                                height: '36px',
-                                color: theme.textMuted,
-                                fontFamily: uiFont,
-                              }}
-                            >
-                              {activePage?.title || 'Untitled Document'}
-                            </div>
-                          )}
 
                           <div className={!isPreviewOrFocus && !isPageless ? "w-full h-full relative" : "w-full relative"} style={!isPreviewOrFocus && !isPageless ? { color: theme.text } : {}}>
                             <Editor

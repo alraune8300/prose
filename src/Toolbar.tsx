@@ -331,8 +331,9 @@ function Toolbar({
               onChange={(size) => {
                 if (editor && !editor.isDestroyed && !editor.state.selection.empty) {
                   (editor as any).chain().focus().setFontSize(size).run();
+                } else {
+                  onSizeChange?.(size);
                 }
-                onSizeChange?.(size);
               }}
               theme={theme}
               uiFont={uiFont}
