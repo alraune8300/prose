@@ -1,12 +1,16 @@
 {
+  "id": "/",
   "name": "Không gian viết",
   "short_name": "Viết",
-  "description": "Không gian viết tối giản, tập trung vào trang giấy và con chữ.",
+  "description": "Không gian viết tối giản, thanh lịch, tập trung vào trang giấy và con chữ.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#FFFFFF",
-  "theme_color": "#1C1B19",
+  "background_color": "#FBFAF7",
+  "theme_color": "#FBFAF7",
   "orientation": "portrait-primary",
+  "dir": "ltr",
+  "lang": "vi-VN",
+  "categories": ["productivity", "utilities", "lifestyle", "education"],
   "icons": [
     {
       "src": "/icon-192.png",
@@ -20,5 +24,6 @@
       "type": "image/png",
       "purpose": "any maskable"
     }
-  ]
+  ],
+  "prefer_related_applications": false
 }
