@@ -48,6 +48,7 @@ type Props = {
   content: string;
   onContentChange: (html: string) => void;
   isFocusMode?: boolean;
+  lang?: string;
   codexEntities?: any[];
   editorialHighlight?: any;
   creativeOptions?: { rhythmEnabled: boolean, dialogueEnabled: boolean, lang: string };
@@ -58,7 +59,7 @@ type Props = {
 };
 
 function Editor({
-  theme, docFont, headingFont, monoFont, fontSize, formatState, onEditorReady, t, content, onContentChange,
+  lang, theme, docFont, headingFont, monoFont, fontSize, formatState, onEditorReady, t, content, onContentChange,
   isFocusMode = false,
   isPreviewMode = false,
   typewriterMode = false,
@@ -258,6 +259,21 @@ function Editor({
       },
       handleClick: (view, pos, event) => {
         const target = event.target as HTMLElement;
+        if (target && target.tagName === 'HR') {
+          try {
+            const nodePos = view.posAtDOM(target, 0);
+            const tr = view.state.tr.setSelection(NodeSelection.create(view.state.doc, nodePos));
+            view.dispatch(tr);
+            return true;
+          } catch (e) {
+            // fallback
+            try {
+              const tr = view.state.tr.setSelection(NodeSelection.create(view.state.doc, pos));
+              view.dispatch(tr);
+              return true;
+            } catch (err) {}
+          }
+        }
         
         const mark = target.closest('mark[data-hl-id]');
         if (mark) {
@@ -299,8 +315,9 @@ function Editor({
       },
       attributes: {
         class: 'kgv-editor kgv-caret text-left direction-ltr pointer-events-auto user-select-text',
-        style: `color: ${theme.text}; caret-color: ${theme.text}; line-height: 1.7;`,
+        style: `color: ${theme.text}; caret-color: ${theme.text}; line-height: 1.7; --kgv-fold-badge-bg: ${theme.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'}; --kgv-fold-badge-hover: ${theme.isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)'}; --kgv-fold-badge-color: ${theme.textMuted}; --kgv-fold-badge-border: ${theme.border};`,
         'data-placeholder': t.startWriting,
+        'data-lang': lang || 'vi',
         dir: 'ltr',
         autocorrect: 'off',
         autocapitalize: 'off',

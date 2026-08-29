@@ -527,3 +527,7 @@ ol.kgv-editor {
   border-radius: 4px;
   background-color: rgba(245, 158, 11, 0.15);
 }
+
+.kgv-fold-badge:hover {
+  background-color: var(--kgv-fold-badge-hover) !important;
+}

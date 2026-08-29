@@ -512,7 +512,10 @@ const renderFolder = (folder: Folder, depth = 0) => {
             <button
               key={tab.key}
               title={tab.label}
-              onClick={() => (props.onLeftSidebarMainTabChange as (k: string) => void)?.(tab.key)}
+              onClick={() => {
+                if (active) props.onCloseSidebar?.();
+                else (props.onLeftSidebarMainTabChange as (k: string) => void)?.(tab.key);
+              }}
               style={{
                 width: 36, height: 36,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',

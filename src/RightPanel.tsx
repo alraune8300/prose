@@ -535,7 +535,10 @@ ${content.split('\n\n').map(para => {
                 <button
                   key={tab.key}
                   title={tab.label}
-                  onClick={() => onSectionChange(tab.key)}
+                  onClick={() => {
+                    if (active) onClose();
+                    else onSectionChange(tab.key);
+                  }}
                   style={{
                     width: 40, height: 40,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -1622,11 +1625,12 @@ ${content.split('\n\n').map(para => {
                     value={value}
                     onChange={(v) => onFontAssign(role, v)}
                     theme={c}
+                    fontFamily={uiFont}
                     options={availableFontNames.concat(customFonts.map(f => f.name || f.family)).map(n => ({ value: n, label: n }))}
                     buttonStyle={{
                       width: '100%', padding: '5px 8px', borderRadius: 6,
                       border: `1px solid ${c.border}`,
-                      background: c.surface, fontFamily: `'${value}', serif`,
+                      background: c.surface, fontFamily: uiFont,
                       fontSize: '0.8rem', color: c.text, cursor: 'pointer', outline: 'none',
                       display: 'flex', justifyContent: 'space-between', alignItems: 'center'
                     }}

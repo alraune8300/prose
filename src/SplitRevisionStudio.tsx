@@ -42,11 +42,14 @@ export default function SplitRevisionStudio({
   const [liveText, setLiveText] = useState<string>('');
   const [debouncedLiveText, setDebouncedLiveText] = useState<string>('');
   const [syncScroll, setSyncScroll] = useState<boolean>(true);
+  const [diffParts, setDiffParts] = useState<import("diff").Change[]>([]);
+  const [isDiffing, setIsDiffing] = useState(false);
 
   // Scroll synchronization refs
   const leftColRef = useRef<HTMLDivElement>(null);
   const rightColRef = useRef<HTMLDivElement>(null);
   const isSyncingScroll = useRef<boolean>(false);
+  const initialLiveTextRef = useRef<string>("");
 
   const getCleanContent = useCallback((html: string, mode: DiffMode) => {
     if (!html) return '';
@@ -81,6 +84,7 @@ export default function SplitRevisionStudio({
       const current = getCleanContent(activePage.content, diffMode);
       setLiveText(current);
       setDebouncedLiveText(current);
+      initialLiveTextRef.current = current;
     }
   }, [activePage, diffMode, getCleanContent]);
 
@@ -129,12 +133,26 @@ export default function SplitRevisionStudio({
     setTimeout(() => { isSyncingScroll.current = false; }, 50);
   };
 
-  // Compute Diff using 'diff' package
+  // Compute Diff using 'diff' package asynchronously to prevent UI freeze
   const snapshotContent = selectedSnapshot ? selectedSnapshot.content : '';
-  const diffParts = Diff.diffWordsWithSpace(snapshotContent, debouncedLiveText);
+  useEffect(() => {
+    setIsDiffing(true);
+    const timer = setTimeout(() => {
+      const parts = Diff.diffWordsWithSpace(snapshotContent, debouncedLiveText);
+      setDiffParts(parts);
+      setIsDiffing(false);
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [snapshotContent, debouncedLiveText]);
 
   // Global actions
   const handleAcceptAll = () => {
+    // If no changes were made to the live text, just close to preserve rich HTML formatting
+    if (debouncedLiveText === initialLiveTextRef.current) {
+      onClose();
+      return;
+    }
+
     let finalHtml = '';
     if (diffMode === 'markdown') {
       finalHtml = parseMarkdownToHtml(debouncedLiveText);
@@ -240,15 +258,16 @@ export default function SplitRevisionStudio({
     });
   };
 
-  if (!isOpen) return null;
-
   return (
     <div 
-      className="fixed inset-0 z-50 flex flex-col backdrop-blur-md animate-fade-in"
+      className="fixed inset-0 z-[100] flex flex-col backdrop-blur-md transition-all duration-300 ease-in-out"
       style={{ 
         backgroundColor: 'rgba(0, 0, 0, 0.8)',
         fontFamily: `'${uiFont}', sans-serif`,
-        color: theme.text 
+        color: theme.text,
+        opacity: isOpen ? 1 : 0,
+        pointerEvents: isOpen ? 'auto' : 'none',
+        visibility: isOpen ? 'visible' : 'hidden'
       }}
     >
       {/* Studio Header */}

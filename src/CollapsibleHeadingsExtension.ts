@@ -47,17 +47,7 @@ export function unfoldAllHeadingsInDoc(editorView: EditorView) {
 export function toggleHeadingFold(editorView: EditorView, pos: number, textContent: string) {
   if (!editorView || !editorView.state) return;
   const key = `${pos}-${textContent.slice(0, 30)}`;
-
-  const scrollContainer = document.querySelector('.kgv-scroll');
-  let prevScroll = 0;
-  let headingY = 0;
-  if (scrollContainer) {
-    prevScroll = scrollContainer.scrollTop;
-    try {
-      headingY = editorView.coordsAtPos(pos).top;
-    } catch (e) {}
-  }
-
+  
   if (collapsedSet.has(key)) {
     collapsedSet.delete(key);
   } else {
@@ -65,22 +55,6 @@ export function toggleHeadingFold(editorView: EditorView, pos: number, textConte
   }
   
   editorView.dispatch(editorView.state.tr.setMeta(collapsiblePluginKey, { updated: true }));
-
-  if (scrollContainer) {
-    requestAnimationFrame(() => {
-      try {
-        if (headingY > 0) {
-           const newHeadingY = editorView.coordsAtPos(pos).top;
-           const diff = newHeadingY - headingY;
-           scrollContainer.scrollTop += diff;
-        } else {
-           scrollContainer.scrollTop = prevScroll;
-        }
-      } catch (e) {
-        scrollContainer.scrollTop = prevScroll;
-      }
-    });
-  }
 }
 
 export const CollapsibleHeadingsExtension = Extension.create({
@@ -158,9 +132,16 @@ export const CollapsibleHeadingsExtension = Extension.create({
 
                 // Add word count badge widget at end of heading
                 const badgeWidget = document.createElement('span');
-                badgeWidget.className = 'kgv-fold-badge select-none ml-2 px-2 py-0.5 rounded-full text-[11px] font-mono font-medium tracking-wide bg-amber-500/15 text-amber-500 border border-amber-500/30 inline-flex items-center gap-1 cursor-pointer hover:bg-amber-500/25 transition-all';
-                badgeWidget.title = 'Nhấp để mở rộng khối nội dung này';
-                badgeWidget.innerHTML = `<span>[... ${hiddenWordCount.toLocaleString()} từ]</span>`;
+                const editorEl = document.querySelector('.kgv-editor');
+                const lang = editorEl?.getAttribute('data-lang') || 'vi';
+                const wordCountText = lang === 'vi' ? 'từ' : (lang === 'fr' ? 'mots' : (lang === 'de' ? 'Wörter' : (lang === 'es' ? 'palabras' : (lang === 'it' ? 'parole' : (lang === 'ko' ? '단어' : (lang === 'zh' ? '字' : (lang === 'ja' ? '文字' : 'words')))))));
+                
+                badgeWidget.className = 'kgv-fold-badge select-none ml-2 px-2 py-0.5 rounded-full text-[11px] font-mono font-medium tracking-wide inline-flex items-center gap-1 cursor-pointer transition-all';
+                badgeWidget.style.backgroundColor = 'var(--kgv-fold-badge-bg)';
+                badgeWidget.style.color = 'var(--kgv-fold-badge-color)';
+                badgeWidget.style.border = '1px solid var(--kgv-fold-badge-border)';
+                badgeWidget.title = lang === 'vi' ? 'Nhấp để mở rộng khối nội dung này' : 'Click to expand this block';
+                badgeWidget.innerHTML = `<span>[... ${hiddenWordCount.toLocaleString()} ${wordCountText}]</span>`;
 
                 badgeWidget.addEventListener('click', (e) => {
                   e.preventDefault();

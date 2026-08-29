@@ -2321,17 +2321,7 @@ export default function App() {
               >
                 <FileText size={15} />
               </button>
-              <button
-                onClick={() => { setViewMode('block'); setBlockViewOpen(true); setIsFocusMode(false); setIsPreviewMode(false); }}
-                className="p-2 rounded-lg transition-all flex items-center justify-center"
-                style={{
-                  backgroundColor: viewMode === 'block' || blockViewOpen ? (theme.isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)') : 'transparent',
-                  color: viewMode === 'block' || blockViewOpen ? theme.text : theme.textMuted
-                }}
-                title={t.blockView || 'Block View'}
-              >
-                <LayoutList size={15} />
-              </button>
+
               <button
                 onClick={() => { setViewMode('flashcard'); setBlockViewOpen(false); setIsFocusMode(false); setIsPreviewMode(false); }}
                 className="p-2 rounded-lg transition-all flex items-center justify-center"
@@ -2355,7 +2345,7 @@ export default function App() {
                 <Terminal size={15} />
               </button>
             </div>
-            <div className="absolute top-4 right-16 z-50 flex items-center gap-2 pr-2">
+            <div className={`absolute top-4 z-50 flex items-center gap-2 pr-2 transition-all duration-300 ${isSplitView ? "right-16 md:right-[544px] lg:right-[604px] xl:right-[644px]" : "right-16"}`}>
               <WordCountDropdown
                 wordCount={wordCount}
                 charCount={charCount}
@@ -2441,10 +2431,9 @@ export default function App() {
 
             <button
               onClick={() => {
-                if (rightOpen && rightPanelTab === 'settings') setRightOpen(false);
-                else { setRightPanelTab('settings'); setRightOpen(true); }
+                setRightOpen(prev => !prev);
               }}
-              className="absolute top-4 right-4 z-50 p-2 rounded-lg transition-all hover:opacity-80 active:scale-95 shadow-sm"
+              className={`absolute top-4 z-50 p-2 rounded-lg transition-all hover:opacity-80 active:scale-95 shadow-sm duration-300 ${isSplitView ? "right-4 md:right-[496px] lg:right-[556px] xl:right-[596px]" : "right-4"}`}
               style={{
                 backgroundColor: rightOpen ? theme.accentLight : theme.surface,
                 color: rightOpen ? theme.accent : theme.text,
@@ -2519,6 +2508,7 @@ export default function App() {
             <div className="flex-1 h-full overflow-y-auto kgv-scroll flex flex-col items-center p-4 md:p-6 border-r" style={{ borderColor: theme.borderFaint }}>
               <div className="w-full max-w-3xl">
                 <Editor
+                  lang={lang}
           creativeOptions={creativeOptions}
           codexEntities={codexEntities}
           editorialHighlight={editorialHighlight}
@@ -2638,6 +2628,7 @@ export default function App() {
 
                           <div className={!isPreviewOrFocus && !isPageless ? "w-full h-full relative" : "w-full relative"} style={!isPreviewOrFocus && !isPageless ? { color: theme.text } : {}}>
                             <Editor
+                  lang={lang}
                               key={activePage?.id || 'empty'}
                               theme={theme}
                               docFont={docFont}
