@@ -92,7 +92,7 @@ export async function encryptData(plainText: string, secretCode: string): Promis
     v: 1,
     salt: bufferToBase64(salt),
     iv: bufferToBase64(iv),
-    data: bufferToBase64(new Uint8Array(encrypted)),
+    data: bufferToBase64(new Uint8Array(encrypted) as unknown as BufferSource),
     updatedAt: new Date().toISOString(),
   };
 

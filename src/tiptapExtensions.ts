@@ -266,13 +266,13 @@ import { ResizableImageComponent } from './ResizableImageComponent';
 export const ResizableImage = Image.extend({
   addOptions() {
     return {
-      ...this.parent?.(),
+      ...(this.parent?.() as any),
       allowBase64: true,
     }
   },
   addAttributes() {
     return {
-      ...this.parent?.(),
+      ...(this.parent?.() as any),
       width: {
         default: null,
         parseHTML: element => element.getAttribute('width'),

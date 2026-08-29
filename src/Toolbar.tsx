@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { createPortal } from 'react-dom';
 import React, { useState, useEffect, useRef } from 'react';
 import {
@@ -6,7 +7,7 @@ import {
   AlignLeft, AlignCenter, AlignRight,
   Eraser, Plus, Minus,
   Link2, Bookmark, BookOpen, Quote, SeparatorHorizontal,
-  Split, X, Copy, FileText, Code, Check
+  Split, X, Copy, FileText, Code, Check, ChevronDown
 } from 'lucide-react';
 import type { Editor } from '@tiptap/react';
 import type { ThemeColors } from './types';
@@ -14,6 +15,145 @@ import type { Dict } from './i18n';
 import { CustomSelect } from './CustomSelect';
 import GoogleFontsPanel from './GoogleFontsPanel';
 import { injectGoogleFont } from './googleFontsApi';
+
+const FONT_SIZES = [9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 22, 24, 26, 28, 32, 36, 40, 48, 56, 64, 72];
+
+function FontSizeSelector({
+  currentSize,
+  onChange,
+  theme,
+  uiFont,
+  label
+}: {
+  currentSize: number;
+  onChange: (size: number) => void;
+  theme: ThemeColors;
+  uiFont: string;
+  label: string;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [inputValue, setInputValue] = useState(String(currentSize));
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setInputValue(String(currentSize));
+  }, [currentSize]);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [isOpen]);
+
+  const commitInput = () => {
+    const num = parseInt(inputValue, 10);
+    if (!isNaN(num) && num >= 8 && num <= 144) {
+      onChange(num);
+    } else {
+      setInputValue(String(currentSize));
+    }
+  };
+
+  return (
+    <div ref={containerRef} className="relative flex items-center gap-0.5 shrink-0 select-none">
+      {/* Decrease size */}
+      <button
+        type="button"
+        onMouseDown={e => e.preventDefault()}
+        onClick={() => onChange(Math.max(8, currentSize - 1))}
+        className="w-5 h-5 flex items-center justify-center rounded-lg hover:bg-black/5 dark:hover:bg-white/10 active:scale-95 transition-all cursor-pointer shrink-0"
+        title={`${label} (-1)`}
+        aria-label="Decrease font size"
+      >
+        <Minus size={11} style={{ color: theme.text }} />
+      </button>
+
+      {/* Editable input + dropdown trigger */}
+      <div
+        className="flex items-center rounded-lg px-1 py-0.5 hover:bg-black/5 dark:hover:bg-white/10 transition-colors cursor-pointer"
+        style={{ color: theme.text }}
+      >
+        <input
+          type="text"
+          inputMode="numeric"
+          pattern="[0-9]*"
+          value={inputValue}
+          onChange={e => setInputValue(e.target.value)}
+          onBlur={commitInput}
+          onKeyDown={e => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              commitInput();
+              (e.target as HTMLInputElement).blur();
+            }
+          }}
+          className="w-6 text-center text-xs font-semibold bg-transparent outline-none cursor-text p-0"
+          style={{ color: theme.text, fontFamily: `'${uiFont}', sans-serif` }}
+          title={label}
+        />
+        <button
+          type="button"
+          onMouseDown={e => e.preventDefault()}
+          onClick={() => setIsOpen(prev => !prev)}
+          className="p-0.5 opacity-60 hover:opacity-100 transition-opacity cursor-pointer"
+          title={label}
+        >
+          <ChevronDown size={10} style={{ color: theme.text }} />
+        </button>
+      </div>
+
+      {/* Increase size */}
+      <button
+        type="button"
+        onMouseDown={e => e.preventDefault()}
+        onClick={() => onChange(Math.min(144, currentSize + 1))}
+        className="w-5 h-5 flex items-center justify-center rounded-lg hover:bg-black/5 dark:hover:bg-white/10 active:scale-95 transition-all cursor-pointer shrink-0"
+        title={`${label} (+1)`}
+        aria-label="Increase font size"
+      >
+        <Plus size={11} style={{ color: theme.text }} />
+      </button>
+
+      {/* Dropdown Menu */}
+      {isOpen && (
+        <div
+          className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 z-50 p-1 rounded-xl shadow-2xl border backdrop-blur-md max-h-48 overflow-y-auto w-20 flex flex-col gap-0.5 animate-in fade-in zoom-in-95"
+          style={{
+            backgroundColor: theme.surface ? `${theme.surface}fa` : (theme.isDark ? '#1e1e24' : '#ffffff'),
+            borderColor: theme.border,
+            boxShadow: theme.isDark ? '0 16px 36px rgba(0,0,0,0.6)' : '0 12px 32px rgba(0,0,0,0.15)',
+          }}
+        >
+          {FONT_SIZES.map(sz => (
+            <button
+              key={sz}
+              type="button"
+              onMouseDown={e => e.preventDefault()}
+              onClick={() => {
+                onChange(sz);
+                setIsOpen(false);
+              }}
+              className="px-2 py-1 rounded-lg text-xs font-semibold text-center transition-colors hover:bg-black/5 dark:hover:bg-white/10 cursor-pointer"
+              style={{
+                backgroundColor: currentSize === sz ? (theme.isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)') : 'transparent',
+                color: currentSize === sz ? theme.accent : theme.text,
+                fontFamily: `'${uiFont}', sans-serif`
+              }}
+            >
+              {sz}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 type Props = {
   editor: Editor;
@@ -25,6 +165,7 @@ type Props = {
   selectedSize: number;
   availableFonts: { family: string; label: string }[];
   onFontChange: (family: string) => void;
+  onSizeChange?: (size: number) => void;
   onFontAssign?: (role: 'body' | 'heading' | 'mono' | 'ui', fontName: string) => void;
   onUndo: () => void;
   onRedo: () => void;
@@ -48,7 +189,7 @@ type Props = {
 function Toolbar({
   editor, theme, uiFont, t, lang,
   selectedFont, selectedSize, availableFonts,
-  onFontChange, onFontAssign,
+  onFontChange, onSizeChange, onFontAssign,
   onUndo, onRedo, canUndo, canRedo,
   zoomPercent, zoomInput,
   onZoomIn, onZoomOut,
@@ -159,25 +300,45 @@ function Toolbar({
         if (monoFonts.length > 0) groups.push({ label: 'MONOSPACE', options: monoFonts.map(f => ({ value: f.family, label: f.label, fontFamily: `'${f.family}', monospace` })) });
 
         return (
-          <CustomSelect
-            value={currentFont}
-            onOpen={() => setSavedSelection(editor?.state.selection)}
-            onChange={(fam) => { if(savedSelection && editor) { editor.commands.setTextSelection(savedSelection); } onFontChange(fam); }}
-            groups={groups}
-            theme={theme}
-            buttonClassName="text-xs py-1 px-2 rounded-lg outline-none cursor-pointer hover:bg-black/5 dark:hover:bg-white/10 max-w-[110px] shrink-0 bg-transparent border-none transition-colors truncate"
-            buttonStyle={{ color: theme.text }}
-            dropdownClassName="w-56 bottom-full mb-2 !mt-0"
-            footerNode={
-              <button
-                onClick={() => { setSavedSelection(editor?.state.selection); setShowGoogleFonts(true); }}
-                className="w-full text-left px-4 py-2 text-xs font-semibold hover:opacity-80 transition-opacity"
-                style={{ color: theme.accent }}
-              >
-                {t.browseGoogleFonts || 'Browse Google Fonts...'}
-              </button>
-            }
-          />
+          <>
+            <CustomSelect
+              value={currentFont}
+              onOpen={() => setSavedSelection(editor?.state.selection)}
+              onChange={(fam) => { if(savedSelection && editor) { editor.commands.setTextSelection(savedSelection); } onFontChange(fam); }}
+              groups={groups}
+              theme={theme}
+              buttonClassName="text-xs py-1 px-2 rounded-lg outline-none cursor-pointer hover:bg-black/5 dark:hover:bg-white/10 max-w-[110px] shrink-0 bg-transparent border-none transition-colors truncate"
+              buttonStyle={{ color: theme.text }}
+              dropdownClassName="w-56 bottom-full mb-2 !mt-0"
+              footerNode={
+                <button
+                  onClick={() => { setSavedSelection(editor?.state.selection); setShowGoogleFonts(true); }}
+                  className="w-full text-left px-4 py-2 text-xs font-semibold hover:opacity-80 transition-opacity"
+                  style={{ color: theme.accent }}
+                >
+                  {t.browseGoogleFonts || 'Browse Google Fonts...'}
+                </button>
+              }
+            />
+
+            <Divider />
+
+            <FontSizeSelector
+              currentSize={(() => {
+                const activeSize = editor ? editor.getAttributes('textStyle').fontSize : null;
+                return activeSize ? Number(activeSize) : (selectedSize || 18);
+              })()}
+              onChange={(size) => {
+                if (editor && !editor.isDestroyed && !editor.state.selection.empty) {
+                  (editor as any).chain().focus().setFontSize(size).run();
+                }
+                onSizeChange?.(size);
+              }}
+              theme={theme}
+              uiFont={uiFont}
+              label={t.fontSize || (lang === 'vi' ? 'Cỡ chữ' : 'Font size')}
+            />
+          </>
         );
       })()}
 

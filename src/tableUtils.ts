@@ -53,13 +53,13 @@ export function getActiveTableInfo(editor: Editor | null): TableInfo | null {
     let currentPos = tablePos + 1;
     let rowIdx = 0;
 
-    tableNode.forEach((rowNode: ProseMirrorNode) => {
+    (tableNode as any).forEach((rowNode: ProseMirrorNode) => {
       if (rowNode.type.name === 'tableRow') {
         rowIdx++;
         let colIdx = 0;
         let allCellsHeader = true;
 
-        rowNode.forEach((cellNode: ProseMirrorNode) => {
+        (rowNode as any).forEach((cellNode: ProseMirrorNode) => {
           if (cellNode.type.name === 'tableCell' || cellNode.type.name === 'tableHeader') {
             colIdx++;
             if (cellNode.type.name !== 'tableHeader') {
@@ -209,7 +209,7 @@ export function setTableRowColor(editor: Editor, color: string) {
     if (rowPos !== null && rowNode) {
       const tr = state.tr;
       let cur = rowPos + 1;
-      rowNode.forEach((cellNode) => {
+      (rowNode as any).forEach((cellNode) => {
         tr.setNodeMarkup(cur, undefined, {
           ...cellNode.attrs,
           backgroundColor: color || null,
@@ -252,9 +252,9 @@ export function setTableColumnColor(editor: Editor, color: string) {
     const tr = state.tr;
     let cur = tablePos + 1;
 
-    tableNode.forEach((rowNode) => {
+    (tableNode as any).forEach((rowNode) => {
       let colIdx = 0;
-      rowNode.forEach((cellNode) => {
+      (rowNode as any).forEach((cellNode) => {
         colIdx++;
         if (colIdx === targetCol) {
           tr.setNodeMarkup(cur, undefined, {
@@ -299,9 +299,9 @@ export function clearTableContents(editor: Editor) {
     const tr = state.tr;
 
     const newRows: ProseMirrorNode[] = [];
-    tableNode.forEach((rowNode: ProseMirrorNode) => {
+    (tableNode as any).forEach((rowNode: ProseMirrorNode) => {
       const newCells: ProseMirrorNode[] = [];
-      rowNode.forEach((cellNode: ProseMirrorNode) => {
+      (rowNode as any).forEach((cellNode: ProseMirrorNode) => {
         newCells.push(cellNode.type.create(cellNode.attrs, defaultParagraph));
       });
       newRows.push(rowNode.type.create(rowNode.attrs, newCells));
@@ -338,8 +338,8 @@ export function distributeColumnsEvenly(editor: Editor) {
 
     const tr = state.tr;
     let currentPos = tablePos + 1;
-    tableNode.forEach((rowNode: ProseMirrorNode) => {
-      rowNode.forEach((cellNode: ProseMirrorNode) => {
+    (tableNode as any).forEach((rowNode: ProseMirrorNode) => {
+      (rowNode as any).forEach((cellNode: ProseMirrorNode) => {
         if (cellNode.attrs?.colwidth) {
           tr.setNodeMarkup(currentPos, undefined, {
             ...cellNode.attrs,
@@ -482,10 +482,10 @@ export function insertParsedTable(editor: Editor, matrix: string[][]): boolean {
 
           const newRows: ProseMirrorNode[] = [];
           let rIdx = 0;
-          tableNode.forEach((rowNode: ProseMirrorNode) => {
+          (tableNode as any).forEach((rowNode: ProseMirrorNode) => {
             const newCells: ProseMirrorNode[] = [];
             let cIdx = 0;
-            rowNode.forEach((cellNode: ProseMirrorNode) => {
+            (rowNode as any).forEach((cellNode: ProseMirrorNode) => {
               const pasteR = rIdx - startR;
               const pasteC = cIdx - startC;
               if (pasteR >= 0 && pasteR < matrix.length && pasteC >= 0 && pasteC < matrix[pasteR].length) {
@@ -568,9 +568,9 @@ export function convertTableToList(editor: Editor): boolean {
     const listItems: ProseMirrorNode[] = [];
     let headers: string[] = [];
 
-    tableNode.forEach((rowNode: ProseMirrorNode, _offset, rIdx) => {
+    (tableNode as any).forEach((rowNode: ProseMirrorNode, _offset, rIdx) => {
       const cellTexts: string[] = [];
-      rowNode.forEach((cellNode: ProseMirrorNode) => {
+      (rowNode as any).forEach((cellNode: ProseMirrorNode) => {
         cellTexts.push(cellNode.textContent?.trim() || '');
       });
 
@@ -638,7 +638,7 @@ export function convertListToTable(editor: Editor): boolean {
     if (listPos === null || !listNode) return false;
 
     const matrix: string[][] = [];
-    listNode.forEach((itemNode: ProseMirrorNode) => {
+    (listNode as any).forEach((itemNode: ProseMirrorNode) => {
       const text = itemNode.textContent?.trim() || '';
       if (text) {
         // Split by delimiter if exists: ":", "-", "–", "\t", "|"
@@ -714,7 +714,7 @@ export function moveRow(editor: Editor, fromRowIdx: number, toRowIdx: number): b
     if (tablePos === null || !tableNode) return false;
 
     const rows: ProseMirrorNode[] = [];
-    tableNode.forEach((r) => rows.push(r));
+    (tableNode as any).forEach((r) => rows.push(r));
 
     const from = fromRowIdx - 1;
     const to = toRowIdx - 1;
@@ -764,9 +764,9 @@ export function moveColumn(editor: Editor, fromColIdx: number, toColIdx: number)
     const newRows: ProseMirrorNode[] = [];
     let isValid = true;
 
-    tableNode.forEach((rowNode: ProseMirrorNode) => {
+    (tableNode as any).forEach((rowNode: ProseMirrorNode) => {
       const cells: ProseMirrorNode[] = [];
-      rowNode.forEach(c => cells.push(c));
+      (rowNode as any).forEach(c => cells.push(c));
 
       if (from < 0 || from >= cells.length || to < 0 || to >= cells.length || from === to) {
         isValid = false;

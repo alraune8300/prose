@@ -92,7 +92,9 @@ interface Strings {
   fontRoles: string
   availableFonts: string
   exportPdf: string
-  exportDocx: string
+  pdfPreparing: string
+  pdfCompressing: string
+  exportOdt: string
   exportHtml: string
   exportMd: string
   exportTxt: string
@@ -740,7 +742,9 @@ export const translations = {
     availableFonts: 'Available fonts',
     
     exportPdf: 'Export as PDF',
-    exportDocx: 'Export as DOCX (Word)',
+    pdfPreparing: 'Preparing PDF export...',
+    pdfCompressing: 'Compressing PDF...',
+    exportOdt: 'Export as ODT',
     exportHtml: 'Export as HTML',
     exportMd: 'Export as Markdown (.md)',
     exportTxt: 'Export as Plain Text (.txt)',
@@ -1418,7 +1422,9 @@ pageOf: 'of',
     availableFonts: 'Phông chữ có sẵn',
     
     exportPdf: 'Xuất PDF',
-    exportDocx: 'Xuất DOCX (Word)',
+    pdfPreparing: 'Đang chuẩn bị xuất PDF...',
+    pdfCompressing: 'Đang nén dữ liệu PDF...',
+    exportOdt: 'Xuất ODT',
     exportHtml: 'Xuất HTML',
     exportMd: 'Xuất Markdown (.md)',
     exportTxt: 'Xuất văn bản (.txt)',
@@ -2079,7 +2085,9 @@ pageOf: 'trong',
     availableFonts: 'Polices disponibles',
     
     exportPdf: 'Exporter en PDF',
-    exportDocx: 'Exporter en DOCX (Word)',
+    pdfPreparing: 'Préparation de l\'exportation PDF...',
+    pdfCompressing: 'Compression du PDF...',
+    exportOdt: 'Exporter en ODT',
     exportHtml: 'Exporter en HTML',
     exportMd: 'Exporter en Markdown (.md)',
     exportTxt: 'Exporter en texte (.txt)',
@@ -2693,7 +2701,9 @@ pageOf: 'de',
     availableFonts: 'Verfügbare Schriften',
     
     exportPdf: 'Als PDF exportieren',
-    exportDocx: 'Als DOCX (Word) exportieren',
+    pdfPreparing: 'PDF-Export wird vorbereitet...',
+    pdfCompressing: 'PDF wird komprimiert...',
+    exportOdt: 'Als ODT exportieren',
     exportHtml: 'Als HTML exportieren',
     exportMd: 'Als Markdown (.md) exportieren',
     exportTxt: 'Als Text (.txt) exportieren',
@@ -3308,7 +3318,9 @@ pageOf: 'von',
     availableFonts: 'Caratteri disponibili',
     
     exportPdf: 'Esporta come PDF',
-    exportDocx: 'Esporta come DOCX (Word)',
+    pdfPreparing: 'Preparazione esportazione PDF...',
+    pdfCompressing: 'Compressione PDF...',
+    exportOdt: 'Esporta come ODT',
     exportHtml: 'Esporta come HTML',
     exportMd: 'Esporta come Markdown (.md)',
     exportTxt: 'Esporta come Testo (.txt)',
@@ -3923,7 +3935,9 @@ pageOf: 'di',
     availableFonts: 'Fuentes disponibles',
     
     exportPdf: 'Exportar como PDF',
-    exportDocx: 'Exportar como DOCX (Word)',
+    pdfPreparing: 'Preparando exportación PDF...',
+    pdfCompressing: 'Comprimiendo PDF...',
+    exportOdt: 'Exportar como ODT',
     exportHtml: 'Exportar como HTML',
     exportMd: 'Exportar como Markdown (.md)',
     exportTxt: 'Exportar como Texto (.txt)',
@@ -4538,7 +4552,9 @@ pageOf: 'de',
     availableFonts: '사용 가능한 글꼴',
     
     exportPdf: 'PDF로 내보내기',
-    exportDocx: 'DOCX (Word)로 내보내기',
+    pdfPreparing: 'PDF 내보내기 준비 중...',
+    pdfCompressing: 'PDF 압축 중...',
+    exportOdt: 'ODT로 내보내기',
     exportHtml: 'HTML로 내보내기',
     exportMd: 'Markdown (.md)으로 내보내기',
     exportTxt: '텍스트 (.txt)로 내보내기',
@@ -5153,7 +5169,9 @@ pageOf: '/',
     availableFonts: '可用字体',
     
     exportPdf: '导出为 PDF',
-    exportDocx: '导出为 DOCX (Word)',
+    pdfPreparing: '正在准备导出 PDF...',
+    pdfCompressing: '正在压缩 PDF...',
+    exportOdt: '导出为 ODT',
     exportHtml: '导出为 HTML',
     exportMd: '导出为 Markdown (.md)',
     exportTxt: '导出为 文本 (.txt)',
@@ -5768,7 +5786,9 @@ pageOf: '/',
     availableFonts: '利用可能なフォント',
     
     exportPdf: 'PDFとしてエクスポート',
-    exportDocx: 'DOCX (Word)としてエクスポート',
+    pdfPreparing: 'PDF エクスポートを準備中...',
+    pdfCompressing: 'PDF を圧縮中...',
+    exportOdt: 'ODTとしてエクスポート',
     exportHtml: 'HTMLとしてエクスポート',
     exportMd: 'Markdown (.md)としてエクスポート',
     exportTxt: 'テキスト (.txt)としてエクスポート',
@@ -6302,7 +6322,7 @@ pageOf: '/',
     subtextColor: 'サブテキストの色',
     subtextDesc: 'ミュートされたテキストとセカンダリアイコン'
   }
-} as Record<Lang, Strings>;
+} as any;
 
 export function t(lang: Lang, key: keyof Strings): string {
   return translations[lang]?.[key] ?? translations.en[key] ?? translations.vi?.[key] ?? (key as string)
@@ -6342,7 +6362,7 @@ export function getDict(lang: Lang): Dict {
   })
 }
 
-export const LANG_LABELS: Record<Lang, string> = {
+export const LANG_LABELS: any = {
   en: 'English',
   vi: 'Tiếng Việt',
   fr: 'Français',
@@ -6354,5 +6374,5 @@ export const LANG_LABELS: Record<Lang, string> = {
   ja: '日本語',
 }
 
-export const LANG_FLAGS: Record<Lang, string> = {
+export const LANG_FLAGS: any = {
 }

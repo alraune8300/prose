@@ -1181,24 +1181,7 @@ ${content.split('\n\n').map(para => {
                 </button>
 
                 <button onClick={() => {
-                  if (props.onExportPdf) (props.onExportPdf as () => void)();
-                  else handlePrintPDF();
-                }}
-                  style={{
-                    padding: '9px 12px', borderRadius: 8, cursor: 'pointer',
-                    background: 'transparent', border: `1.5px solid ${c.border}`,
-                    color: c.text, fontFamily: uiFont, fontSize: '0.8rem', fontWeight: 500,
-                    display: 'flex', alignItems: 'center', gap: 8, transition: 'border-color 0.15s',
-                  }}
-                  onMouseEnter={e => (e.currentTarget.style.borderColor = c.accentMid)}
-                  onMouseLeave={e => (e.currentTarget.style.borderColor = c.border)}
-                >
-                  <FileDown size={15} style={{ color: c.accent }} />
-                  <span>{t(lang, 'exportPdf')}</span>
-                </button>
-
-                <button onClick={() => {
-                  if (props.onExportDocx) (props.onExportDocx as () => void)();
+                  if (props.onExportOdt) (props.onExportOdt as () => void)();
                   else handleDownloadDocx();
                 }}
                   style={{
@@ -1211,7 +1194,7 @@ ${content.split('\n\n').map(para => {
                   onMouseLeave={e => (e.currentTarget.style.borderColor = c.border)}
                 >
                   <FileSpreadsheet size={15} style={{ color: c.accent }} />
-                  <span>{t(lang, 'exportDocx')}</span>
+                  <span>{t(lang, 'exportOdt')}</span>
                 </button>
 
                 <button onClick={() => {
@@ -1246,20 +1229,6 @@ ${content.split('\n\n').map(para => {
                 >
                   <FileText size={15} style={{ color: c.accent }} />
                   <span>{t(lang, 'exportMd')}</span>
-                </button>
-
-                <button onClick={() => handleDownload('txt')}
-                  style={{
-                    padding: '9px 12px', borderRadius: 8, cursor: 'pointer',
-                    background: 'transparent', border: `1.5px solid ${c.border}`,
-                    color: c.text, fontFamily: uiFont, fontSize: '0.8rem', fontWeight: 500,
-                    display: 'flex', alignItems: 'center', gap: 8, transition: 'border-color 0.15s',
-                  }}
-                  onMouseEnter={e => (e.currentTarget.style.borderColor = c.accentMid)}
-                  onMouseLeave={e => (e.currentTarget.style.borderColor = c.border)}
-                >
-                  <FileText size={15} style={{ color: c.accent }} />
-                  <span>{t(lang, 'exportTxt')}</span>
                 </button>
 
                 <button onClick={() => {

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test DOCX</title>
+</head>
+<body>
+  <button id="btn">Download</button>
+  <script type="module">
+    import { asBlob } from '/node_modules/html-docx-js-typescript/dist/index.js';
+    import { saveAs } from '/node_modules/file-saver/dist/FileSaver.min.js';
+    document.getElementById('btn').onclick = async () => {
+      try {
+        const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Test</title></head><body><h1>Test</h1></body></html>`;
+        const result = await asBlob(html);
+        console.log('Result:', result);
+        const blob = new Blob([result], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+        saveAs(blob, 'test.docx');
+        console.log('Success');
+      } catch (e) {
+        console.error('FAILED:', e);
+      }
+    };
+  </script>
+</body>
+</html>

@@ -5,7 +5,8 @@ import {
 } from './theme';
 import { getDict, type Dict } from './i18n';
 import { exportTxt, exportJson } from './exportUtils';
-import { importFile, exportToPdf, exportToDocx, exportToHtmlFile, exportToMarkdownFile, exportToJsonBackup } from './fileHandlers';
+import { isMarkdownText, parseMarkdownToHtml } from "./clipboardEngine";
+import { importFile, exportToOdt, exportToHtmlFile, exportToMarkdownFile, exportToJsonBackup } from './fileHandlers';
 import { saveApiKey, loadApiKey, injectGoogleFont, reinjectSavedFonts } from './googleFontsApi';
 import {  X, Plus, Minus, ZoomIn, Eye, Maximize2, PanelLeft, Hourglass, Coffee, Settings, LayoutList, Columns, Brain, FileText, GitCompare, Table, FoldVertical, UnfoldVertical, Terminal, Sparkles, Trash2 , Activity, Type } from 'lucide-react';
 import type { Editor as TiptapEditorType } from '@tiptap/react';
@@ -142,6 +143,19 @@ export default function App() {
     const found = allPagesInActiveProj.find((p) => p.id === activePageId);
     return found || activeProject.pages?.[0] || activeProject.drafts?.[0];
   }, [activeProject, allPagesInActiveProj, activePageId]);
+
+  const safeActiveContent = useMemo(() => {
+    let c = activePage?.content || "";
+    if (!c) return c;
+    if (c.includes("&lt;p&gt;") || c.includes("&lt;h") || c.includes("&lt;div&gt;")) {
+        const doc = new DOMParser().parseFromString(c, "text/html");
+        c = doc.documentElement.textContent || c;
+    }
+    if (!/<(p|h[1-6]|ul|ol|blockquote|table|div)>/i.test(c) && isMarkdownText(c) >= 1) {
+      c = parseMarkdownToHtml(c);
+    }
+    return c;
+  }, [activePage?.content]);
 
   const [themeMode, setThemeMode] = useState<ThemeMode>('light');
   const [customThemes, setCustomThemes] = useState<CustomTheme[]>([]);
@@ -312,7 +326,7 @@ export default function App() {
 
   const handleInsertCitationMarker = (key: string) => {
     if (!activePage) return;
-    const updated = (activePage.content || '') + ` [@${key}] `;
+    const updated = (safeActiveContent) + ` [@${key}] `;
     updatePageContent(activePage.id, updated);
   };
 
@@ -331,7 +345,7 @@ export default function App() {
 
   const handleUpdateFootnoteContent = (id: string, newContent: string) => {
     if (!activePage) return;
-    const current = activePage.content || '';
+    const current = safeActiveContent;
     const defRegex = new RegExp(`\\[\\^${id}\\]:\\s*[^\\n<]*`, 'g');
     let updated = current;
     if (defRegex.test(current)) {
@@ -343,7 +357,7 @@ export default function App() {
   };
 
   const handleInsertNewFootnote = useCallback(() => {
-    const current = activePage?.content || '';
+    const current = safeActiveContent;
     // Find highest footnote number
     const regex = /\[\^(\d+)\]/g;
     let maxNum = 0;
@@ -358,7 +372,7 @@ export default function App() {
 
   const handleDeleteFootnote = (id: string) => {
     if (!activePage) return;
-    const current = activePage.content || '';
+    const current = safeActiveContent;
     const inlineRegex = new RegExp(`\\[\\^${id}\\]`, 'g');
     const defRegex = new RegExp(`\\[\\^${id}\\]:[^\\n<]*\\n?`, 'g');
     const updated = current.replace(inlineRegex, '').replace(defRegex, '');
@@ -457,6 +471,7 @@ export default function App() {
 
   const [isOnline, setIsOnline] = useState<boolean>(navigator.onLine);
   const [networkToast, setNetworkToast] = useState<{ message: string; type: 'offline' | 'online' } | null>(null);
+  const [exportToast, setExportToast] = useState<string | null>(null);
 
   useEffect(() => {
     const handleOnline = () => {
@@ -762,8 +777,8 @@ export default function App() {
       addFootnoteDesc: { en: 'Insert footnote marker at current position', vi: 'Tạo đánh số chú thích và quản lý nội dung chân trang', fr: 'Insérer un marqueur de note de bas de page', de: 'Fußnotenmarkierung an der aktuellen Position einfügen', it: 'Inserisci marcatore di nota a piè di pagina', es: 'Insertar marcador de nota al pie', ko: '현재 위치에 각주 마커 삽입', zh: '在当前位置插入脚注标记', ja: '現在の位置に脚注マーカーを挿入する' },
       addCitation: { en: 'Add Citation', vi: 'Trích dẫn tài liệu (Add Citation)', fr: 'Ajouter une citation', de: 'Zitat hinzufügen', it: 'Aggiungi Citazione', es: 'Agregar cita', ko: '인용 추가', zh: '添加引用', ja: '引用を追加' },
       addCitationDesc: { en: 'Insert citation reference in text', vi: 'Thêm nguồn tham khảo chuẩn APA, MLA, Chicago', fr: 'Insérer une référence de citation', de: 'Zitierverweis im Text einfügen', it: 'Inserisci riferimento di citazione nel testo', es: 'Insertar referencia de cita', ko: '텍스트에 인용 참조 삽입', zh: '在文本中插入引用参考', ja: 'テキストに引用参照を挿入する' },
-      exportPdf: { en: 'Export PDF', vi: 'Xuất tài liệu PDF (Export PDF)', fr: 'Exporter en PDF', de: 'PDF exportieren', it: 'Esporta PDF', es: 'Exportar PDF', ko: 'PDF 내보내기', zh: '导出PDF', ja: 'PDFをエクスポート' },
-      exportPdfDesc: { en: 'Download formatted PDF document', vi: 'Xuất file PDF chất lượng cao có canh lề chuẩn trang', fr: 'Télécharger le document PDF formaté', de: 'Formatiertes PDF-Dokument herunterladen', it: 'Scarica il documento PDF formattato', es: 'Descargar documento PDF formateado', ko: '형식이 지정된 PDF 문서 다운로드', zh: '下载格式化的PDF文档', ja: 'フォーマットされたPDFドキュメントをダウンロードする' },
+      exportOdt: { en: 'Export PDF', vi: 'Xuất tài liệu PDF (Export PDF)', fr: 'Exporter en PDF', de: 'PDF exportieren', it: 'Esporta PDF', es: 'Exportar PDF', ko: 'PDF 내보내기', zh: '导出PDF', ja: 'PDFをエクスポート' },
+      exportOdtDesc: { en: 'Download formatted PDF document', vi: 'Xuất file PDF chất lượng cao có canh lề chuẩn trang', fr: 'Télécharger le document PDF formaté', de: 'Formatiertes PDF-Dokument herunterladen', it: 'Scarica il documento PDF formattato', es: 'Descargar documento PDF formateado', ko: '형식이 지정된 PDF 문서 다운로드', zh: '下载格式化的PDF文档', ja: 'フォーマットされたPDFドキュメントをダウンロードする' },
       exportMd: { en: 'Export Markdown', vi: 'Xuất file Markdown (.md)', fr: 'Exporter en Markdown', de: 'Markdown exportieren', it: 'Esporta Markdown', es: 'Exportar Markdown', ko: '마크다운 내보내기', zh: '导出Markdown', ja: 'Markdownをエクスポート' },
       exportMdDesc: { en: 'Download .md raw text file', vi: 'Xuất nội dung sang định dạng Markdown chuẩn', fr: 'Télécharger le fichier texte brut .md', de: 'Unbearbeitete .md-Textdatei herunterladen', it: 'Scarica file di testo grezzo .md', es: 'Descargar archivo .md', ko: '.md 원시 텍스트 파일 다운로드', zh: '下载 .md 纯文本文件', ja: '.md テキストファイルをダウンロードする' },
       backupJson: { en: 'Backup JSON', vi: 'Sao lưu dữ liệu JSON (Backup JSON)', fr: 'Sauvegarder JSON', de: 'JSON sichern', it: 'Backup JSON', es: 'Copia de sicurezza JSON', ko: 'JSON 백업', zh: '备份JSON', ja: 'JSONをバックアップ' },
@@ -930,13 +945,13 @@ export default function App() {
       },
     },
     {
-      id: 'export-pdf',
-      label: getT('exportPdf'),
+      id: 'export-odt',
+      label: getT('exportOdt'),
       category: 'System & Export',
       icon: <FileText size={16} />,
-      description: getT('exportPdfDesc'),
+      description: getT('exportOdtDesc'),
       perform: () => {
-        if (activePage) exportToPdf(activePage.title || 'Untitled', activePage.content || '', theme, docFont);
+        if (activePage) exportToOdt(activePage.title || 'Untitled', safeActiveContent);
       },
     },
     {
@@ -946,7 +961,7 @@ export default function App() {
       icon: <FileText size={16} />,
       description: getT('exportMdDesc'),
       perform: () => {
-        if (activePage) exportToMarkdownFile(activePage.title || 'Untitled', activePage.content || '');
+        if (activePage) exportToMarkdownFile(activePage.title || 'Untitled', safeActiveContent);
       },
     },
     {
@@ -966,7 +981,7 @@ export default function App() {
       perform: () => setGithubModalOpen(true),
     },
   ];
-  }, [lang, activePage, theme, docFont, handleInsertNewFootnote, t]);
+  }, [lang, activePage, docFont, handleInsertNewFootnote, t]);
   // Sync document body styles with the current active theme
   useEffect(() => {
     document.body.style.background = theme.bg;
@@ -1161,7 +1176,7 @@ export default function App() {
   }, [activePageId, activeProjectId, editorInstance]);
 
   const { wordCount, charCount, readMin } = useMemo(() => {
-    const raw = activePage?.content || '';
+    const raw = safeActiveContent;
     if (!raw) return { wordCount: 0, charCount: 0, readMin: 0 };
     const text = raw.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
     const words = text ? text.split(/\s+/).length : 0;
@@ -1856,10 +1871,6 @@ export default function App() {
     }
   }, []);
 
-  const handleExportPdf = useCallback(() => {
-    exportToPdf(activePage?.title || 'Document', activePage?.content || '', pageFormat, formatState.pageNumbering);
-  }, [activePage, pageFormat, formatState.pageNumbering]);
-
   const handlePrint = useCallback(() => {
     const existing = document.getElementById('kgv-print-style');
     if (existing) existing.remove();
@@ -2012,16 +2023,16 @@ export default function App() {
     }, 150);
   }, [pageFormat, formatState.pageNumbering]);
 
-  const handleExportDocx = useCallback(() => {
-    exportToDocx(activePage?.title || 'Document', activePage?.content || '', pageFormat);
-  }, [activePage, pageFormat]);
+  const handleExportOdt = useCallback(() => {
+    exportToOdt(activePage?.title || 'Document', safeActiveContent);
+  }, [activePage, pageFormat, formatState]);
 
   const handleExportHtml = useCallback(() => {
-    exportToHtmlFile(activePage?.title || 'Document', activePage?.content || '');
+    exportToHtmlFile(activePage?.title || 'Document', safeActiveContent, formatState, theme);
   }, [activePage]);
 
   const handleExportMd = useCallback(() => {
-    exportToMarkdownFile(activePage?.title || 'Document', activePage?.content || '');
+    exportToMarkdownFile(activePage?.title || 'Document', safeActiveContent);
   }, [activePage]);
 
   const handleExportJsonBackupAll = useCallback(() => {
@@ -2038,11 +2049,6 @@ export default function App() {
   
   
   
-  const handleExportTxt = useCallback(() => {
-    if (!activePage) return;
-    const doc: Document = { id: activePage.id, title: activePage.title, content: activePage.content };
-    exportTxt(doc);
-  }, [activePage]);
 
   const handleExportJson = useCallback(() => {
     const docsExport: Document[] = allPagesInActiveProj.map((p) => ({ id: p.id, title: p.title, content: p.content, folder_id: p.folderId || null }));
@@ -2501,6 +2507,9 @@ export default function App() {
               const currentEditor = (activeBlockEditor || editorInstance) as TiptapEditorType;
               currentEditor?.chain().focus().setFontFamily(fam).run();
             }}
+            onSizeChange={(size) => {
+              handleFormatChange({ fontSize: size });
+            }}
             onFontAssign={(role, fontName) => {
               if (role === 'body') handleSelectDocFont(fontName);
               else if (role === 'heading') handleSelectHeadingFont(fontName);
@@ -2558,7 +2567,7 @@ export default function App() {
                   formatState={formatState}
                   onEditorReady={setEditorInstance}
                   t={t}
-                  content={activePage?.content || ''}
+                  content={safeActiveContent}
                   onContentChange={handleContentChange}
                   isFocusMode={false}
                   onToggleFocusMode={handleToggleFocusMode}
@@ -2698,7 +2707,7 @@ export default function App() {
                               formatState={formatState}
                               onEditorReady={setEditorInstance}
                               t={t}
-                              content={activePage?.content || ''}
+                              content={safeActiveContent}
                               onContentChange={handleContentChange}
                               isFocusMode={isFocusMode}
                               onToggleFocusMode={handleToggleFocusMode}
@@ -2784,12 +2793,10 @@ export default function App() {
           onOpenFontExplorer={() => setFontExplorerOpen(true)}
           apiKey={apiKey}
           onSaveApiKey={handleSaveApiKey}
-          onExportTxt={handleExportTxt}
           onExportJson={handleExportJson}
           onImportFile={handleImportFile}
-          onExportPdf={handleExportPdf}
           onPrint={handlePrint}
-          onExportDocx={handleExportDocx}
+          onExportOdt={handleExportOdt}
           onExportHtml={handleExportHtml}
           onExportMd={handleExportMd}
           onExportJsonBackup={handleExportJsonBackupAll}
@@ -2824,6 +2831,19 @@ export default function App() {
         />
       )}
 
+      {exportToast && (
+        <div className="fixed top-20 right-4 z-[60] flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg border animate-in fade-in slide-in-from-right-4"
+             style={{
+               background: theme.isDark ? '#1e1e24' : '#ffffff',
+               borderColor: theme.border,
+               color: theme.text,
+               fontFamily: uiFont,
+               fontSize: '0.85rem'
+             }}>
+          <div className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: theme.accent, borderTopColor: 'transparent' }} />
+          <span>{exportToast}</span>
+        </div>
+      )}
       {networkToast && (
         <div className="fixed top-4 right-4 z-50 flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg border"
              style={{
@@ -2839,7 +2859,7 @@ export default function App() {
             <button
               onClick={() => {
                 const title = activePage?.title || 'document';
-                const text = (activePage?.content || '').replace(/<[^>]*>/g, '');
+                const text = (safeActiveContent).replace(/<[^>]*>/g, '');
                 const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');

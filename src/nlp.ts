@@ -14,8 +14,8 @@ export const COMMON_ADVERBS: Record<string, Set<string>> = {
 export function extractWords(text: string, lang: string): { word: string, index: number, length: number }[] {
   const words: { word: string, index: number, length: number }[] = [];
   
-  if (['zh', 'ja', 'ko'].includes(lang) && typeof Intl !== 'undefined' && Intl.Segmenter) {
-    const segmenter = new Intl.Segmenter(lang, { granularity: 'word' });
+  if (['zh', 'ja', 'ko'].includes(lang) && typeof Intl !== 'undefined' && (Intl as any).Segmenter) {
+    const segmenter = new (Intl as any).Segmenter(lang, { granularity: 'word' });
     const segments = segmenter.segment(text);
     for (const segment of segments) {
       if (segment.isWordLike) {
