@@ -242,13 +242,22 @@ function LeftPanel(props: Record<string, unknown>) {
             </span>
           )}
           
-          <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1" style={{ background: isHoveredOrActive ? (c.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)') : c.surface, borderRadius: 4 }}>
+          <div className="flex items-center gap-0.5 opacity-70 group-hover:opacity-100 transition-opacity" style={{ background: 'transparent', borderRadius: 4 }}>
+            <button
+              onClick={e => { e.stopPropagation(); setFolderMenuOpenId(null); setRenamingId(page.id); setRenameVal(page.title); }}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, color: c.textMuted }}
+              onMouseEnter={e => (e.currentTarget.style.color = c.text)}
+              onMouseLeave={e => (e.currentTarget.style.color = c.textMuted)}
+              title={t(lang, 'rename') || "Rename"}
+            >
+              <Edit2 size={14} />
+            </button>
             <button
               onClick={e => { e.stopPropagation(); onDeletePage(page.id) }}
               style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, color: c.textMuted }}
               onMouseEnter={e => (e.currentTarget.style.color = '#e05050')}
               onMouseLeave={e => (e.currentTarget.style.color = c.textMuted)}
-              title="Delete"
+              title={t(lang, 'delete') || "Delete"}
             >
               <Trash2 size={14} />
             </button>
