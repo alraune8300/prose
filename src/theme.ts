@@ -4442,11 +4442,6 @@ import { ThemeConfig } from './types'
 export function deriveCustomTheme(config: ThemeConfig): Theme {
   const isDark = isHexDark(config.bg)
   let textColor = config.text
-  if (isDark && isHexDark(config.text)) {
-    textColor = '#f8fafc'
-  } else if (!isDark && !isHexDark(config.text)) {
-    textColor = '#0f172a'
-  }
   const muted = config.textMuted || (isDark ? '#cbd5e1' : '#475569')
   const faint = isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)'
   const accentSoft = isDark ? 'rgba(255, 255, 255, 0.12)' : (config.accent.startsWith('#') ? config.accent + '22' : 'rgba(37, 99, 235, 0.12)')
