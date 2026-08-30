@@ -31,25 +31,11 @@ function FontSizeSelector({
   uiFont: string;
   label: string;
 }) {
-  const [isOpen, setIsOpen] = useState(false);
   const [inputValue, setInputValue] = useState(String(currentSize));
-  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setInputValue(String(currentSize));
   }, [currentSize]);
-
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setIsOpen(false);
-      }
-    };
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
-    }
-  }, [isOpen]);
 
   const commitInput = () => {
     const num = parseInt(inputValue, 10);
@@ -61,7 +47,7 @@ function FontSizeSelector({
   };
 
   return (
-    <div ref={containerRef} className="relative flex items-center gap-0.5 shrink-0 select-none">
+    <div className="relative flex items-center gap-0.5 shrink-0 select-none">
       {/* Decrease size */}
       <button
         type="button"
@@ -74,9 +60,9 @@ function FontSizeSelector({
         <Minus size={11} style={{ color: theme.text }} />
       </button>
 
-      {/* Editable input + dropdown trigger */}
+      {/* Editable input */}
       <div
-        className="flex items-center rounded-lg px-1 py-0.5 hover:bg-black/5 dark:hover:bg-white/10 transition-colors cursor-pointer"
+        className="flex items-center rounded-lg px-0.5 py-0.5 transition-colors"
         style={{ color: theme.text }}
       >
         <input
@@ -93,19 +79,10 @@ function FontSizeSelector({
               (e.target as HTMLInputElement).blur();
             }
           }}
-          className="w-6 text-center text-xs font-semibold bg-transparent outline-none cursor-text p-0"
+          className="w-6 text-center text-xs font-semibold bg-transparent outline-none cursor-text p-0 hover:opacity-80 focus:opacity-100 transition-opacity"
           style={{ color: theme.text, fontFamily: `'${uiFont}', sans-serif` }}
           title={label}
         />
-        <button
-          type="button"
-          onMouseDown={e => e.preventDefault()}
-          onClick={() => setIsOpen(prev => !prev)}
-          className="p-0.5 opacity-60 hover:opacity-100 transition-opacity cursor-pointer"
-          title={label}
-        >
-          <ChevronDown size={10} style={{ color: theme.text }} />
-        </button>
       </div>
 
       {/* Increase size */}
@@ -119,38 +96,6 @@ function FontSizeSelector({
       >
         <Plus size={11} style={{ color: theme.text }} />
       </button>
-
-      {/* Dropdown Menu */}
-      {isOpen && (
-        <div
-          className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 z-50 p-1 rounded-xl shadow-2xl border backdrop-blur-md max-h-48 overflow-y-auto w-20 flex flex-col gap-0.5 animate-in fade-in zoom-in-95"
-          style={{
-            backgroundColor: theme.surface ? `${theme.surface}fa` : (theme.isDark ? '#1e1e24' : '#ffffff'),
-            borderColor: theme.border,
-            boxShadow: theme.isDark ? '0 16px 36px rgba(0,0,0,0.6)' : '0 12px 32px rgba(0,0,0,0.15)',
-          }}
-        >
-          {FONT_SIZES.map(sz => (
-            <button
-              key={sz}
-              type="button"
-              onMouseDown={e => e.preventDefault()}
-              onClick={() => {
-                onChange(sz);
-                setIsOpen(false);
-              }}
-              className="px-2 py-1 rounded-lg text-xs font-semibold text-center transition-colors hover:bg-black/5 dark:hover:bg-white/10 cursor-pointer"
-              style={{
-                backgroundColor: currentSize === sz ? (theme.isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)') : 'transparent',
-                color: currentSize === sz ? theme.accent : theme.text,
-                fontFamily: `'${uiFont}', sans-serif`
-              }}
-            >
-              {sz}
-            </button>
-          ))}
-        </div>
-      )}
     </div>
   );
 }
@@ -249,6 +194,7 @@ function Toolbar({
   const Divider = () => <div className="w-px h-4 mx-0.5 shrink-0" style={{ backgroundColor: theme.border || 'rgba(156,163,175,0.25)' }} />;
 
   return (
+    <>
     <div
       ref={toolbarRef}
       className="absolute bottom-6 left-0 right-0 mx-auto justify-center z-40 flex items-center flex-nowrap w-max gap-0.5 px-2.5 py-1.5 select-none rounded-full shadow-2xl border backdrop-blur-md max-w-[calc(100%-1.5rem)] overflow-x-auto"
@@ -392,35 +338,9 @@ function Toolbar({
 
       <Divider />
 
-      <ToolBtn 
-        onClick={() => {
-          if (editor.isActive('link')) {
-            editor.chain().focus().unsetLink().run();
-          } else {
-            const previousUrl = editor.getAttributes('link').href;
-            setLinkInputValue(previousUrl || 'https://');
-            setIsLinkModalOpen(true);
-          }
-        }} 
-        icon={<Link2 size={14} />} 
-        label={lang === 'vi' ? 'Chèn liên kết (Ctrl+K)' : 'Insert link (Ctrl+K)'} 
-        active={editor.isActive('link')} 
-      />
-      <ToolBtn 
-        onClick={() => {
-          setFootnoteInputValue('1');
-          setIsFootnoteModalOpen(true);
-        }} 
-        icon={<Bookmark size={14} />} 
-        label={lang === 'vi' ? 'Chèn chú thích neo lề [^n]' : 'Insert margin footnote [^n]'} 
-      />
-      <ToolBtn 
-        onClick={() => {
-          window.dispatchEvent(new CustomEvent('kgv-open-citations'));
-        }} 
-        icon={<BookOpen size={14} />} 
-        label={lang === 'vi' ? 'Thư viện trích dẫn & Thư mục (Citations)' : 'Citations & Bibliography Desk'} 
-      />
+      
+      
+      
       <ToolBtn 
         onClick={() => editor.chain().focus().toggleBlockquote().run()} 
         icon={<Quote size={14} />} 
@@ -433,89 +353,7 @@ function Toolbar({
         label={t.divider || (lang === 'vi' ? 'Đường kẻ ngang phân cách (---)' : 'Horizontal divider (---)')} 
       />
 
-      <Divider />
-
-      {/* Smart Context Copy Button & Dropdown */}
-      <div className="relative">
-        <ToolBtn
-          onClick={() => setShowCopyMenu(prev => !prev)}
-          icon={copiedFormat ? <Check size={14} className="text-emerald-500" /> : <Copy size={14} />}
-          label={lang === 'vi' ? 'Sao chép thông minh (Rich Text, Markdown, Plain Text)' : 'Smart Context Copy'}
-          active={showCopyMenu}
-        />
-        {showCopyMenu && (
-          <div
-            className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 z-50 p-1.5 rounded-2xl shadow-2xl border backdrop-blur-md w-56 flex flex-col gap-1 select-none animate-in fade-in zoom-in-95"
-            style={{
-              backgroundColor: theme.surface ? `${theme.surface}fa` : (theme.isDark ? '#1e1e24' : '#ffffff'),
-              borderColor: theme.border,
-              boxShadow: theme.isDark ? '0 16px 36px rgba(0,0,0,0.6)' : '0 12px 32px rgba(0,0,0,0.15)',
-            }}
-          >
-            <div className="px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider opacity-60 border-b pb-1" style={{ borderColor: theme.border }}>
-              {lang === 'vi' ? 'Định dạng sao chép' : 'Copy Format'}
-            </div>
-            
-            <button
-              type="button"
-              onMouseDown={e => e.preventDefault()}
-              onClick={() => {
-                window.dispatchEvent(new CustomEvent('kgv-copy-as', { detail: { format: 'rich' } }));
-                setCopiedFormat('rich');
-                setTimeout(() => { setCopiedFormat(null); setShowCopyMenu(false); }, 700);
-              }}
-              className="flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-medium hover:bg-black/5 dark:hover:bg-white/10 transition-colors text-left"
-              style={{ color: theme.text }}
-            >
-              <div className="flex items-center gap-2">
-                <FileText size={13} style={{ color: theme.accent }} />
-                <span>{lang === 'vi' ? 'Chuẩn (Rich Text)' : 'Rich Text (HTML)'}</span>
-              </div>
-              {copiedFormat === 'rich' && <Check size={12} className="text-emerald-500" />}
-            </button>
-
-            <button
-              type="button"
-              onMouseDown={e => e.preventDefault()}
-              onClick={() => {
-                window.dispatchEvent(new CustomEvent('kgv-copy-as', { detail: { format: 'markdown' } }));
-                setCopiedFormat('markdown');
-                setTimeout(() => { setCopiedFormat(null); setShowCopyMenu(false); }, 700);
-              }}
-              className="flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-medium hover:bg-black/5 dark:hover:bg-white/10 transition-colors text-left"
-              style={{ color: theme.text }}
-            >
-              <div className="flex items-center gap-2">
-                <Code size={13} style={{ color: theme.accent }} />
-                <span>{lang === 'vi' ? 'Markdown thô' : 'Raw Markdown'}</span>
-              </div>
-              <span className="text-[10px] px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/10 opacity-75 font-mono">
-                Ctrl+Shift+C
-              </span>
-            </button>
-
-            <button
-              type="button"
-              onMouseDown={e => e.preventDefault()}
-              onClick={() => {
-                window.dispatchEvent(new CustomEvent('kgv-copy-as', { detail: { format: 'plain' } }));
-                setCopiedFormat('plain');
-                setTimeout(() => { setCopiedFormat(null); setShowCopyMenu(false); }, 700);
-              }}
-              className="flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs font-medium hover:bg-black/5 dark:hover:bg-white/10 transition-colors text-left"
-              style={{ color: theme.text }}
-            >
-              <div className="flex items-center gap-2">
-                <Copy size={13} style={{ color: theme.textMuted || theme.text }} />
-                <span>{lang === 'vi' ? 'Văn bản thuần' : 'Plain Text'}</span>
-              </div>
-              {copiedFormat === 'plain' && <Check size={12} className="text-emerald-500" />}
-            </button>
-          </div>
-        )}
-      </div>
-
-      {onToggleSplitView && (
+            {onToggleSplitView && (
         <ToolBtn
           onClick={onToggleSplitView}
           icon={<Split size={14} />}
@@ -523,8 +361,7 @@ function Toolbar({
           active={isSplitView}
         />
       )}
-
-      <ToolBtn onClick={() => editor.chain().focus().unsetAllMarks().clearNodes().run()} icon={<Eraser size={14} />} label={t.clearFormat} />
+      <ToolBtn onClick={() => editor.chain().focus().unsetAllMarks().clearNodes().run()} icon={<Eraser size={14} />} label={t.clearFormat || "Clear Format"} />
       
       {zoomPercent !== undefined && onZoomIn && onZoomOut && (
         <>
@@ -540,25 +377,10 @@ function Toolbar({
             >
               <Minus size={11} style={{ color: theme.text }} />
             </button>
-            <div className="flex items-center px-0.5">
-              <input
-                type="text"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                value={zoomInput || String(zoomPercent)}
-                onChange={(e) => onZoomInputChange?.(e.target.value)}
-                onBlur={onZoomInputBlur}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    onZoomInputBlur?.();
-                  }
-                }}
-                className="w-7 text-center text-xs font-semibold bg-transparent outline-none cursor-text"
-                style={{ color: theme.text }}
-                title="Tỉ lệ phóng to/thu nhỏ (50% - 250%)"
-              />
-              <span className="text-[10px] font-semibold opacity-70 -ml-0.5" style={{ color: theme.text }}>%</span>
+            <div className="flex items-center px-1 justify-center w-11">
+              <span className="text-center text-xs font-semibold select-none" style={{ color: theme.text }}>
+                {zoomPercent}%
+              </span>
             </div>
             <button
               type="button"
@@ -573,34 +395,32 @@ function Toolbar({
           </div>
         </>
       )}
+    </div>
 
-      {/* Link Insertion Modal */}
-      {isLinkModalOpen && createPortal(
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-200">
-          <div 
-            className="w-full max-w-md rounded-2xl border shadow-2xl overflow-hidden p-6 relative"
-            style={{ 
-              backgroundColor: theme.surface, 
-              borderColor: theme.border, 
-              color: theme.text,
-              fontFamily: `'${uiFont}', sans-serif`
-            }}
-          >
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2.5">
-                <div className="p-2 rounded-xl" style={{ backgroundColor: `${theme.accent}15`, color: theme.accent }}>
-                  <Link2 size={18} />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-sm" style={{ color: theme.text }}>
-                    {t.insertHyperlink}
-                  </h3>
-                  <p className="text-xs opacity-60" style={{ color: theme.text }}>
-                    {t.enterWebAddress}
-                  </p>
-                </div>
+    {/* Link Insertion Modal */}
+    {isLinkModalOpen && createPortal(
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-xs animate-in fade-in duration-200">
+        <div 
+          className="w-full max-w-md rounded-2xl border shadow-2xl overflow-hidden p-6 relative"
+          style={{ 
+            backgroundColor: theme.surface, 
+            borderColor: theme.border, 
+            color: theme.text,
+            fontFamily: `'${uiFont}', sans-serif`
+          }}
+        >
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2.5">
+              <div className="p-2 rounded-xl" style={{ backgroundColor: `${theme.accent}15`, color: theme.accent }}>
+                <Link2 size={18} />
               </div>
-              <button
+              <div>
+                <h3 className="font-semibold text-sm" style={{ color: theme.text }}>
+                  {t.insertHyperlink || "Insert Hyperlink"}
+                </h3>
+              </div>
+            </div>
+            <button
                 onClick={() => setIsLinkModalOpen(false)}
                 className="p-1.5 rounded-lg opacity-70 hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
                 style={{ color: theme.text }}
@@ -763,7 +583,7 @@ function Toolbar({
         </div>,
         document.body
       )}
-    </div>
+    </>
   );
 }
 
