@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Highlighter, Type, Bold, Italic, Strikethrough, GripVertical } from 'lucide-react';
+import { Highlighter, Type, Bold, Italic, Strikethrough, GripVertical, Heading1, Heading2, Heading3, Heading4 } from 'lucide-react';
 import { BubbleMenu } from '@tiptap/react/menus';
 import type { Editor } from '@tiptap/react';
 import type { ThemeColors } from './types';
@@ -103,6 +103,37 @@ export function FloatingToolbar({ editor, theme }: { editor: Editor | null, them
         style={{ touchAction: 'none' }}
       >
         <GripVertical size={14} />
+      </div>
+
+      <div className="flex items-center gap-0.5 pr-1 border-r border-black/10 dark:border-white/10">
+        <button
+          onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+          className={`p-1 rounded-md transition-colors ${editor.isActive('heading', { level: 1 }) ? 'bg-black/10 dark:bg-white/20' : 'hover:bg-black/5 dark:hover:bg-white/10'}`}
+          title="Heading 1"
+        >
+          <Heading1 size={15} />
+        </button>
+        <button
+          onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+          className={`p-1 rounded-md transition-colors ${editor.isActive('heading', { level: 2 }) ? 'bg-black/10 dark:bg-white/20' : 'hover:bg-black/5 dark:hover:bg-white/10'}`}
+          title="Heading 2"
+        >
+          <Heading2 size={15} />
+        </button>
+        <button
+          onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+          className={`p-1 rounded-md transition-colors ${editor.isActive('heading', { level: 3 }) ? 'bg-black/10 dark:bg-white/20' : 'hover:bg-black/5 dark:hover:bg-white/10'}`}
+          title="Heading 3"
+        >
+          <Heading3 size={15} />
+        </button>
+        <button
+          onClick={() => editor.chain().focus().toggleHeading({ level: 4 }).run()}
+          className={`p-1 rounded-md transition-colors ${editor.isActive('heading', { level: 4 }) ? 'bg-black/10 dark:bg-white/20' : 'hover:bg-black/5 dark:hover:bg-white/10'}`}
+          title="Heading 4"
+        >
+          <Heading4 size={15} />
+        </button>
       </div>
 
       <div className="flex items-center gap-0.5 pr-1 border-r border-black/10 dark:border-white/10">

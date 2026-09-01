@@ -83,12 +83,13 @@ function Editor({
         const coords = view.coordsAtPos(state.selection.head);
         const scrollContainer = document.querySelector(".kgv-scroll");
         if (coords && scrollContainer) {
-          if (scrollContainer.scrollHeight > scrollContainer.clientHeight) {
-            const containerRect = scrollContainer.getBoundingClientRect();
-            const caretY = coords.top - containerRect.top + scrollContainer.scrollTop;
-            const targetScroll = caretY - (containerRect.height / 2);
-            scrollContainer.scrollTo({ top: targetScroll, behavior: "smooth" });
-          }
+          const containerRect = scrollContainer.getBoundingClientRect();
+          // Calculate the Y position of the caret relative to the scroll container's content
+          const caretY = coords.top - containerRect.top + scrollContainer.scrollTop;
+          // Calculate the desired scroll position to put caret in middle
+          const targetScroll = caretY - (containerRect.height / 2);
+          // Apply a smooth scroll
+          scrollContainer.scrollTo({ top: Math.max(0, targetScroll), behavior: "smooth" });
         }
       } catch (e) {
         console.warn('Typewriter scroll calculation failed:', e);
@@ -762,9 +763,12 @@ function Editor({
         onClick={(e) => {
           if (!isPreviewMode && editor && !editor.isDestroyed) {
             const target = e.target as HTMLElement;
-            if (!target.closest('button') && !target.closest('a') && !target.closest('input') ) {
-              if (!editor.isFocused) {
+            if (!target.closest('button') && !target.closest('a') && !target.closest('input')) {
+              // If user clicks exactly on the scroll wrapper (outside the text), focus at end
+              if (e.target === e.currentTarget || target.classList.contains('ProseMirror-wrapper')) {
                 editor?.commands?.focus('end');
+              } else if (!editor.isFocused) {
+                editor?.commands?.focus();
               }
             }
           }
@@ -776,15 +780,20 @@ function Editor({
               ? 'px-4 sm:px-8 md:px-12 pt-6 pb-20 tracking-normal'
               : 'px-4 sm:px-6 md:px-8 pt-6 pb-24'
           }`}
-          style={{
+          style={Object.assign({
+            paddingTop: typewriterMode ? '45vh' : undefined,
+            paddingBottom: typewriterMode ? '50vh' : undefined,
+          }, {
             fontFamily: `'${currentBodyFont}', Georgia, serif`,
             fontSize: `${formatState?.fontSize || fontSize}px`,
             lineHeight: `${Math.round((formatState?.fontSize || fontSize || 16) * ((isPreviewMode || isFocusMode) ? 1.8 : (formatState?.lineH || 1.7)))}px`,
-            ['--kgv-body-font' as string]: `'${currentBodyFont}', Georgia, serif`,
-            ['--kgv-heading-font' as string]: `'${currentHeadingFont}', serif`,
-            ['--kgv-mono-font' as string]: `'${currentMonoFont}', monospace`,
-          } as React.CSSProperties}
-        >
+            ['--kgv-body-font']: `'${currentBodyFont}', Georgia, serif`,
+            ['--kgv-heading-font']: `'${currentHeadingFont}', serif`,
+            ['--kgv-mono-font']: `'${currentMonoFont}', monospace`,
+          } as React.CSSProperties)}>
+
+
+
           <FloatingToolbar editor={editor} theme={theme} />
           <EditorContent editor={editor} />
         </div>
@@ -802,7 +811,7 @@ export const getEditorExtensions = () => [
   CodexMention.configure({ suggestion: getSuggestionOptions() }),
   StarterKit.configure({
     link: false,
-    heading: { levels: [1, 2, 3] },
+    heading: { levels: [1, 2, 3, 4, 5, 6] },
     horizontalRule: {},
   }),
   Table.extend({
