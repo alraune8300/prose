@@ -88,7 +88,7 @@ export function FloatingToolbar({ editor, theme }: { editor: Editor | null, them
     <BubbleMenu 
       editor={editor} 
       tippyOptions={{ duration: 100, placement: 'top', animation: 'fade' }}
-      className="z-50 flex items-center gap-1 p-1 rounded-xl shadow-lg border backdrop-blur-md"
+      className="z-50 flex items-center gap-1 p-1 rounded-xl shadow-lg border bg-white dark:bg-zinc-800"
       style={{ 
         backgroundColor: theme.isDark ? 'rgba(30, 30, 30, 0.9)' : 'rgba(255, 255, 255, 0.95)', 
         borderColor: theme.border,

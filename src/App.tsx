@@ -2226,7 +2226,8 @@ export default function App() {
           ${sidebarOpen && !isFocusMode && !isPreviewMode ? 'translate-x-0 opacity-100 w-[85vw] sm:w-[320px]' : '-translate-x-full opacity-0 w-0 pointer-events-none'}
         `}
       >
-        <LeftPanel
+        <div className="w-[85vw] sm:w-[320px] h-full overflow-hidden flex flex-col">
+          <LeftPanel
           codexEntities={codexEntities}
           onUpdateCodexEntities={handleUpdateCodexEntities}
           onEditorialHighlight={setEditorialHighlight}
@@ -2287,6 +2288,7 @@ export default function App() {
           }}
         />
       </div>
+        </div>
 
       {/* Main Workspace Area with fluid flex expansion & smooth resize transition */}
       <main className="flex-1 min-w-0 h-full overflow-hidden flex flex-col transition-all duration-300 ease-in-out relative">
@@ -2675,7 +2677,8 @@ export default function App() {
           ${rightOpen && !isFocusMode && !isPreviewMode ? 'translate-x-0 opacity-100 w-[85vw] sm:w-[300px]' : 'translate-x-full opacity-0 w-0 pointer-events-none'}
         `}
       >
-        <RightPanel
+        <div className="w-[85vw] sm:w-[300px] h-full overflow-hidden flex flex-col">
+          <RightPanel
           key={activeProjectId}
           panel={rightPanelTab}
           onSectionChange={setRightPanelTab}
@@ -2742,6 +2745,7 @@ export default function App() {
           onClearFootnoteHighlight={() => setActiveFootnoteHighlight(null)}
         />
       </div>
+        </div>
 
       {fontExplorerOpen && (
         <GoogleFontsPanel onSaveApiKey={handleSaveApiKey}
@@ -2829,7 +2833,7 @@ export default function App() {
           className="flex items-center gap-2 pointer-events-auto select-none max-w-[calc(100vw-24px)]"
         >
           <div
-            className="flex items-center gap-2 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-full shadow-2xl border backdrop-blur-md"
+            className="flex items-center gap-2 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-full shadow-2xl border bg-white dark:bg-zinc-800"
             style={{
               backgroundColor: theme.surface,
               borderColor: theme.border,

@@ -69,7 +69,7 @@ export default function WordCountDropdown({
 
       {open && (
         <div 
-          className="absolute right-0 p-3 rounded-xl shadow-xl w-56 border backdrop-blur-md animate-in fade-in duration-150 z-50"
+          className="absolute right-0 p-3 rounded-xl shadow-xl w-56 border bg-white dark:bg-zinc-800 animate-in fade-in duration-150 z-50"
           style={{
             ...(direction === 'up' 
               ? { bottom: 'calc(100% + 6px)' } 

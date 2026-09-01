@@ -75,21 +75,34 @@ function Editor({
   
   const handleTypewriterScroll = (editor: import("@tiptap/react").Editor) => {
     if (!callbacksRef.current.typewriterMode) return;
-    requestAnimationFrame(() => {
+    // Optimize by checking if we actually need to scroll
+    if (editor._typewriterRaf) cancelAnimationFrame(editor._typewriterRaf);
+    
+    editor._typewriterRaf = requestAnimationFrame(() => {
       try {
         const view = editor.view;
         const state = editor.state;
         if (!state.selection.empty) return; // Skip if text is selected
+        
         const coords = view.coordsAtPos(state.selection.head);
         const scrollContainer = document.querySelector(".kgv-scroll");
         if (coords && scrollContainer) {
-          const containerRect = scrollContainer.getBoundingClientRect();
-          // Calculate the Y position of the caret relative to the scroll container's content
-          const caretY = coords.top - containerRect.top + scrollContainer.scrollTop;
-          // Calculate the desired scroll position to put caret in middle
-          const targetScroll = caretY - (containerRect.height / 2);
-          // Apply a smooth scroll
-          scrollContainer.scrollTo({ top: Math.max(0, targetScroll), behavior: "smooth" });
+          // Cache the container rect if possible, but reading it once per frame is usually ok if not heavily thrashed.
+          // To avoid layout thrashing, we only read what's necessary.
+          const containerRectTop = scrollContainer.offsetTop || 0; // Using offsetTop is cheaper than getBoundingClientRect
+          const containerHeight = scrollContainer.clientHeight;
+          
+          // Fallback to bounding rect if offsetTop is not reliable for absolute positioning, 
+          // but in our layout kgv-scroll is relative/absolute.
+          const topOffset = scrollContainer.getBoundingClientRect().top;
+          
+          const caretY = coords.top - topOffset + scrollContainer.scrollTop;
+          const targetScroll = caretY - (containerHeight / 2);
+          
+          // Only scroll if the difference is significant (> 10px) to save CPU and battery
+          if (Math.abs(scrollContainer.scrollTop - Math.max(0, targetScroll)) > 10) {
+            scrollContainer.scrollTo({ top: Math.max(0, targetScroll), behavior: "smooth" });
+          }
         }
       } catch (e) {
         console.warn('Typewriter scroll calculation failed:', e);

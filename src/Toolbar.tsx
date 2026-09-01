@@ -197,7 +197,7 @@ function Toolbar({
     <>
     <div
       ref={toolbarRef}
-      className="absolute bottom-6 left-0 right-0 mx-auto justify-center z-40 flex items-center flex-nowrap w-max gap-0.5 px-2.5 py-1.5 select-none rounded-full shadow-2xl border backdrop-blur-md max-w-[calc(100%-1.5rem)] overflow-x-auto"
+      className="absolute bottom-6 left-0 right-0 mx-auto justify-center z-40 flex items-center flex-nowrap w-max gap-0.5 px-2.5 py-1.5 select-none rounded-full shadow-2xl border bg-white dark:bg-zinc-800 max-w-[calc(100%-1.5rem)] overflow-x-auto"
       style={{ 
         backgroundColor: theme.surface ? `${theme.surface}f0` : (theme.isDark ? 'rgba(30,30,30,0.92)' : 'rgba(255,255,255,0.92)'),
         borderColor: theme.border || (theme.isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.1)'),
