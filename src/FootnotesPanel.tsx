@@ -211,12 +211,10 @@ export default function FootnotesPanel({
           >
             <Hash size={24} className="mb-2 opacity-40" style={{ color: theme.text }} />
             <p className="text-xs font-medium mb-1" style={{ color: theme.text }}>
-              {searchQuery ? (lang === 'vi' ? 'Không tìm thấy kết quả' : 'No results found') : t(lang, 'noFootnotesYet')}
+              {searchQuery ? (t(lang, 'noResultsFound') || 'No results found') : t(lang, 'noFootnotesYet')}
             </p>
             <p className="text-[11px] opacity-60 leading-relaxed mb-3" style={{ color: theme.textMuted }}>
-              {lang === 'vi'
-                ? 'Bấm nút "Thêm" hoặc gõ [^1] trong bài viết để tạo ghi chú.'
-                : 'Click "Add" or type [^1] in the editor to create reference notes.'}
+              {t(lang, 'createFootnoteHelp') || 'Click "Add" or type [^1] in the editor to create reference notes.'}
             </p>
             <button
               onClick={onInsertNewFootnote}

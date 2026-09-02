@@ -11,10 +11,24 @@ html, body, #root {
   padding: 0;
   overflow: hidden;
   background: var(--bg-color, #fff); /* fallback */
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 body {
   transition: background-color 0.3s ease;
+}
+
+/* Allow text selection strictly inside editors, Zen reader, and input elements */
+.kgv-editor,
+.ProseMirror,
+.zen-content,
+input,
+textarea,
+select,
+[contenteditable="true"] {
+  user-select: text;
+  -webkit-user-select: text;
 }
 @tailwind base;
 @tailwind components;

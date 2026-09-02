@@ -5,6 +5,10 @@ export interface Folder {
   created_at?: number
   isDeleted?: boolean
   deletedAt?: string | null
+  isArchived?: boolean
+  archivedAt?: string | null
+  isPinned?: boolean
+  pinnedAt?: string | null
 }
 
 export interface Document {
@@ -14,6 +18,8 @@ export interface Document {
   updated_at?: number | string
   folder_id?: string | null
   created_at?: number | string
+  isPinned?: boolean
+  pinnedAt?: string | null
 }
 
 export interface Page {
@@ -21,11 +27,16 @@ export interface Page {
   title: string
   content: string
   isDraft: boolean
+  isScratchpad?: boolean
   createdAt: string
   lastModified: string
   lastOpened?: string
   folderId?: string | null
   originalPageId?: string | null
+  isArchived?: boolean
+  archivedAt?: string | null
+  isPinned?: boolean
+  pinnedAt?: string | null
 }
 
 export interface Project {
@@ -33,14 +44,20 @@ export interface Project {
   title: string
   pages: Page[]
   drafts: Page[]
+  scratchpad?: Page[]
   folders: Folder[]
   bin: Page[]
+  archive?: Page[]
   createdAt: string
   lastModified: string
   lastOpened?: string
   folderId?: string | null
   isDeleted?: boolean
   deletedAt?: string | null
+  isArchived?: boolean
+  archivedAt?: string | null
+  isPinned?: boolean
+  pinnedAt?: string | null
 }
 
 export interface CustomFont {

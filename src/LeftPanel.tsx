@@ -5,7 +5,7 @@ import { Lang, t as i18nT } from './i18n'
 import {
   Home, Highlighter, Folder as FolderIcon, FolderOpen, Edit2, FileText, Trash2,
   ChevronDown, RotateCcw, X, MoreHorizontal, Upload, Plus, PanelLeftClose, Bookmark,
-  BookOpen, Type, Table as TableIcon, List, Cloud
+  BookOpen, Table as TableIcon, List, Cloud, Archive, ArchiveRestore, Pin, StickyNote
 } from 'lucide-react'
 import { importJsonBackupFile } from './fileHandlers';
 import { saveProjectToDB, saveFolderToDB } from './db';
@@ -105,14 +105,20 @@ function LeftPanel(props: Record<string, unknown>) {
   const activePageId = (props.activePageId || props.activeId || '') as string
   const onSelectPage = (props.onSelectPage || props.onSelectDoc || (() => {})) as (id: string) => void
   const onNewPage = (props.onNewPage || (props.onAddDoc ? (() => (props.onAddDoc as () => void)()) : (() => {}))) as (isDraft?: boolean, folderId?: string) => void
+  const onNewScratchpad = (props.onNewScratchpad || (() => onNewPage(false))) as () => void
+  const onTogglePinPage = (props.onTogglePinPage || (() => {})) as (id: string) => void
   const onDeletePage = (props.onDeletePage || props.onDeleteDoc || (() => {})) as (id: string) => void
   const onRenamePage = (props.onRenamePage || (() => {})) as (id: string, name: string) => void
   const syncStatus: SyncStatus = (props.syncStatus || 'saved') as SyncStatus
   const lastSaved: Date = (props.lastSaved || new Date()) as Date
   const bin: Page[] = activeProject ? activeProject.bin : (Array.isArray(props.bin) ? (props.bin as Page[]) : [])
+  const archive: Page[] = activeProject ? (activeProject.archive || []) : (Array.isArray(props.archive) ? (props.archive as Page[]) : [])
+  const scratchpads: Page[] = activeProject ? (activeProject.scratchpad || []) : pages.filter(p => p.isScratchpad)
   const onRestorePage = (props.onRestorePage || (() => {})) as (id: string) => void
   const onPermanentDelete = (props.onPermanentDelete || (() => {})) as (id: string) => void
   const onEmptyBin = (props.onEmptyBin || (() => {})) as () => void
+  const onArchivePage = (props.onArchivePage || (() => {})) as (id: string) => void
+  const onUnarchivePage = (props.onUnarchivePage || (() => {})) as (id: string) => void
 
   const folders: Folder[] = activeProject ? activeProject.folders : (Array.isArray(props.folders) ? (props.folders as Folder[]) : [])
   const activeFolders = folders.filter(f => !f.isDeleted)
@@ -130,6 +136,7 @@ function LeftPanel(props: Record<string, unknown>) {
   const [, setTick] = useState(0)
   const [activeTab, setActiveTab] = useState<'pages' | 'drafts'>('pages')
   const [binOpen, setBinOpen] = useState(false)
+  const [archiveOpen, setArchiveOpen] = useState(false)
   const [collapsedFolders, setCollapsedFolders] = useState<Set<string>>(new Set())
   const [renamingFolderId, setRenamingFolderId] = useState<string | null>(null)
   const [folderRenameVal, setFolderRenameVal] = useState('')
@@ -267,13 +274,26 @@ function LeftPanel(props: Record<string, unknown>) {
               fontFamily: uiFont, fontSize: '0.8rem',
               fontWeight: isActive ? 600 : 400,
               color: isActive ? c.accent : c.text, lineHeight: 1.35,
-              whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1
+              whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1,
+              display: 'flex', alignItems: 'center', gap: 5
             }}>
-              {page.title}
+              {page.isPinned && (
+                <Pin size={11} style={{ color: c.accent, fill: c.accent, flexShrink: 0 }} />
+              )}
+              <span className="truncate">{page.title}</span>
             </span>
           )}
           
           <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity" style={{ flexShrink: 0 }}>
+            <button
+              onClick={e => { e.stopPropagation(); onTogglePinPage(page.id); }}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, color: page.isPinned ? c.accent : c.textMuted, display: 'flex', alignItems: 'center' }}
+              onMouseEnter={e => (e.currentTarget.style.color = c.accent)}
+              onMouseLeave={e => (e.currentTarget.style.color = page.isPinned ? c.accent : c.textMuted)}
+              title={page.isPinned ? (t(lang, 'unpin') || "Unpin") : (t(lang, 'pin') || "Pin")}
+            >
+              <Pin size={12} style={page.isPinned ? { fill: c.accent } : {}} />
+            </button>
             <button
               onClick={e => { e.stopPropagation(); setFolderMenuOpenId(null); setRenamingId(page.id); setRenameVal(page.title); }}
               style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, color: c.accent, display: 'flex', alignItems: 'center' }}
@@ -282,6 +302,15 @@ function LeftPanel(props: Record<string, unknown>) {
               title={t(lang, 'rename') || "Rename"}
             >
               <Edit2 size={12} />
+            </button>
+            <button
+              onClick={e => { e.stopPropagation(); onArchivePage(page.id) }}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, color: c.textMuted, display: 'flex', alignItems: 'center' }}
+              onMouseEnter={e => (e.currentTarget.style.color = c.accent)}
+              onMouseLeave={e => (e.currentTarget.style.color = c.textMuted)}
+              title={t(lang, 'archiveDocument') || "Archive"}
+            >
+              <Archive size={12} />
             </button>
             <button
               onClick={e => { e.stopPropagation(); onDeletePage(page.id) }}
@@ -307,7 +336,11 @@ function LeftPanel(props: Record<string, unknown>) {
   const renderFolder = (folder: Folder, depth = 0) => {
     const isCollapsed = collapsedFolders.has(folder.id)
     const childFolders = activeFolders.filter(f => f.parentId === folder.id)
-    const folderPages = (activeTab === 'drafts' ? drafts : nonDrafts).filter(p => p.folderId === folder.id)
+    const folderPages = [...(activeTab === 'drafts' ? drafts : nonDrafts).filter(p => p.folderId === folder.id)].sort((a, b) => {
+      if (a.isPinned && !b.isPinned) return -1;
+      if (!a.isPinned && b.isPinned) return 1;
+      return 0;
+    })
 
     return (
       <div key={folder.id} style={{ marginLeft: depth > 0 ? 10 : 0, marginTop: 2 }}>
@@ -458,7 +491,11 @@ function LeftPanel(props: Record<string, unknown>) {
   const renderTabContent = (isDraftSection: boolean) => {
     const list = isDraftSection ? drafts : nonDrafts
     const rootFolders = folders.filter(f => f.parentId === null)
-    const rootPages = list.filter(p => !p.folderId || !folders.find(f => f.id === p.folderId))
+    const rootPages = list.filter(p => !p.folderId || !folders.find(f => f.id === p.folderId)).sort((a, b) => {
+      if (a.isPinned && !b.isPinned) return -1;
+      if (!a.isPinned && b.isPinned) return 1;
+      return 0;
+    })
 
     return (
       <div>
@@ -910,6 +947,45 @@ function LeftPanel(props: Record<string, unknown>) {
                   {renderTabContent(true)}
                 </div>
               </div>
+
+              {/* Scratchpad Section */}
+              <div style={{ marginTop: 10 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 4px', marginBottom: 4 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <StickyNote size={14} style={{ color: c.accent }} />
+                    <span style={{ fontSize: '0.74rem', fontWeight: 600, color: c.text, fontFamily: uiFont, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                      {t(lang, 'scratchpad')}
+                    </span>
+                    <span style={{ fontSize: '0.64rem', color: c.accent, opacity: 0.85 }}>
+                      ({scratchpads.length})
+                    </span>
+                  </div>
+                  <button 
+                    onClick={() => onNewScratchpad()} 
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: c.accent, padding: 2, display: 'flex', alignItems: 'center' }}
+                    title={t(lang, 'newScratchpad') || 'New Scratchpad'}
+                  >
+                    <Plus size={14} />
+                  </button>
+                </div>
+                
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  {scratchpads.length === 0 ? (
+                    <div style={{
+                      padding: '6px 10px', fontFamily: uiFont, fontSize: '0.7rem',
+                      color: c.textMuted, fontStyle: 'italic', borderRadius: 6, margin: '2px 6px'
+                    }}>
+                      {t(lang, 'scratchpadEmpty') || 'No scratchpad notes'}
+                    </div>
+                  ) : (
+                    [...scratchpads].sort((a, b) => {
+                      if (a.isPinned && !b.isPinned) return -1;
+                      if (!a.isPinned && b.isPinned) return 1;
+                      return 0;
+                    }).map(p => renderPage(p, 0))
+                  )}
+                </div>
+              </div>
             </div>
           )}
         </div>
@@ -933,18 +1009,33 @@ function LeftPanel(props: Record<string, unknown>) {
           )}
           
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <button
-              onClick={() => setBinOpen(v => !v)}
-              style={{
-                background: 'none', border: 'none', cursor: 'pointer', color: c.textMuted,
-                display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.68rem', fontWeight: 500
-              }}
-              title="Bin"
-            >
-              <Trash2 size={13} />
-              <span>{t(lang, 'bin') || 'Bin'}</span>
-              {bin.length > 0 && <span style={{ opacity: 0.7 }}>({bin.length})</span>}
-            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <button
+                onClick={() => { setArchiveOpen(v => !v); setBinOpen(false); }}
+                style={{
+                  background: 'none', border: 'none', cursor: 'pointer', color: archiveOpen ? c.accent : c.textMuted,
+                  display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.68rem', fontWeight: 500
+                }}
+                title={t(lang, 'archive') || "Archive"}
+              >
+                <Archive size={13} />
+                <span>{t(lang, 'archive') || 'Archive'}</span>
+                {archive.length > 0 && <span style={{ opacity: 0.7 }}>({archive.length})</span>}
+              </button>
+
+              <button
+                onClick={() => { setBinOpen(v => !v); setArchiveOpen(false); }}
+                style={{
+                  background: 'none', border: 'none', cursor: 'pointer', color: binOpen ? c.accent : c.textMuted,
+                  display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.68rem', fontWeight: 500
+                }}
+                title="Bin"
+              >
+                <Trash2 size={13} />
+                <span>{t(lang, 'bin') || 'Bin'}</span>
+                {bin.length > 0 && <span style={{ opacity: 0.7 }}>({bin.length})</span>}
+              </button>
+            </div>
             
             {/* Sync Status */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
@@ -953,6 +1044,31 @@ function LeftPanel(props: Record<string, unknown>) {
             </div>
           </div>
         </div>
+
+        {/* Archive Overlay */}
+        {archiveOpen && (
+          <div style={{ position: 'absolute', bottom: 'calc(48px + env(safe-area-inset-bottom))', left: 12, width: 230, background: c.panel, border: `1px solid ${c.border}`, borderRadius: 8, padding: 10, boxShadow: '0 8px 24px rgba(0,0,0,0.14)', zIndex: 20 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, borderBottom: `1px solid ${c.borderFaint}`, paddingBottom: 6 }}>
+              <span style={{ fontSize: '0.72rem', fontWeight: 600, color: c.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t(lang, 'archive') || 'Archive'}</span>
+              <button onClick={() => setArchiveOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: c.textMuted, padding: 2 }}><X size={12} /></button>
+            </div>
+            {archive.length === 0 ? (
+              <div style={{ fontSize: '0.75rem', color: c.textMuted, textAlign: 'center', padding: '12px 0' }}>{t(lang, 'archiveEmpty') || 'Archive is empty'}</div>
+            ) : (
+              <div style={{ maxHeight: 200, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 4 }}>
+                {archive.map(p => (
+                  <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '3px 6px', background: c.surface, borderRadius: 5 }}>
+                    <span style={{ fontSize: '0.75rem', color: c.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1, paddingRight: 6 }}>{p.title}</span>
+                    <div style={{ display: 'flex', gap: 3 }}>
+                      <button onClick={() => onUnarchivePage(p.id)} style={{ padding: 3, background: (c.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'), color: c.accent, borderRadius: 4, border: 'none', cursor: 'pointer' }} title={t(lang, 'unarchiveDocument') || 'Unarchive'}><ArchiveRestore size={11} /></button>
+                      <button onClick={() => onDeletePage(p.id)} style={{ padding: 3, background: 'rgba(224, 80, 80, 0.1)', color: '#e05050', borderRadius: 4, border: 'none', cursor: 'pointer' }} title={t(lang, 'moveToTrash') || 'Move to Trash'}><Trash2 size={11} /></button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
         
         {/* Bin Overlay */}
         {binOpen && (

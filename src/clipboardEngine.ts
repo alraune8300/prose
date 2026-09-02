@@ -230,6 +230,50 @@ export function convertHtmlToMarkdown(html: string): string {
 }
 
 /**
+ * Normalizes any content (raw markdown, paragraph-wrapped markdown, escaped HTML, or rich HTML)
+ * into standard, fully formatted Semantic Rich HTML (h1-h6, strong, em, ul, ol, blockquote, code, table).
+ */
+export function ensureRichTextHtml(rawContent: string): string {
+  if (!rawContent || !rawContent.trim()) return '';
+
+  let c = rawContent;
+
+  // 1. Decode escaped HTML entities if double encoded
+  if (c.includes('&lt;p&gt;') || c.includes('&lt;h') || c.includes('&lt;div&gt;') || c.includes('&lt;strong&gt;')) {
+    try {
+      const doc = new DOMParser().parseFromString(c, 'text/html');
+      c = doc.documentElement.textContent || c;
+    } catch {
+      // ignore
+    }
+  }
+
+  // 2. Check if content has no HTML tags at all (plain text or raw markdown)
+  const hasHtmlTags = /<[a-z][\s\S]*>/i.test(c);
+  if (!hasHtmlTags) {
+    return parseMarkdownToHtml(c);
+  }
+
+  // 3. Check for unrendered markdown symbols trapped inside <p> or <div> tags
+  // Examples: <p># Heading</p>, <p>## Subheading</p>, <p>> Quote</p>, <p>- Item</p>, <p>**Bold text**</p>
+  const hasTrappedMarkdown = /<p>\s*(#{1,6}\s|&gt;\s*|>\s*|[-*+]\s+\[[ xX]\]|[-*+]\s+|\d+\.\s+|```)/i.test(c) ||
+    /<p>.*?\*\*[^*]+\*\*.*?<\/p>/i.test(c) ||
+    /<p>.*?~~[^~]+~~.*?<\/p>/i.test(c);
+
+  // 4. Check if the HTML only contains basic wrapper tags (<p>, <div>, <br>, <span>) with no semantic tags
+  const hasSemanticTags = /<(h[1-6]|ul|ol|blockquote|table|strong|b|em|i|code|pre|hr|a|img)[^>]*>/i.test(c);
+
+  if (hasTrappedMarkdown || !hasSemanticTags) {
+    const md = convertHtmlToMarkdown(c);
+    if (isMarkdownText(md) >= 1 || hasTrappedMarkdown) {
+      return parseMarkdownToHtml(md);
+    }
+  }
+
+  return sanitizePastedHtml(c);
+}
+
+/**
  * Handles Smart Multi-tier Paste for Tiptap Editor
  * Returns true if paste was handled customly, false to let default editor behavior proceed.
  */

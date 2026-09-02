@@ -5,7 +5,7 @@ import {
 } from './theme';
 import { getDict, type Dict } from './i18n';
 import { exportTxt, exportJson } from './exportUtils';
-import { isMarkdownText, parseMarkdownToHtml } from "./clipboardEngine";
+import { isMarkdownText, parseMarkdownToHtml, ensureRichTextHtml } from "./clipboardEngine";
 import { importFile, exportToOdt, exportToHtmlFile, exportToMarkdownFile, exportToJsonBackup } from './fileHandlers';
 import { saveApiKey, loadApiKey, injectGoogleFont, reinjectSavedFonts } from './googleFontsApi';
 import {  X, Plus, Minus, ZoomIn, Eye, Maximize2, PanelLeft, Hourglass, Coffee, Settings, LayoutList, Columns, Brain, FileText, GitCompare, Table, FoldVertical, UnfoldVertical, Terminal, Sparkles, Trash2 , Activity, Type, ArrowLeft, FolderOpen, ChevronRight, Home } from 'lucide-react';
@@ -172,26 +172,19 @@ export default function App() {
 
   const allPagesInActiveProj = useMemo(() => {
     if (!activeProject) return [];
-    return [...(activeProject.pages || []), ...(activeProject.drafts || [])];
+    return [...(activeProject.pages || []), ...(activeProject.drafts || []), ...(activeProject.scratchpad || [])];
   }, [activeProject]);
 
   const activePage = useMemo(() => {
     if (!activeProject) return undefined;
     const found = allPagesInActiveProj.find((p) => p.id === activePageId);
-    return found || activeProject.pages?.[0] || activeProject.drafts?.[0];
+    return found || activeProject.pages?.[0] || activeProject.drafts?.[0] || activeProject.scratchpad?.[0];
   }, [activeProject, allPagesInActiveProj, activePageId]);
 
   const safeActiveContent = useMemo(() => {
     let c = activePage?.content || "";
     if (!c) return c;
-    if (c.includes("&lt;p&gt;") || c.includes("&lt;h") || c.includes("&lt;div&gt;")) {
-        const doc = new DOMParser().parseFromString(c, "text/html");
-        c = doc.documentElement.textContent || c;
-    }
-    if (!/<(p|h[1-6]|ul|ol|blockquote|table|div)>/i.test(c) && isMarkdownText(c) >= 1) {
-      c = parseMarkdownToHtml(c);
-    }
-    return c;
+    return ensureRichTextHtml(c);
   }, [activePage?.content]);
 
   const [themeMode, setThemeMode] = useState<ThemeMode>('light');
@@ -1274,6 +1267,11 @@ export default function App() {
           return p;
         });
 
+        const updatedScratchpad = (proj.scratchpad || []).map((p) => {
+          if (p.id === activePageId) { pageFound = true; return { ...p, ...patch, lastModified: now }; }
+          return p;
+        });
+
         if (!pageFound) {
           // If the page doesn't exist (e.g. was just deleted), do not update anything.
           return proj;
@@ -1292,6 +1290,7 @@ export default function App() {
           title: updatedTitle,
           pages: updatedPages,
           drafts: updatedDrafts,
+          scratchpad: updatedScratchpad,
           lastModified: now,
         };
 
@@ -1486,22 +1485,28 @@ export default function App() {
     alert("Draft successfully committed to original document!");
   }, [activeProject, activePage, activeProjectId, scheduleSaveProject]);
 
-  const addPage = useCallback((isDraft = false, folderId?: string) => {
-    let title = isDraft ? 'Untitled Draft' : 'Untitled Document';
+  const addPage = useCallback((isDraft = false, folderId?: string, isScratchpad = false) => {
+    let title = isDraft ? 'Untitled Draft' : (isScratchpad ? (t.scratchpadTitle || 'Scratchpad') : 'Untitled Document');
     let content = '';
     let originalPageId: string | undefined = undefined;
 
-    if (isDraft && activePage && !activePage.isDraft) {
+    if (isDraft && activePage && !activePage.isDraft && !isScratchpad) {
       title = `${activePage.title} (Draft)`;
       content = activePage.content;
       originalPageId = activePage.id;
+    } else if (isScratchpad) {
+      title = t.scratchpadTitle || 'Scratchpad';
+      content = '';
     }
 
     const newPage: Page = {
       id: 'page-' + Date.now() + '-' + Math.random().toString(36).substring(2, 6),
       title,
       content,
-      isDraft, folderId, originalPageId,
+      isDraft, 
+      isScratchpad,
+      folderId, 
+      originalPageId,
       createdAt: new Date().toISOString(),
       lastModified: new Date().toISOString(),
     };
@@ -1511,8 +1516,9 @@ export default function App() {
         if (proj.id !== activeProjectId) return proj;
         const updatedProj: Project = {
           ...proj,
-          pages: isDraft ? proj.pages : [newPage, ...(proj.pages || [])],
+          pages: (isDraft || isScratchpad) ? proj.pages : [newPage, ...(proj.pages || [])],
           drafts: isDraft ? [newPage, ...(proj.drafts || [])] : proj.drafts,
+          scratchpad: isScratchpad ? [newPage, ...(proj.scratchpad || [])] : proj.scratchpad,
           lastModified: new Date().toISOString(),
         };
         scheduleSaveProject(updatedProj);
@@ -1521,28 +1527,30 @@ export default function App() {
     });
 
     setActivePageId(newPage.id);
-  }, [activeProjectId, scheduleSaveProject, activePage]);
+  }, [activeProjectId, scheduleSaveProject, activePage, t]);
 
   const deletePage = useCallback((pageId: string) => {
     setProjects((prev) => {
       return prev.map((proj) => {
         if (proj.id !== activeProjectId) return proj;
 
-        const targetPage = [...(proj.pages || []), ...(proj.drafts || [])].find((p) => p.id === pageId);
+        const targetPage = [...(proj.pages || []), ...(proj.drafts || []), ...(proj.scratchpad || [])].find((p) => p.id === pageId);
         const remainingPages = (proj.pages || []).filter((p) => p.id !== pageId);
         const remainingDrafts = (proj.drafts || []).filter((p) => p.id !== pageId);
+        const remainingScratchpad = (proj.scratchpad || []).filter((p) => p.id !== pageId);
         const updatedBin = targetPage ? [targetPage, ...(proj.bin || [])] : (proj.bin || []);
 
         const updatedProj: Project = {
           ...proj,
           pages: remainingPages,
           drafts: remainingDrafts,
+          scratchpad: remainingScratchpad,
           bin: updatedBin,
           lastModified: new Date().toISOString(),
         };
 
         if (activePageId === pageId) {
-          const nextActive = remainingPages[0] || remainingDrafts[0];
+          const nextActive = remainingPages[0] || remainingDrafts[0] || remainingScratchpad[0];
           if (nextActive) {
             setActivePageId(nextActive.id);
           } else {
@@ -1565,6 +1573,73 @@ export default function App() {
     });
   }, [activeProjectId, activePageId, scheduleSaveProject]);
 
+  const archivePage = useCallback((pageId: string) => {
+    setProjects((prev) => {
+      return prev.map((proj) => {
+        if (proj.id !== activeProjectId) return proj;
+
+        const targetPage = [...(proj.pages || []), ...(proj.drafts || []), ...(proj.scratchpad || [])].find((p) => p.id === pageId);
+        if (!targetPage) return proj;
+        const remainingPages = (proj.pages || []).filter((p) => p.id !== pageId);
+        const remainingDrafts = (proj.drafts || []).filter((p) => p.id !== pageId);
+        const remainingScratchpad = (proj.scratchpad || []).filter((p) => p.id !== pageId);
+        const updatedArchive = [{ ...targetPage, isArchived: true, archivedAt: new Date().toISOString() }, ...(proj.archive || [])];
+
+        const updatedProj: Project = {
+          ...proj,
+          pages: remainingPages,
+          drafts: remainingDrafts,
+          scratchpad: remainingScratchpad,
+          archive: updatedArchive,
+          lastModified: new Date().toISOString(),
+        };
+
+        if (activePageId === pageId) {
+          const nextActive = remainingPages[0] || remainingDrafts[0] || remainingScratchpad[0];
+          if (nextActive) {
+            setActivePageId(nextActive.id);
+          } else {
+            const fallback: Page = {
+              id: 'page-' + Date.now(),
+              title: 'Untitled Document',
+              content: '',
+              isDraft: false,
+              createdAt: new Date().toISOString(),
+              lastModified: new Date().toISOString(),
+            };
+            updatedProj.pages = [fallback];
+            setActivePageId(fallback.id);
+          }
+        }
+
+        scheduleSaveProject(updatedProj);
+        return updatedProj;
+      });
+    });
+  }, [activeProjectId, activePageId, scheduleSaveProject]);
+
+  const unarchivePage = useCallback((pageId: string) => {
+    setProjects((prev) => {
+      return prev.map((proj) => {
+        if (proj.id !== activeProjectId) return proj;
+        const target = (proj.archive || []).find((p) => p.id === pageId);
+        if (!target) return proj;
+        const remainingArchive = (proj.archive || []).filter((p) => p.id !== pageId);
+        const restoredPage: Page = { ...target, isArchived: false, archivedAt: undefined };
+        const updatedProj: Project = {
+          ...proj,
+          archive: remainingArchive,
+          pages: (!target.isDraft && !target.isScratchpad) ? [restoredPage, ...(proj.pages || [])] : proj.pages,
+          drafts: target.isDraft ? [restoredPage, ...(proj.drafts || [])] : proj.drafts,
+          scratchpad: target.isScratchpad ? [restoredPage, ...(proj.scratchpad || [])] : proj.scratchpad,
+          lastModified: new Date().toISOString(),
+        };
+        scheduleSaveProject(updatedProj);
+        return updatedProj;
+      });
+    });
+  }, [activeProjectId, scheduleSaveProject]);
+
   const renamePage = useCallback((pageId: string, newName: string) => {
     setProjects((prev) => {
       return prev.map((proj) => {
@@ -1573,6 +1648,25 @@ export default function App() {
           ...proj,
           pages: (proj.pages || []).map((p) => p.id === pageId ? { ...p, title: newName, lastModified: new Date().toISOString() } : p),
           drafts: (proj.drafts || []).map((p) => p.id === pageId ? { ...p, title: newName, lastModified: new Date().toISOString() } : p),
+          scratchpad: (proj.scratchpad || []).map((p) => p.id === pageId ? { ...p, title: newName, lastModified: new Date().toISOString() } : p),
+          lastModified: new Date().toISOString(),
+        };
+        scheduleSaveProject(updatedProj);
+        return updatedProj;
+      });
+    });
+  }, [activeProjectId, scheduleSaveProject]);
+
+  const togglePinPage = useCallback((pageId: string) => {
+    setProjects((prev) => {
+      return prev.map((proj) => {
+        if (proj.id !== activeProjectId) return proj;
+        const toggle = (p: Page) => p.id === pageId ? { ...p, isPinned: !p.isPinned, pinnedAt: !p.isPinned ? new Date().toISOString() : undefined } : p;
+        const updatedProj: Project = {
+          ...proj,
+          pages: (proj.pages || []).map(toggle),
+          drafts: (proj.drafts || []).map(toggle),
+          scratchpad: (proj.scratchpad || []).map(toggle),
           lastModified: new Date().toISOString(),
         };
         scheduleSaveProject(updatedProj);
@@ -1591,8 +1685,9 @@ export default function App() {
         const updatedProj: Project = {
           ...proj,
           bin: remainingBin,
-          pages: target.isDraft ? proj.pages : [target, ...(proj.pages || [])],
+          pages: (!target.isDraft && !target.isScratchpad) ? [target, ...(proj.pages || [])] : proj.pages,
           drafts: target.isDraft ? [target, ...(proj.drafts || [])] : proj.drafts,
+          scratchpad: target.isScratchpad ? [target, ...(proj.scratchpad || [])] : proj.scratchpad,
           lastModified: new Date().toISOString(),
         };
         scheduleSaveProject(updatedProj);
@@ -2347,7 +2442,11 @@ export default function App() {
           onDeleteProject={handleDeleteProject}
           onSelectPage={(id: string) => { setActivePageId(id); if (window.innerWidth < 768) setSidebarOpen(false); }}
           onNewPage={addPage}
+          onNewScratchpad={() => addPage(false, undefined, true)}
+          onTogglePinPage={togglePinPage}
           onDeletePage={deletePage}
+          onArchivePage={archivePage}
+          onUnarchivePage={unarchivePage}
           onRenamePage={renamePage}
           onCreateFolder={addFolder}
           onRenameFolder={renameFolder}

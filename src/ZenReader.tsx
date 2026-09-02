@@ -7,7 +7,6 @@ interface ZenReaderProps {
   theme: ThemeColors;
   docFont?: string;
   zoomPercent?: number;
-  zoomPercent?: number;
   onClose: () => void;
   onTouchStart?: (e: React.TouchEvent) => void;
   onTouchEnd?: (e: React.TouchEvent) => void;
@@ -38,76 +37,6 @@ export function ZenReader({ content, title, theme, docFont = 'Newsreader, Georgi
     }
   };
 
-  // Intersection Observer for scroll-reveal and focus spotlight
-  useEffect(() => {
-    if (!contentRef.current) return;
-    const blocks = contentRef.current.querySelectorAll('p, h1, h2, h3, h4, h5, h6, li, blockquote');
-    
-    // Add base classes for CSS transitions
-    blocks.forEach(block => {
-      block.classList.add('zen-block');
-    });
-
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          // Calculate how close to the center of the viewport the element is
-          const rect = entry.boundingClientRect;
-          const viewportHeight = window.innerHeight;
-          const elementCenter = rect.top + rect.height / 2;
-          const distanceToCenter = Math.abs(viewportHeight / 2 - elementCenter);
-          const maxDistance = viewportHeight / 1.1;
-          const ratio = Math.max(0, 1 - distanceToCenter / maxDistance);
-          
-          if (ratio > 0.3) {
-             entry.target.classList.add('zen-focus');
-             entry.target.classList.remove('zen-blur');
-             entry.target.classList.remove('zen-hidden');
-          } else {
-             entry.target.classList.add('zen-blur');
-             entry.target.classList.remove('zen-focus');
-             entry.target.classList.remove('zen-hidden');
-          }
-        } else {
-          // Out of viewport
-          entry.target.classList.remove('zen-focus');
-          entry.target.classList.remove('zen-blur');
-          // If it's below the viewport, it should be zen-hidden to slide up when appearing
-          if (entry.boundingClientRect.top > 0) {
-            entry.target.classList.add('zen-hidden');
-          } else {
-            // Above viewport, just blur it out
-            entry.target.classList.add('zen-blur');
-          }
-        }
-      });
-    }, {
-      root: containerRef.current,
-      threshold: Array.from({ length: 21 }).map((_, i) => i * 0.05), // Observe constantly for smooth focus
-      rootMargin: "0px 0px -15% 0px" // Trigger slightly before it hits the bottom
-    });
-
-    blocks.forEach(block => observer.observe(block));
-
-    return () => observer.disconnect();
-  }, [content]);
-
-  // Handle first letter drop cap & paragraph formatting
-  useEffect(() => {
-    if (!contentRef.current) return;
-    const paragraphs = contentRef.current.querySelectorAll('p');
-    if (paragraphs.length > 0) {
-      // Find the first non-empty paragraph
-      for (let i = 0; i < paragraphs.length; i++) {
-        const p = paragraphs[i];
-        if (p.textContent && p.textContent.trim().length > 0) {
-          p.classList.add('zen-first-paragraph');
-          break;
-        }
-      }
-    }
-  }, [content]);
-
   return (
     <div 
       ref={containerRef}
@@ -118,89 +47,247 @@ export function ZenReader({ content, title, theme, docFont = 'Newsreader, Georgi
       onTouchEnd={onTouchEnd}
     >
       <style>{`
-        /* Minimalist scrollbar hide just in case */
+        /* Minimalist scrollbar hide */
         .zen-reader-scroll::-webkit-scrollbar { display: none; }
         
         /* Typography & Layout */
         .zen-content {
-          max-width: 66ch;
+          max-width: 72ch;
           margin: 0 auto;
-          font-family: 'Newsreader', 'Merriweather', ${docFont}, 'Georgia', serif;
-          line-height: 1.95;
-          letter-spacing: 0.015em;
-          padding: 12vh 24px 20vh;
-          font-size: ${1.125 * (zoomPercent / 100)}rem;
+          font-family: ${docFont || "'Newsreader', 'Merriweather', 'Georgia', serif"};
+          line-height: 1.85;
+          letter-spacing: 0.01em;
+          padding: 10vh 24px 20vh;
+          font-size: ${1.0625 * (zoomPercent / 100)}rem;
+          color: ${theme.text};
+          word-break: break-word;
         }
-        
-        .zen-content h1, .zen-content h2, .zen-content h3 {
-          line-height: 1.4;
-          margin-top: 2em;
-          margin-bottom: 1em;
-          font-weight: 600;
-        }
-        
-        .zen-content h1 { font-size: 2.25em; text-align: center; }
-        .zen-content h2 { font-size: 1.75em; }
-        .zen-content h3 { font-size: 1.35em; }
         
         /* Title */
         .zen-title {
-          font-family: 'Newsreader', 'Merriweather', ${docFont}, 'Georgia', serif;
-          font-size: ${2.5 * (zoomPercent / 100)}rem;
+          font-family: ${docFont || "'Newsreader', 'Merriweather', 'Georgia', serif"};
+          font-size: ${2.25 * (zoomPercent / 100)}rem;
           font-weight: 700;
           text-align: center;
-          margin-bottom: 3rem;
+          margin-bottom: 2.75rem;
           line-height: 1.3;
           letter-spacing: -0.02em;
+          color: ${theme.text};
         }
 
-        /* Editorial Paragraphs */
+        /* Standard Paragraphs - No drop caps, clean spacing */
         .zen-content p {
-          margin: 0;
-          text-indent: 1.8em;
+          margin: 0 0 1.25em 0;
+          line-height: 1.85;
+          text-indent: 0;
         }
         
-        /* Drop Cap for First Paragraph */
-        .zen-first-paragraph {
-          text-indent: 0 !important;
+        /* Headings - hierarchy and natural alignment */
+        .zen-content h1, .zen-content h2, .zen-content h3, .zen-content h4, .zen-content h5, .zen-content h6 {
+          font-weight: 600;
+          line-height: 1.35;
+          color: ${theme.text};
         }
         
-        .zen-first-paragraph::first-letter {
-          float: left;
-          font-size: 3.5em;
-          line-height: 0.8;
-          padding-top: 0.1em;
-          padding-right: 0.1em;
-          padding-left: 0.05em;
-          color: ${theme.accent};
-          font-weight: bold;
+        .zen-content h1 {
+          font-size: 1.85em;
+          font-weight: 700;
+          margin-top: 1.8em;
+          margin-bottom: 0.6em;
+        }
+        
+        .zen-content h2 {
+          font-size: 1.45em;
+          margin-top: 1.5em;
+          margin-bottom: 0.5em;
+        }
+        
+        .zen-content h3 {
+          font-size: 1.2em;
+          margin-top: 1.3em;
+          margin-bottom: 0.4em;
+        }
+        
+        .zen-content h4, .zen-content h5, .zen-content h6 {
+          font-size: 1.05em;
+          margin-top: 1.1em;
+          margin-bottom: 0.35em;
         }
 
-        /* Intersection Observer Transitions */
-        .zen-block {
-          transition: opacity 0.4s ease-out, transform 0.4s ease-out, filter 0.4s ease-out;
-          will-change: opacity, transform, filter;
+        /* Unordered & Ordered Lists */
+        .zen-content ul {
+          list-style-type: disc;
+          margin: 0 0 1.25em 1.5em;
+          padding-left: 0.5em;
         }
-        
-        /* State: hidden (below viewport) */
-        .zen-hidden {
-          opacity: 0;
-          transform: translateY(40px);
-          filter: blur(4px);
+
+        .zen-content ol {
+          list-style-type: decimal;
+          margin: 0 0 1.25em 1.5em;
+          padding-left: 0.5em;
         }
-        
-        /* State: blurred (out of focus, but in view) */
-        .zen-blur {
-          opacity: 0.35;
-          transform: translateY(0);
-          filter: blur(0px);
+
+        .zen-content li {
+          margin: 0.35em 0;
+          line-height: 1.75;
         }
-        
-        /* State: focus */
-        .zen-focus {
-          opacity: 1;
-          transform: translateY(0);
-          filter: blur(0px);
+
+        /* Task Lists */
+        .zen-content ul[data-type="taskList"] {
+          list-style: none;
+          margin: 0 0 1.25em 0;
+          padding-left: 0;
+        }
+
+        .zen-content li[data-type="taskItem"] {
+          display: flex;
+          align-items: flex-start;
+          gap: 0.6em;
+          margin: 0.4em 0;
+        }
+
+        .zen-content li[data-type="taskItem"] > label {
+          margin-top: 0.3em;
+          user-select: none;
+        }
+
+        .zen-content li[data-type="taskItem"] input[type="checkbox"] {
+          cursor: pointer;
+          accent-color: ${theme.accent};
+          width: 15px;
+          height: 15px;
+        }
+
+        .zen-content li[data-type="taskItem"] > div {
+          flex: 1 1 auto;
+        }
+
+        /* Blockquotes */
+        .zen-content blockquote {
+          margin: 1.5em 0;
+          padding: 0.6em 0 0.6em 1.25em;
+          border-left: 3px solid ${theme.accent};
+          font-style: italic;
+          opacity: 0.9;
+        }
+
+        /* Horizontal Rules */
+        .zen-content hr {
+          border: none;
+          border-top: 1px solid ${theme.border || 'rgba(128,128,128,0.25)'};
+          margin: 2.25em 0;
+          opacity: 0.7;
+        }
+
+        /* Tables */
+        .zen-content table {
+          width: 100%;
+          border-collapse: collapse;
+          margin: 1.5em 0;
+          font-size: 0.95em;
+        }
+
+        .zen-content th, .zen-content td {
+          border: 1px solid ${theme.border || 'rgba(128,128,128,0.2)'};
+          padding: 8px 14px;
+          text-align: left;
+        }
+
+        .zen-content th {
+          background-color: ${theme.surface || 'rgba(128,128,128,0.08)'};
+          font-weight: 600;
+        }
+
+        /* Code & Preformatted */
+        .zen-content pre {
+          background-color: ${theme.surface || 'rgba(128,128,128,0.08)'};
+          border: 1px solid ${theme.borderFaint || 'rgba(128,128,128,0.15)'};
+          border-radius: 8px;
+          padding: 1em 1.25em;
+          margin: 1.5em 0;
+          overflow-x: auto;
+          font-family: monospace;
+          font-size: 0.9em;
+          line-height: 1.6;
+        }
+
+        .zen-content code {
+          font-family: monospace;
+          font-size: 0.88em;
+          background-color: ${theme.surface || 'rgba(128,128,128,0.08)'};
+          padding: 0.15em 0.35em;
+          border-radius: 4px;
+        }
+
+        .zen-content pre code {
+          background: none;
+          padding: 0;
+          border: none;
+        }
+
+        /* Images */
+        .zen-content img {
+          max-width: 100%;
+          height: auto;
+          border-radius: 8px;
+          margin: 1.5em auto;
+          display: block;
+        }
+
+        /* Text Alignments */
+        .zen-content .has-text-align-center,
+        .zen-content [style*="text-align: center"],
+        .zen-content [style*="text-align:center"] {
+          text-align: center;
+        }
+
+        .zen-content .has-text-align-right,
+        .zen-content [style*="text-align: right"],
+        .zen-content [style*="text-align:right"] {
+          text-align: right;
+        }
+
+        .zen-content .has-text-align-justify,
+        .zen-content [style*="text-align: justify"],
+        .zen-content [style*="text-align:justify"] {
+          text-align: justify;
+        }
+
+        .zen-content .has-text-align-left,
+        .zen-content [style*="text-align: left"],
+        .zen-content [style*="text-align:left"] {
+          text-align: left;
+        }
+
+        /* Formatting marks */
+        .zen-content mark {
+          background-color: #fef08a;
+          color: #1f2937;
+          padding: 0.1em 0.25em;
+          border-radius: 2px;
+        }
+
+        .zen-content u {
+          text-decoration: underline;
+          text-underline-offset: 2px;
+        }
+
+        .zen-content s {
+          text-decoration: line-through;
+        }
+
+        .zen-content strong, .zen-content b {
+          font-weight: 700;
+        }
+
+        .zen-content em, .zen-content i {
+          font-style: italic;
+        }
+
+        .zen-content a {
+          color: ${theme.accent};
+          text-decoration: underline;
+          text-underline-offset: 3px;
         }
       `}</style>
       
@@ -229,3 +316,4 @@ export function ZenReader({ content, title, theme, docFont = 'Newsreader, Georgi
     </div>
   );
 }
+

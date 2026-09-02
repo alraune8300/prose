@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { FileText, FolderOpen, FolderInput, Plus, Download, Upload, Grid, List, Trash2, Edit2, Check, X, RotateCcw, Home, AlertCircle, Search, ArrowUpDown, FileJson, Clock, Palette, ArrowLeft, ChevronRight } from 'lucide-react';
+import { FileText, FolderOpen, FolderInput, Plus, Download, Upload, Grid, List, Trash2, Edit2, Check, X, RotateCcw, Home, AlertCircle, Search, ArrowUpDown, FileJson, Clock, Palette, ArrowLeft, ChevronRight, Archive, ArchiveRestore } from 'lucide-react';
 
 import { Project, ThemeColors, Folder } from './types';
 import { db, getAllProjectsFromDB, saveProjectToDB, deleteProjectFromDB, getAllFoldersFromDB, saveFolderToDB } from './db';
@@ -121,16 +121,18 @@ const FolderCardShape: React.FC<FolderCardShapeProps> = ({
   );
 };
 
-function WelcomeScreen({ theme, themeMode, onSelectTheme, onOpenThemeModal, uiFont, lang = 'vi', onChangeLang, onOpenProject, onImport, onExportAll, onOpenGithubCloudSave, onEmptyAllTrash, onReloadProjects, refreshTrigger, initialFolderId, onFolderChange }: WelcomeScreenProps) {
+function WelcomeScreen({ theme, onSelectTheme, onOpenThemeModal, uiFont, lang = 'vi', onChangeLang, onOpenProject, onImport, onExportAll, onOpenGithubCloudSave, onEmptyAllTrash, onReloadProjects, refreshTrigger, initialFolderId, onFolderChange }: WelcomeScreenProps) {
     
   const [projects, setProjects] = useState<Project[]>([]);
-  const activeProjects = projects.filter(p => !p.isDeleted);
+  const activeProjects = projects.filter(p => !p.isDeleted && !p.isArchived);
+  const archivedProjects = projects.filter(p => !p.isDeleted && p.isArchived);
   const trashedProjects = projects.filter(p => p.isDeleted);
   const [folders, setFolders] = useState<Folder[]>([]);
-  const activeFolders = folders.filter(f => !f.isDeleted);
+  const activeFolders = folders.filter(f => !f.isDeleted && !f.isArchived);
+  const archivedFolders = folders.filter(f => !f.isDeleted && f.isArchived);
   const trashedFolders = folders.filter(f => f.isDeleted);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [tab, setTab] = useState<'active' | 'trash'>('active');
+  const [tab, setTab] = useState<'active' | 'archive' | 'trash'>('active');
   const [timeGreeting, setTimeGreeting] = useState('');
   
   const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
@@ -273,6 +275,64 @@ function WelcomeScreen({ theme, themeMode, onSelectTheme, onOpenThemeModal, uiFo
     await loadData();
     if (onReloadProjects) onReloadProjects();
     setToastMsg(t(lang, 'projectMoved') || 'Project moved successfully');
+  };
+
+  const handleArchiveProject = async (project: Project, e: React.MouseEvent) => {
+    e.stopPropagation();
+    await saveProjectToDB({ 
+      ...project, 
+      isArchived: true, 
+      archivedAt: new Date().toISOString() 
+    });
+    await loadData();
+    if (onReloadProjects) onReloadProjects();
+    setToastMsg({ text: t(lang, 'itemArchived') || 'Project moved to archive', type: 'success' });
+  };
+
+  const handleUnarchiveProject = async (project: Project, e: React.MouseEvent) => {
+    e.stopPropagation();
+    await saveProjectToDB({ 
+      ...project, 
+      isArchived: false, 
+      archivedAt: null 
+    });
+    await loadData();
+    if (onReloadProjects) onReloadProjects();
+    setToastMsg({ text: t(lang, 'itemUnarchived') || 'Project restored from archive', type: 'success' });
+  };
+
+  const handleArchiveFolder = async (folder: Folder, e: React.MouseEvent) => {
+    e.stopPropagation();
+    await saveFolderToDB({
+      ...folder,
+      isArchived: true,
+      archivedAt: new Date().toISOString()
+    });
+    await loadData();
+    setToastMsg({ text: t(lang, 'itemArchived') || 'Folder moved to archive', type: 'success' });
+  };
+
+  const handleUnarchiveFolder = async (folder: Folder, e: React.MouseEvent) => {
+    e.stopPropagation();
+    await saveFolderToDB({
+      ...folder,
+      isArchived: false,
+      archivedAt: null
+    });
+    await loadData();
+    setToastMsg({ text: t(lang, 'itemUnarchived') || 'Folder restored from archive', type: 'success' });
+  };
+
+  const handleUnarchiveAll = async () => {
+    for (const p of archivedProjects) {
+      await saveProjectToDB({ ...p, isArchived: false, archivedAt: null });
+    }
+    for (const f of archivedFolders) {
+      await saveFolderToDB({ ...f, isArchived: false, archivedAt: null });
+    }
+    await loadData();
+    if (onReloadProjects) onReloadProjects();
+    setToastMsg({ text: t(lang, 'itemUnarchived') || 'All items restored from archive', type: 'success' });
   };
 
   const handleSoftDeleteProject = async (project: Project, e: React.MouseEvent) => {
@@ -470,8 +530,9 @@ function WelcomeScreen({ theme, themeMode, onSelectTheme, onOpenThemeModal, uiFo
     input.click();
   };
 
-  const filteredProjects = (tab === 'active' ? activeProjects : trashedProjects).filter(p => {
-    const matchesFolder = (p.folderId || null) === currentFolderId;
+  const targetProjectList = tab === 'active' ? activeProjects : tab === 'archive' ? archivedProjects : trashedProjects;
+  const filteredProjects = targetProjectList.filter(p => {
+    const matchesFolder = tab === 'active' ? (p.folderId || null) === currentFolderId : true;
     const matchesSearch = !searchQuery.trim() || 
       (p.title || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
       (p.pages || []).some(page => (page.title || '').toLowerCase().includes(searchQuery.toLowerCase()));
@@ -507,8 +568,9 @@ function WelcomeScreen({ theme, themeMode, onSelectTheme, onOpenThemeModal, uiFo
     return 0;
   });
 
-  const filteredFolders = (tab === 'active' ? activeFolders : trashedFolders).filter(f => {
-    const matchesFolder = (f.parentId || null) === currentFolderId;
+  const targetFolderList = tab === 'active' ? activeFolders : tab === 'archive' ? archivedFolders : trashedFolders;
+  const filteredFolders = targetFolderList.filter(f => {
+    const matchesFolder = tab === 'active' ? (f.parentId || null) === currentFolderId : true;
     const matchesSearch = !searchQuery.trim() || (f.name || '').toLowerCase().includes(searchQuery.toLowerCase());
     return matchesFolder && matchesSearch;
   });
@@ -618,35 +680,66 @@ function WelcomeScreen({ theme, themeMode, onSelectTheme, onOpenThemeModal, uiFo
               </h2>
             </div>
           </div>
-          <nav className="flex flex-row md:flex-col gap-2 w-full mt-2">
+          <nav className="flex flex-row md:flex-col gap-1.5 md:gap-2 w-full mt-2">
             <button 
-              onClick={() => setTab('active')} 
-              className="flex items-center gap-2 md:gap-3 px-3 py-1.5 md:py-2.5 rounded-full transition-all border"
+              onClick={() => { setTab('active'); }} 
+              className="flex items-center justify-between px-3 py-1.5 md:py-2.5 rounded-full transition-all border cursor-pointer"
               style={{ 
-                backgroundColor: tab === 'active' ? 'transparent' : 'transparent',
+                backgroundColor: tab === 'active' ? (theme.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)') : 'transparent',
                 borderColor: tab === 'active' ? theme.border : 'transparent',
                 color: tab === 'active' ? theme.text : theme.textMuted
               }}
               onMouseEnter={e => { if (tab !== 'active') e.currentTarget.style.backgroundColor = theme.panel; }}
               onMouseLeave={e => { if (tab !== 'active') e.currentTarget.style.backgroundColor = 'transparent'; }}
             >
-              <Home size={16} strokeWidth={tab === 'active' ? 2 : 1.5} />
-              <span className="font-medium text-xs md:text-sm">{t(lang, 'active')}</span>
+              <div className="flex items-center gap-2 md:gap-3">
+                <Home size={16} strokeWidth={tab === 'active' ? 2 : 1.5} />
+                <span className="font-medium text-xs md:text-sm">{t(lang, 'active')}</span>
+              </div>
             </button>
             
             <button 
-              onClick={() => setTab('trash')} 
-              className="flex items-center gap-2 md:gap-3 px-3 py-1.5 md:py-2.5 rounded-full transition-all border"
+              onClick={() => { setTab('archive'); }} 
+              className="flex items-center justify-between px-3 py-1.5 md:py-2.5 rounded-full transition-all border cursor-pointer"
               style={{ 
-                backgroundColor: tab === 'trash' ? 'transparent' : 'transparent',
+                backgroundColor: tab === 'archive' ? (theme.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)') : 'transparent',
+                borderColor: tab === 'archive' ? theme.border : 'transparent',
+                color: tab === 'archive' ? theme.text : theme.textMuted
+              }}
+              onMouseEnter={e => { if (tab !== 'archive') e.currentTarget.style.backgroundColor = theme.panel; }}
+              onMouseLeave={e => { if (tab !== 'archive') e.currentTarget.style.backgroundColor = 'transparent'; }}
+            >
+              <div className="flex items-center gap-2 md:gap-3">
+                <Archive size={16} strokeWidth={tab === 'archive' ? 2 : 1.5} />
+                <span className="font-medium text-xs md:text-sm">{t(lang, 'archive')}</span>
+              </div>
+              {(archivedProjects.length + archivedFolders.length) > 0 && (
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full font-semibold" style={{ backgroundColor: folderBg, color: theme.accent }}>
+                  {archivedProjects.length + archivedFolders.length}
+                </span>
+              )}
+            </button>
+
+            <button 
+              onClick={() => { setTab('trash'); }} 
+              className="flex items-center justify-between px-3 py-1.5 md:py-2.5 rounded-full transition-all border cursor-pointer"
+              style={{ 
+                backgroundColor: tab === 'trash' ? (theme.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)') : 'transparent',
                 borderColor: tab === 'trash' ? theme.border : 'transparent',
                 color: tab === 'trash' ? theme.text : theme.textMuted
               }}
               onMouseEnter={e => { if (tab !== 'trash') e.currentTarget.style.backgroundColor = theme.panel; }}
               onMouseLeave={e => { if (tab !== 'trash') e.currentTarget.style.backgroundColor = 'transparent'; }}
             >
-              <Trash2 size={16} strokeWidth={tab === 'trash' ? 2 : 1.5} />
-              <span className="font-medium text-xs md:text-sm">{t(lang, 'trash')}</span>
+              <div className="flex items-center gap-2 md:gap-3">
+                <Trash2 size={16} strokeWidth={tab === 'trash' ? 2 : 1.5} />
+                <span className="font-medium text-xs md:text-sm">{t(lang, 'trash')}</span>
+              </div>
+              {(trashedProjects.length + trashedFolders.length) > 0 && (
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full font-semibold" style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', color: '#ef4444' }}>
+                  {trashedProjects.length + trashedFolders.length}
+                </span>
+              )}
             </button>
           </nav>
         </div>
@@ -960,6 +1053,40 @@ function WelcomeScreen({ theme, themeMode, onSelectTheme, onOpenThemeModal, uiFo
             </div>
           </div>
         )}
+        {tab === 'archive' && (
+          <div className="w-full max-w-5xl mb-4 flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-xl border animate-fade-in-up gap-3" style={{ backgroundColor: theme.surface, borderColor: theme.borderFaint }}>
+            <div className="flex items-center gap-2.5">
+              <div className="p-2 rounded-lg" style={{ backgroundColor: folderBg, color: theme.accent }}>
+                <Archive size={16} strokeWidth={2} />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-semibold" style={{ color: theme.text }}>
+                    {t(lang, 'archivedItems')}
+                  </span>
+                  <span className="text-[11px] px-1.5 py-0.5 rounded-full font-medium" style={{ backgroundColor: folderBg, color: theme.accent }}>
+                    {archivedProjects.length + archivedFolders.length}
+                  </span>
+                </div>
+                <p className="text-[11px] font-light mt-0.5" style={{ color: theme.textMuted }}>
+                  {t(lang, 'archiveDesc')}
+                </p>
+              </div>
+            </div>
+            {(archivedProjects.length > 0 || archivedFolders.length > 0) && (
+              <button
+                onClick={handleUnarchiveAll}
+                className="self-start sm:self-auto flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold cursor-pointer transition-all"
+                style={{ borderColor: theme.borderFaint, color: theme.accent, backgroundColor: folderBg }}
+                onMouseEnter={e => e.currentTarget.style.backgroundColor = folderHoverBg}
+                onMouseLeave={e => e.currentTarget.style.backgroundColor = folderBg}
+              >
+                <ArchiveRestore size={13} />
+                <span>{t(lang, 'unarchiveAll')}</span>
+              </button>
+            )}
+          </div>
+        )}
         {tab === 'trash' && (trashedProjects.length > 0 || trashedFolders.length > 0) && (
           <div className="w-full max-w-5xl mb-4 flex items-center justify-between p-3 rounded-xl border animate-fade-in-up" style={{ backgroundColor: theme.surface, borderColor: theme.borderFaint }}>
             <span className="text-xs font-medium" style={{ color: theme.textMuted }}>
@@ -985,7 +1112,7 @@ function WelcomeScreen({ theme, themeMode, onSelectTheme, onOpenThemeModal, uiFo
             >
               <FileText size={32} className="mb-4" strokeWidth={1.5} style={{ color: theme.textMuted }} />
               <p className="font-light text-sm" style={{ color: theme.textMuted }}>
-                {tab === 'active' ? t(lang, 'noProjectsFound') : t(lang, 'trashIsEmpty')}
+                {tab === 'active' ? t(lang, 'noProjectsFound') : tab === 'archive' ? t(lang, 'archiveEmpty') : t(lang, 'trashIsEmpty')}
               </p>
             </div>
           ) : (
@@ -1047,8 +1174,20 @@ function WelcomeScreen({ theme, themeMode, onSelectTheme, onOpenThemeModal, uiFo
                           <div className="flex-shrink-0 flex items-center gap-1 transition-opacity" onClick={(e) => e.stopPropagation()}>
                             {tab === 'active' ? (
                               <>
-                                <button onClick={(e) => handleStartEditFolder(folder.id, folder.name, e)} className="p-1.5 rounded-md hover:bg-neutral-500/10 transition-colors cursor-pointer" style={{ color: theme.accent }} title="Rename">
+                                <button onClick={(e) => handleStartEditFolder(folder.id, folder.name, e)} className="p-1.5 rounded-md hover:bg-neutral-500/10 transition-colors cursor-pointer" style={{ color: theme.accent }} title={t(lang, 'rename')}>
                                   <Edit2 size={14} />
+                                </button>
+                                <button onClick={(e) => handleArchiveFolder(folder, e)} className="p-1.5 rounded-md hover:bg-neutral-500/10 transition-colors cursor-pointer" style={{ color: theme.accent }} title={t(lang, 'archiveFolder')}>
+                                  <Archive size={14} />
+                                </button>
+                                <button onClick={(e) => handleSoftDeleteFolder(folder, e)} className="p-1.5 rounded-md text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer" title={t(lang, 'moveToTrash')}>
+                                  <Trash2 size={14} />
+                                </button>
+                              </>
+                            ) : tab === 'archive' ? (
+                              <>
+                                <button onClick={(e) => handleUnarchiveFolder(folder, e)} className="p-1.5 rounded-md hover:bg-neutral-500/10 transition-colors cursor-pointer" style={{ color: theme.accent }} title={t(lang, 'unarchiveFolder')}>
+                                  <ArchiveRestore size={14} />
                                 </button>
                                 <button onClick={(e) => handleSoftDeleteFolder(folder, e)} className="p-1.5 rounded-md text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer" title={t(lang, 'moveToTrash')}>
                                   <Trash2 size={14} />
@@ -1056,7 +1195,7 @@ function WelcomeScreen({ theme, themeMode, onSelectTheme, onOpenThemeModal, uiFo
                               </>
                             ) : (
                               <>
-                                <button onClick={(e) => handleRestoreFolder(folder, e)} className="p-1.5 rounded-md hover:bg-neutral-500/10 transition-colors cursor-pointer" style={{ color: theme.accent }} title="Restore">
+                                <button onClick={(e) => handleRestoreFolder(folder, e)} className="p-1.5 rounded-md hover:bg-neutral-500/10 transition-colors cursor-pointer" style={{ color: theme.accent }} title={t(lang, 'restore')}>
                                   <RotateCcw size={14} />
                                 </button>
                                 <button onClick={(e) => promptHardDelete('folder', folder.id, folder.name, e)} className="p-1.5 rounded-md text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer" title={t(lang, 'deleteForever')}>
@@ -1134,6 +1273,18 @@ function WelcomeScreen({ theme, themeMode, onSelectTheme, onOpenThemeModal, uiFo
                         <button onClick={(e) => handleStartEditFolder(folder.id, folder.name, e)} className="p-1.5 rounded-md hover:bg-neutral-500/10 transition-colors cursor-pointer" style={{ color: theme.accent }} title={t(lang, 'rename')}>
                           <Edit2 size={13} />
                         </button>
+                        <button onClick={(e) => handleArchiveFolder(folder, e)} className="p-1.5 rounded-md hover:bg-neutral-500/10 transition-colors cursor-pointer" style={{ color: theme.accent }} title={t(lang, 'archiveFolder')}>
+                          <Archive size={13} />
+                        </button>
+                        <button onClick={(e) => handleSoftDeleteFolder(folder, e)} className="p-1.5 rounded-md text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer" title={t(lang, 'moveToTrash')}>
+                          <Trash2 size={13} />
+                        </button>
+                      </>
+                    ) : tab === 'archive' ? (
+                      <>
+                        <button onClick={(e) => handleUnarchiveFolder(folder, e)} className="p-1.5 rounded-md hover:bg-neutral-500/10 transition-colors cursor-pointer" style={{ color: theme.accent }} title={t(lang, 'unarchiveFolder')}>
+                          <ArchiveRestore size={13} />
+                        </button>
                         <button onClick={(e) => handleSoftDeleteFolder(folder, e)} className="p-1.5 rounded-md text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer" title={t(lang, 'moveToTrash')}>
                           <Trash2 size={13} />
                         </button>
@@ -1160,8 +1311,8 @@ function WelcomeScreen({ theme, themeMode, onSelectTheme, onOpenThemeModal, uiFo
                   draggable={tab === 'active'}
                   onDragStart={(e) => { e.stopPropagation(); setDragProjectId(project.id); }}
                   onDragEnd={(e) => { e.stopPropagation(); setDragProjectId(null); setDragOverFolderId(null); }}
-                  onClick={() => tab === 'active' && onOpenProject(project.id)}
-                  className={`group relative flex flex-col justify-center px-4 py-3 rounded-md border transition-colors ${tab === 'active' ? 'cursor-pointer hover:-translate-y-0.5 shadow-sm' : ''} ${dragProjectId === project.id ? 'opacity-50' : ''}`}
+                  onClick={() => (tab === 'active' || tab === 'archive') && onOpenProject(project.id)}
+                  className={`group relative flex flex-col justify-center px-4 py-3 rounded-md border transition-colors ${tab === 'active' || tab === 'archive' ? 'cursor-pointer hover:-translate-y-0.5 shadow-sm' : ''} ${dragProjectId === project.id ? 'opacity-50' : ''}`}
                   style={{ 
                     backgroundColor: fileBg,
                     borderColor: fileBorder
@@ -1220,6 +1371,18 @@ function WelcomeScreen({ theme, themeMode, onSelectTheme, onOpenThemeModal, uiFo
                         </button>
                         <button onClick={(e) => handleStartEditProject(project.id, project.title, e)} className="p-1.5 rounded-md hover:bg-neutral-500/10 transition-colors cursor-pointer" style={{ color: theme.accent }} title={t(lang, 'rename')}>
                           <Edit2 size={13} />
+                        </button>
+                        <button onClick={(e) => handleArchiveProject(project, e)} className="p-1.5 rounded-md hover:bg-neutral-500/10 transition-colors cursor-pointer" style={{ color: theme.accent }} title={t(lang, 'archiveProject')}>
+                          <Archive size={13} />
+                        </button>
+                        <button onClick={(e) => handleSoftDeleteProject(project, e)} className="p-1.5 rounded-md text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer" title={t(lang, 'moveToTrash')}>
+                          <Trash2 size={13} />
+                        </button>
+                      </>
+                    ) : tab === 'archive' ? (
+                      <>
+                        <button onClick={(e) => handleUnarchiveProject(project, e)} className="p-1.5 rounded-md hover:bg-neutral-500/10 transition-colors cursor-pointer" style={{ color: theme.accent }} title={t(lang, 'unarchiveProject')}>
+                          <ArchiveRestore size={13} />
                         </button>
                         <button onClick={(e) => handleSoftDeleteProject(project, e)} className="p-1.5 rounded-md text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer" title={t(lang, 'moveToTrash')}>
                           <Trash2 size={13} />
