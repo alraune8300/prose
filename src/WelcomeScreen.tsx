@@ -1,11 +1,10 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { FileText, FolderOpen, FolderInput, Plus, Download, Upload, Grid, List, Trash2, Edit2, Check, X, RotateCcw, Home, AlertCircle, Search, ArrowUpDown, FileJson, Clock, Palette, ArrowLeft, ChevronRight } from 'lucide-react';
 
 import { Project, ThemeColors, Folder } from './types';
 import { db, getAllProjectsFromDB, saveProjectToDB, deleteProjectFromDB, getAllFoldersFromDB, saveFolderToDB } from './db';
 import { exportToJsonBackup, importJsonBackupFile } from './fileHandlers';
 import { Lang, t } from './i18n';
-import { PRESETS, THEME_CATEGORIES } from './theme';
 import { CustomSelect } from './CustomSelect';
 
 interface WelcomeScreenProps {
@@ -41,6 +40,87 @@ const LANGUAGES: {value: Lang, label: string}[] = [
 
 type SortOption = 'lastOpened' | 'updated' | 'newest' | 'oldest' | 'nameAZ' | 'nameZA' | 'pages';
 
+interface FolderCardShapeProps {
+  isHovered: boolean;
+  isDragOver: boolean;
+  accent: string;
+  folderBg: string;
+  folderBorder: string;
+  folderHoverBg: string;
+  folderHoverBorder: string;
+}
+
+const FolderCardShape: React.FC<FolderCardShapeProps> = ({
+  isHovered,
+  isDragOver,
+  accent,
+  folderBg,
+  folderBorder,
+  folderHoverBg,
+  folderHoverBorder,
+}) => {
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  const [width, setWidth] = React.useState(320);
+
+  React.useEffect(() => {
+    if (!containerRef.current) return;
+    const ro = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        if (entry.contentRect.width > 0) {
+          setWidth(entry.contentRect.width);
+        }
+      }
+    });
+    ro.observe(containerRef.current);
+    return () => ro.disconnect();
+  }, []);
+
+  const tabWidth = Math.min(135, Math.max(105, width * 0.42));
+  const r = 14;
+  const tabH = 18;
+  const h = 140;
+
+  // Mathematically continuous single SVG path:
+  // 1. Top-left of tab (0, 0) rounded with arc
+  // 2. Tab top horizontal
+  // 3. Smooth slope into shoulder
+  // 4. Shoulder horizontal
+  // 5. Top-right of body rounded
+  // 6. Right edge & bottom rounded corners
+  // 7. Left edge up to tab
+  const pathD = `
+    M 0 ${tabH + r}
+    L 0 ${r}
+    A ${r} ${r} 0 0 1 ${r} 0
+    L ${tabWidth - 10} 0
+    Q ${tabWidth} 0 ${tabWidth + 4} 6
+    L ${tabWidth + 10} ${tabH - 4}
+    Q ${tabWidth + 14} ${tabH} ${tabWidth + 22} ${tabH}
+    L ${width - r} ${tabH}
+    A ${r} ${r} 0 0 1 ${width} ${tabH + r}
+    L ${width} ${h - r}
+    A ${r} ${r} 0 0 1 ${width - r} ${h}
+    L ${r} ${h}
+    A ${r} ${r} 0 0 1 0 ${h - r}
+    Z
+  `;
+
+  return (
+    <div ref={containerRef} className="absolute inset-0 w-full h-full pointer-events-none">
+      <svg width={width} height={h} className="w-full h-full overflow-visible">
+        <path
+          d={pathD}
+          fill={isHovered ? folderHoverBg : folderBg}
+          stroke={isDragOver ? accent : (isHovered ? folderHoverBorder : folderBorder)}
+          strokeWidth={isDragOver ? 2 : 1}
+          strokeLinejoin="round"
+          className="transition-colors duration-150"
+        />
+      </svg>
+    </div>
+  );
+};
+
 function WelcomeScreen({ theme, themeMode, onSelectTheme, onOpenThemeModal, uiFont, lang = 'vi', onChangeLang, onOpenProject, onImport, onExportAll, onOpenGithubCloudSave, onEmptyAllTrash, onReloadProjects, refreshTrigger, initialFolderId, onFolderChange }: WelcomeScreenProps) {
     
   const [projects, setProjects] = useState<Project[]>([]);
@@ -59,6 +139,7 @@ function WelcomeScreen({ theme, themeMode, onSelectTheme, onOpenThemeModal, uiFo
   const [dragOverFolderId, setDragOverFolderId] = useState<string | null | 'root'>(null);
   const [editingFolderId, setEditingFolderId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
+  const [hoveredFolderId, setHoveredFolderId] = useState<string | null>(null);
   
   const [currentFolderId, setCurrentFolderId] = useState<string | null>(initialFolderId ?? null);
 
@@ -80,8 +161,6 @@ function WelcomeScreen({ theme, themeMode, onSelectTheme, onOpenThemeModal, uiFo
   const [isNewMenuOpen, setIsNewMenuOpen] = useState(false);
   const [isDataMenuOpen, setIsDataMenuOpen] = useState(false);
   
-  const [themeSearchQuery, setThemeSearchQuery] = useState('');
-  const [themeCategoryFilter, setThemeCategoryFilter] = useState('all');
   const [toastMsg, setToastMsg] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
   
   const [deleteConfirmDialog, setDeleteConfirmDialog] = useState<{ isOpen: boolean; type: 'project' | 'folder' | null; id: string | null; name: string }>({
@@ -90,6 +169,56 @@ function WelcomeScreen({ theme, themeMode, onSelectTheme, onOpenThemeModal, uiFo
     id: null,
     name: ''
   });
+
+  // Folder & File visual tokens derived directly from accent colour
+  const folderBg = useMemo(() => {
+    if (theme.accent.startsWith('#')) {
+      return theme.isDark ? `${theme.accent}14` : `${theme.accent}0e`;
+    }
+    return theme.accentLight || (theme.isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)');
+  }, [theme.accent, theme.isDark, theme.accentLight]);
+
+  const folderHoverBg = useMemo(() => {
+    if (theme.accent.startsWith('#')) {
+      return theme.isDark ? `${theme.accent}24` : `${theme.accent}1c`;
+    }
+    return theme.isDark ? 'rgba(255,255,255,0.09)' : 'rgba(0,0,0,0.06)';
+  }, [theme.accent, theme.isDark]);
+
+  const folderBorder = useMemo(() => {
+    if (theme.accent.startsWith('#')) {
+      return `${theme.accent}33`;
+    }
+    return theme.accentMid || (theme.isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)');
+  }, [theme.accent, theme.accentMid, theme.isDark]);
+
+  const folderHoverBorder = useMemo(() => {
+    if (theme.accent.startsWith('#')) {
+      return `${theme.accent}88`;
+    }
+    return theme.accent;
+  }, [theme.accent]);
+
+  const fileBg = useMemo(() => {
+    if (theme.accent.startsWith('#')) {
+      return theme.isDark ? `${theme.accent}10` : `${theme.accent}0a`;
+    }
+    return theme.isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.02)';
+  }, [theme.accent, theme.isDark]);
+
+  const fileHoverBg = useMemo(() => {
+    if (theme.accent.startsWith('#')) {
+      return theme.isDark ? `${theme.accent}20` : `${theme.accent}16`;
+    }
+    return theme.isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)';
+  }, [theme.accent, theme.isDark]);
+
+  const fileBorder = useMemo(() => {
+    if (theme.accent.startsWith('#')) {
+      return `${theme.accent}2e`;
+    }
+    return theme.accentMid || (theme.isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)');
+  }, [theme.accent, theme.accentMid, theme.isDark]);
 
   useEffect(() => {
     if (toastMsg) {
@@ -442,11 +571,11 @@ function WelcomeScreen({ theme, themeMode, onSelectTheme, onOpenThemeModal, uiFo
               <button
                 className="flex items-center gap-2 w-full text-left px-3 py-2 rounded-lg transition-colors text-sm"
                 style={{ color: theme.text, backgroundColor: 'transparent' }}
-                onMouseEnter={e => e.currentTarget.style.backgroundColor = theme.panel}
+                onMouseEnter={e => e.currentTarget.style.backgroundColor = folderHoverBg}
                 onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
                 onClick={() => handleMoveProject(null)}
               >
-                <Home size={14} style={{ color: theme.textMuted }} />
+                <Home size={14} style={{ color: theme.accent }} />
                 <span>{t(lang, 'home') || 'Home'}</span>
               </button>
               {activeFolders.map(folder => (
@@ -454,11 +583,11 @@ function WelcomeScreen({ theme, themeMode, onSelectTheme, onOpenThemeModal, uiFo
                   key={folder.id}
                   className="flex items-center gap-2 w-full text-left px-3 py-2 rounded-lg transition-colors text-sm truncate"
                   style={{ color: theme.text, backgroundColor: 'transparent' }}
-                  onMouseEnter={e => e.currentTarget.style.backgroundColor = theme.panel}
+                  onMouseEnter={e => e.currentTarget.style.backgroundColor = folderHoverBg}
                   onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
                   onClick={() => handleMoveProject(folder.id)}
                 >
-                  <FolderOpen size={14} style={{ color: theme.textMuted }} />
+                  <FolderOpen size={14} style={{ color: theme.accent }} />
                   <span className="truncate">{folder.name || 'Untitled Folder'}</span>
                 </button>
               ))}
@@ -669,8 +798,8 @@ function WelcomeScreen({ theme, themeMode, onSelectTheme, onOpenThemeModal, uiFo
                       <div className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider" style={{ color: theme.textMuted }}>
                         Documents
                       </div>
-                      <button onClick={() => { handleNewProject(); setIsNewMenuOpen(false); }} className="flex items-center gap-3 w-full text-left px-3 py-2 text-sm transition-colors" style={{ color: theme.text }} onMouseEnter={e => e.currentTarget.style.backgroundColor = theme.panel} onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}>
-                        <FileText size={16} style={{ color: theme.textMuted }} />
+                      <button onClick={() => { handleNewProject(); setIsNewMenuOpen(false); }} className="flex items-center gap-3 w-full text-left px-3 py-2 text-sm transition-colors" style={{ color: theme.text }} onMouseEnter={e => e.currentTarget.style.backgroundColor = folderHoverBg} onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}>
+                        <FileText size={16} style={{ color: theme.accent }} />
                         <span>{t(lang, 'newDocument').replace('+', '').trim()}</span>
                       </button>
                       
@@ -679,8 +808,8 @@ function WelcomeScreen({ theme, themeMode, onSelectTheme, onOpenThemeModal, uiFo
                       <div className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider" style={{ color: theme.textMuted }}>
                         Folders
                       </div>
-                      <button onClick={() => { handleNewFolder(); setIsNewMenuOpen(false); }} className="flex items-center gap-3 w-full text-left px-3 py-2 text-sm transition-colors" style={{ color: theme.text }} onMouseEnter={e => e.currentTarget.style.backgroundColor = theme.panel} onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}>
-                        <FolderOpen size={16} style={{ color: theme.textMuted }} />
+                      <button onClick={() => { handleNewFolder(); setIsNewMenuOpen(false); }} className="flex items-center gap-3 w-full text-left px-3 py-2 text-sm transition-colors" style={{ color: theme.text }} onMouseEnter={e => e.currentTarget.style.backgroundColor = folderHoverBg} onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}>
+                        <FolderOpen size={16} style={{ color: theme.accent }} />
                         <span>{t(lang, 'newFolder')}</span>
                       </button>
                     </div>
@@ -876,29 +1005,18 @@ function WelcomeScreen({ theme, themeMode, onSelectTheme, onOpenThemeModal, uiFo
                         e.preventDefault(); e.stopPropagation(); setDragOverFolderId(null);
                         if (dragProjectId) handleMoveProject(folder.id, dragProjectId);
                       }}
-                      onMouseEnter={(e) => {
-                        const bgEls = e.currentTarget.querySelectorAll('.folder-bg');
-                        bgEls.forEach(el => (el as HTMLElement).style.borderColor = theme.border);
-                      }}
-                      onMouseLeave={(e) => {
-                        const bgEls = e.currentTarget.querySelectorAll('.folder-bg');
-                        bgEls.forEach(el => (el as HTMLElement).style.borderColor = theme.borderFaint);
-                      }}
+                      onMouseEnter={() => setHoveredFolderId(folder.id)}
+                      onMouseLeave={() => setHoveredFolderId(null)}
                     >
-                      {/* Folder Tab Shape */}
-                      <div 
-                        className="folder-bg absolute top-0 left-0 w-[45%] h-[17px] rounded-tl-2xl rounded-tr-lg border-t border-l border-r transition-colors"
-                        style={{ backgroundColor: theme.surface, borderColor: theme.borderFaint }}
-                      />
-                      {/* Folder Body Shape */}
-                      <div 
-                        className="folder-bg absolute top-[16px] left-0 right-0 bottom-0 rounded-b-2xl rounded-tr-2xl border transition-colors shadow-sm"
-                        style={{ backgroundColor: theme.surface, borderColor: dragOverFolderId === folder.id ? theme.accent : theme.borderFaint, borderTopLeftRadius: 0, borderWidth: dragOverFolderId === folder.id ? 2 : 1 }}
-                      />
-                      {/* Mask Line */}
-                      <div 
-                        className="absolute top-[16px] left-[1px] h-[2px] z-10"
-                        style={{ width: 'calc(45% - 2px)', backgroundColor: theme.surface }}
+                      {/* 100% Seamless Single-Path Vector Silhouette */}
+                      <FolderCardShape
+                        isHovered={hoveredFolderId === folder.id}
+                        isDragOver={dragOverFolderId === folder.id}
+                        accent={theme.accent}
+                        folderBg={folderBg}
+                        folderBorder={folderBorder}
+                        folderHoverBg={folderHoverBg}
+                        folderHoverBorder={folderHoverBorder}
                       />
 
                       {/* Content */}
@@ -929,7 +1047,7 @@ function WelcomeScreen({ theme, themeMode, onSelectTheme, onOpenThemeModal, uiFo
                           <div className="flex-shrink-0 flex items-center gap-1 transition-opacity" onClick={(e) => e.stopPropagation()}>
                             {tab === 'active' ? (
                               <>
-                                <button onClick={(e) => handleStartEditFolder(folder.id, folder.name, e)} className="p-1.5 rounded-md hover:bg-neutral-500/10 transition-colors cursor-pointer" style={{ color: theme.textMuted }} title="Rename">
+                                <button onClick={(e) => handleStartEditFolder(folder.id, folder.name, e)} className="p-1.5 rounded-md hover:bg-neutral-500/10 transition-colors cursor-pointer" style={{ color: theme.accent }} title="Rename">
                                   <Edit2 size={14} />
                                 </button>
                                 <button onClick={(e) => handleSoftDeleteFolder(folder, e)} className="p-1.5 rounded-md text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer" title={t(lang, 'moveToTrash')}>
@@ -938,7 +1056,7 @@ function WelcomeScreen({ theme, themeMode, onSelectTheme, onOpenThemeModal, uiFo
                               </>
                             ) : (
                               <>
-                                <button onClick={(e) => handleRestoreFolder(folder, e)} className="p-1.5 rounded-md hover:bg-neutral-500/10 transition-colors cursor-pointer" style={{ color: theme.textMuted }} title="Restore">
+                                <button onClick={(e) => handleRestoreFolder(folder, e)} className="p-1.5 rounded-md hover:bg-neutral-500/10 transition-colors cursor-pointer" style={{ color: theme.accent }} title="Restore">
                                   <RotateCcw size={14} />
                                 </button>
                                 <button onClick={(e) => promptHardDelete('folder', folder.id, folder.name, e)} className="p-1.5 rounded-md text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer" title={t(lang, 'deleteForever')}>
@@ -948,8 +1066,8 @@ function WelcomeScreen({ theme, themeMode, onSelectTheme, onOpenThemeModal, uiFo
                             )}
                           </div>
                         </div>
-                        <div className="flex items-center gap-1.5 text-[0.7rem] font-light" style={{ color: theme.textMuted }}>
-                          <Clock size={12} strokeWidth={1.5} />
+                        <div className="flex items-center gap-1.5 text-[0.7rem] font-light" style={{ color: theme.accent, opacity: 0.85 }}>
+                          <Clock size={12} strokeWidth={1.5} style={{ color: theme.accent }} />
                           <span>{folder.created_at ? Intl.DateTimeFormat(lang, { month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(folder.created_at)) : t(lang, 'recently') || 'Recently'}</span>
                         </div>
                       </div>
@@ -969,20 +1087,20 @@ function WelcomeScreen({ theme, themeMode, onSelectTheme, onOpenThemeModal, uiFo
                     if (dragProjectId) handleMoveProject(folder.id, dragProjectId);
                   }}
                   style={{ 
-                    backgroundColor: 'transparent',
-                    borderColor: dragOverFolderId === folder.id ? theme.accent : theme.borderFaint
+                    backgroundColor: folderBg,
+                    borderColor: dragOverFolderId === folder.id ? theme.accent : folderBorder
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = theme.surface;
-                    e.currentTarget.style.borderColor = theme.border;
+                    e.currentTarget.style.backgroundColor = folderHoverBg;
+                    e.currentTarget.style.borderColor = folderHoverBorder;
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = 'transparent';
-                    e.currentTarget.style.borderColor = theme.borderFaint;
+                    e.currentTarget.style.backgroundColor = folderBg;
+                    e.currentTarget.style.borderColor = dragOverFolderId === folder.id ? theme.accent : folderBorder;
                   }}
                 >
                   <div className="flex items-center space-x-2 w-full pr-24">
-                    <div className="flex-shrink-0" style={{ color: theme.textMuted }}>
+                    <div className="flex-shrink-0" style={{ color: theme.accent }}>
                       <FolderOpen size={16} strokeWidth={1.5} />
                     </div>
 
@@ -1013,7 +1131,7 @@ function WelcomeScreen({ theme, themeMode, onSelectTheme, onOpenThemeModal, uiFo
                   <div className="absolute top-1/2 -translate-y-1/2 right-3 flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
                     {tab === 'active' ? (
                       <>
-                        <button onClick={(e) => handleStartEditFolder(folder.id, folder.name, e)} className="p-1.5 rounded-md hover:bg-neutral-500/10 transition-colors cursor-pointer" style={{ color: theme.textMuted }} title={t(lang, 'rename')}>
+                        <button onClick={(e) => handleStartEditFolder(folder.id, folder.name, e)} className="p-1.5 rounded-md hover:bg-neutral-500/10 transition-colors cursor-pointer" style={{ color: theme.accent }} title={t(lang, 'rename')}>
                           <Edit2 size={13} />
                         </button>
                         <button onClick={(e) => handleSoftDeleteFolder(folder, e)} className="p-1.5 rounded-md text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer" title={t(lang, 'moveToTrash')}>
@@ -1022,7 +1140,7 @@ function WelcomeScreen({ theme, themeMode, onSelectTheme, onOpenThemeModal, uiFo
                       </>
                     ) : (
                       <>
-                        <button onClick={(e) => handleRestoreFolder(folder, e)} className="p-1.5 rounded-md hover:bg-neutral-500/10 transition-colors cursor-pointer" style={{ color: theme.textMuted }} title={t(lang, 'restore')}>
+                        <button onClick={(e) => handleRestoreFolder(folder, e)} className="p-1.5 rounded-md hover:bg-neutral-500/10 transition-colors cursor-pointer" style={{ color: theme.accent }} title={t(lang, 'restore')}>
                           <RotateCcw size={13} />
                         </button>
                         <button onClick={(e) => promptHardDelete('folder', folder.id, folder.name, e)} className="p-1.5 rounded-md text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer" title={t(lang, 'deleteForever')}>
@@ -1045,21 +1163,21 @@ function WelcomeScreen({ theme, themeMode, onSelectTheme, onOpenThemeModal, uiFo
                   onClick={() => tab === 'active' && onOpenProject(project.id)}
                   className={`group relative flex flex-col justify-center px-4 py-3 rounded-md border transition-colors ${tab === 'active' ? 'cursor-pointer hover:-translate-y-0.5 shadow-sm' : ''} ${dragProjectId === project.id ? 'opacity-50' : ''}`}
                   style={{ 
-                    backgroundColor: 'transparent',
-                    borderColor: theme.borderFaint
+                    backgroundColor: fileBg,
+                    borderColor: fileBorder
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = theme.surface;
-                    e.currentTarget.style.borderColor = theme.border;
+                    e.currentTarget.style.backgroundColor = fileHoverBg;
+                    e.currentTarget.style.borderColor = folderHoverBorder;
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = 'transparent';
-                    e.currentTarget.style.borderColor = theme.borderFaint;
+                    e.currentTarget.style.backgroundColor = fileBg;
+                    e.currentTarget.style.borderColor = fileBorder;
                   }}
                 >
                   {/* Single Stream Line: Icon + Title */}
                   <div className="flex items-center space-x-2 w-full pr-24">
-                    <div className="flex-shrink-0" style={{ color: theme.textMuted }}>
+                    <div className="flex-shrink-0" style={{ color: theme.accent }}>
                       <FileText size={14} strokeWidth={1.5} />
                     </div>
 
@@ -1087,22 +1205,20 @@ function WelcomeScreen({ theme, themeMode, onSelectTheme, onOpenThemeModal, uiFo
                   </div>
 
                   {/* Sub-Metadata Line */}
-                  <div className="mt-3 flex items-center gap-2 text-[10px] font-light tracking-wider uppercase ml-6" style={{ color: theme.textMuted }}>
+                  <div className="mt-3 flex items-center gap-2 text-[10px] font-light tracking-wider uppercase ml-6" style={{ color: theme.accent, opacity: 0.8 }}>
                     <span>{project.pages.length} {project.pages.length === 1 ? t(lang, 'pageSingular') : t(lang, 'pagePlural')}</span>
                     <span>•</span>
                     <span>{Intl.DateTimeFormat(lang, { month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(project.lastModified || project.createdAt || Date.now()))}</span>
                   </div>
 
-
-
                   {/* Actions (Always visible) */}
                   <div className="absolute top-3 right-3 flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
                     {tab === 'active' ? (
                       <>
-                        <button onClick={(e) => { e.stopPropagation(); setMovingProjectId(project.id); }} className="p-1.5 rounded-md hover:bg-neutral-500/10 transition-colors cursor-pointer" style={{ color: theme.textMuted }} title={t(lang, 'moveToFolder') || 'Move to Folder'}>
+                        <button onClick={(e) => { e.stopPropagation(); setMovingProjectId(project.id); }} className="p-1.5 rounded-md hover:bg-neutral-500/10 transition-colors cursor-pointer" style={{ color: theme.accent }} title={t(lang, 'moveToFolder') || 'Move to Folder'}>
                           <FolderInput size={13} />
                         </button>
-                        <button onClick={(e) => handleStartEditProject(project.id, project.title, e)} className="p-1.5 rounded-md hover:bg-neutral-500/10 transition-colors cursor-pointer" style={{ color: theme.textMuted }} title={t(lang, 'rename')}>
+                        <button onClick={(e) => handleStartEditProject(project.id, project.title, e)} className="p-1.5 rounded-md hover:bg-neutral-500/10 transition-colors cursor-pointer" style={{ color: theme.accent }} title={t(lang, 'rename')}>
                           <Edit2 size={13} />
                         </button>
                         <button onClick={(e) => handleSoftDeleteProject(project, e)} className="p-1.5 rounded-md text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer" title={t(lang, 'moveToTrash')}>
@@ -1111,7 +1227,7 @@ function WelcomeScreen({ theme, themeMode, onSelectTheme, onOpenThemeModal, uiFo
                       </>
                     ) : (
                       <>
-                        <button onClick={(e) => handleRestoreProject(project, e)} className="p-1.5 rounded-md hover:bg-neutral-500/10 transition-colors cursor-pointer" style={{ color: theme.textMuted }} title={t(lang, 'restore')}>
+                        <button onClick={(e) => handleRestoreProject(project, e)} className="p-1.5 rounded-md hover:bg-neutral-500/10 transition-colors cursor-pointer" style={{ color: theme.accent }} title={t(lang, 'restore')}>
                           <RotateCcw size={13} />
                         </button>
                         <button onClick={(e) => promptHardDelete('project', project.id, project.title, e)} className="p-1.5 rounded-md text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer" title={t(lang, 'deleteForever')}>

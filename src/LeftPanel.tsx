@@ -195,6 +195,14 @@ function LeftPanel(props: Record<string, unknown>) {
     error: t(lang, 'saveError'),
   }[syncStatus]
 
+  const itemAccentHoverBg = c.accent.startsWith('#')
+    ? (c.isDark ? `${c.accent}1c` : `${c.accent}12`)
+    : (c.accentLight || (c.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'))
+
+  const itemAccentActiveBg = c.accent.startsWith('#')
+    ? (c.isDark ? `${c.accent}2c` : `${c.accent}20`)
+    : (c.accentLight || (c.isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)'))
+
   const commitRename = (id: string) => {
     if (renameVal.trim()) onRenamePage(id, renameVal.trim())
     setRenamingId(null)
@@ -219,7 +227,7 @@ function LeftPanel(props: Record<string, unknown>) {
           marginLeft: 6 + indent * 14,
           borderRadius: 7,
           border: `1px solid ${isActive ? c.accent : 'transparent'}`,
-          background: isActive ? (c.accentLight) : 'transparent',
+          background: isActive ? itemAccentActiveBg : 'transparent',
           padding: '7px 10px',
           cursor: 'pointer',
           transition: 'all 0.12s ease',
@@ -229,7 +237,7 @@ function LeftPanel(props: Record<string, unknown>) {
         onClick={() => { setFolderMenuOpenId(null); onSelectPage(page.id) }}
         onDoubleClick={() => { setFolderMenuOpenId(null); setRenamingId(page.id); setRenameVal(page.title) }}
         onMouseEnter={e => {
-          if (!isActive) e.currentTarget.style.background = c.isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)'
+          if (!isActive) e.currentTarget.style.background = itemAccentHoverBg
         }}
         onMouseLeave={e => {
           if (!isActive) e.currentTarget.style.background = 'transparent'
@@ -268,9 +276,9 @@ function LeftPanel(props: Record<string, unknown>) {
           <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity" style={{ flexShrink: 0 }}>
             <button
               onClick={e => { e.stopPropagation(); setFolderMenuOpenId(null); setRenamingId(page.id); setRenameVal(page.title); }}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, color: c.textMuted, display: 'flex', alignItems: 'center' }}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, color: c.accent, display: 'flex', alignItems: 'center' }}
               onMouseEnter={e => (e.currentTarget.style.color = c.text)}
-              onMouseLeave={e => (e.currentTarget.style.color = c.textMuted)}
+              onMouseLeave={e => (e.currentTarget.style.color = c.accent)}
               title={t(lang, 'rename') || "Rename"}
             >
               <Edit2 size={12} />
@@ -288,7 +296,7 @@ function LeftPanel(props: Record<string, unknown>) {
         </div>
         
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <span style={{ fontSize: '0.64rem', color: c.textMuted, fontFamily: uiFont }}>
+          <span style={{ fontSize: '0.64rem', color: isActive ? c.accent : c.textMuted, opacity: isActive ? 0.9 : 0.7, fontFamily: uiFont }}>
             {timeSince(new Date(page.updatedAt || page.lastModified || Date.now()), lang)}
           </span>
         </div>
@@ -314,8 +322,9 @@ function LeftPanel(props: Record<string, unknown>) {
           }}
           style={{
             padding: '4px 8px', margin: '1px 6px', borderRadius: 6,
-            background: dragOverFolderId === folder.id ? (c.accentLight) : 'transparent',
-            transition: 'background 0.12s', cursor: 'pointer',
+            background: dragOverFolderId === folder.id ? itemAccentActiveBg : 'transparent',
+            border: `1px solid ${dragOverFolderId === folder.id ? c.accent : 'transparent'}`,
+            transition: 'all 0.12s', cursor: 'pointer',
           }}
           onClick={() => {
             setCollapsedFolders(prev => {
@@ -326,7 +335,7 @@ function LeftPanel(props: Record<string, unknown>) {
             })
           }}
           onMouseEnter={e => {
-            if (dragOverFolderId !== folder.id) e.currentTarget.style.background = c.isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.025)'
+            if (dragOverFolderId !== folder.id) e.currentTarget.style.background = itemAccentHoverBg
           }}
           onMouseLeave={e => {
             if (dragOverFolderId !== folder.id) e.currentTarget.style.background = 'transparent'
@@ -355,7 +364,7 @@ function LeftPanel(props: Record<string, unknown>) {
               <ChevronDown
                 size={13}
                 style={{
-                  color: c.textMuted, transition: 'transform 0.2s',
+                  color: c.accent, transition: 'transform 0.2s',
                   transform: isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)',
                   flexShrink: 0
                 }}
@@ -366,7 +375,7 @@ function LeftPanel(props: Record<string, unknown>) {
               }}>
                 {folder.name}
               </span>
-              <span style={{ fontSize: '0.62rem', color: c.textMuted, opacity: 0.7 }}>
+              <span style={{ fontSize: '0.62rem', color: c.accent, opacity: 0.85 }}>
                 ({folderPages.length})
               </span>
             </div>
@@ -377,9 +386,9 @@ function LeftPanel(props: Record<string, unknown>) {
               <div style={{ position: 'relative' }}>
                 <button
                   onClick={e => { e.stopPropagation(); setFolderMenuOpenId(folderMenuOpenId === folder.id ? null : folder.id); }}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, color: c.textMuted, display: 'flex', alignItems: 'center' }}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, color: c.accent, display: 'flex', alignItems: 'center' }}
                   onMouseEnter={e => (e.currentTarget.style.color = c.text)}
-                  onMouseLeave={e => (e.currentTarget.style.color = c.textMuted)}
+                  onMouseLeave={e => (e.currentTarget.style.color = c.accent)}
                 >
                   <MoreHorizontal size={13} />
                 </button>
@@ -389,19 +398,19 @@ function LeftPanel(props: Record<string, unknown>) {
                     <button
                       onClick={e => { e.stopPropagation(); onNewPage(activeTab === 'drafts', folder.id); setCollapsedFolders(prev => { const next = new Set(prev); next.delete(folder.id); return next; }); setFolderMenuOpenId(null); }}
                       style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '5px 8px', color: c.text, display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.72rem', fontFamily: uiFont, width: '100%', textAlign: 'left', borderRadius: 4 }}
-                      onMouseEnter={e => (e.currentTarget.style.backgroundColor = (c.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'))}
+                      onMouseEnter={e => (e.currentTarget.style.backgroundColor = itemAccentHoverBg)}
                       onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
                     >
-                      <FileText size={12} /> {t(lang, 'newDocument')?.replace('+', '').trim() || 'New Document'}
+                      <FileText size={12} style={{ color: c.accent }} /> {t(lang, 'newDocument')?.replace('+', '').trim() || 'New Document'}
                     </button>
                     <div style={{ height: 1, background: c.borderFaint, margin: '2px 0' }} />
                     <button
                       onClick={e => { e.stopPropagation(); setRenamingFolderId(folder.id); setFolderRenameVal(folder.name); setFolderMenuOpenId(null); }}
                       style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '5px 8px', color: c.text, display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.72rem', fontFamily: uiFont, width: '100%', textAlign: 'left', borderRadius: 4 }}
-                      onMouseEnter={e => (e.currentTarget.style.backgroundColor = (c.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'))}
+                      onMouseEnter={e => (e.currentTarget.style.backgroundColor = itemAccentHoverBg)}
                       onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
                     >
-                      <Edit2 size={12} /> {t(lang, 'rename')}
+                      <Edit2 size={12} style={{ color: c.accent }} /> {t(lang, 'rename')}
                     </button>
                     <button
                       onClick={e => { e.stopPropagation(); onDeleteFolder(folder.id); setFolderMenuOpenId(null); }}
@@ -857,17 +866,17 @@ function LeftPanel(props: Record<string, unknown>) {
               <div style={{ display: 'flex', flexDirection: 'column' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 4px', marginBottom: 4 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <FileText size={14} color={c.textMuted} />
+                    <FileText size={14} color={c.accent} />
                     <span style={{ fontSize: '0.74rem', fontWeight: 600, color: c.text, fontFamily: uiFont, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                       {t(lang, 'pages')}
                     </span>
-                    <span style={{ fontSize: '0.64rem', color: c.textMuted, opacity: 0.7 }}>
+                    <span style={{ fontSize: '0.64rem', color: c.accent, opacity: 0.85 }}>
                       ({nonDrafts.length})
                     </span>
                   </div>
                   <button 
                     onClick={() => { setActiveTab('pages'); onNewPage(false); }} 
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: c.textMuted, padding: 2, display: 'flex', alignItems: 'center' }}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: c.accent, padding: 2, display: 'flex', alignItems: 'center' }}
                     title={t(lang, 'newPage') || 'New Page'}
                   >
                     <Plus size={14} />
@@ -880,17 +889,17 @@ function LeftPanel(props: Record<string, unknown>) {
               <div style={{ marginTop: 8 }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 4px', marginBottom: 4 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={c.textMuted} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="6" y1="3" x2="6" y2="15"></line><circle cx="18" cy="6" r="3"></circle><circle cx="6" cy="18" r="3"></circle><path d="M18 9a9 9 0 0 1-9 9"></path></svg>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={c.accent} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="6" y1="3" x2="6" y2="15"></line><circle cx="18" cy="6" r="3"></circle><circle cx="6" cy="18" r="3"></circle><path d="M18 9a9 9 0 0 1-9 9"></path></svg>
                     <span style={{ fontSize: '0.74rem', fontWeight: 600, color: c.text, fontFamily: uiFont, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                       {t(lang, 'drafts')}
                     </span>
-                    <span style={{ fontSize: '0.64rem', color: c.textMuted, opacity: 0.7 }}>
+                    <span style={{ fontSize: '0.64rem', color: c.accent, opacity: 0.85 }}>
                       ({drafts.length})
                     </span>
                   </div>
                   <button 
                     onClick={() => { setActiveTab('drafts'); onNewPage(true); }} 
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: c.textMuted, padding: 2, display: 'flex', alignItems: 'center' }}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: c.accent, padding: 2, display: 'flex', alignItems: 'center' }}
                     title={t(lang, 'newDraft') || 'New Draft'}
                   >
                     <Plus size={14} />
