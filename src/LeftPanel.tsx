@@ -3,7 +3,8 @@ import React, { useState, useEffect } from 'react'
 import { Page, Folder, SyncStatus, Project } from './types'
 import { Lang, t as i18nT } from './i18n'
 import { Home, Highlighter,  Folder as FolderIcon, Edit2, FileText, Trash2, ChevronDown, RotateCcw, X, MoreHorizontal, Upload, Plus, PanelLeftClose, Bookmark, BookOpen, Activity, Type, Table as TableIcon, List } from 'lucide-react'
-import { importJsonBackupFile } from './fileHandlers'
+import { importJsonBackupFile } from './fileHandlers';
+import { saveProjectToDB, saveFolderToDB } from './db';
 import FootnotesPanel from './FootnotesPanel'
 import HighlightsPanel from './HighlightsPanel'
 import CitationsPanel from './CitationsPanel'
@@ -144,7 +145,17 @@ function LeftPanel(props: Record<string, unknown>) {
 
       if (file.name.toLowerCase().endsWith('.json')) {
         try {
-          await importJsonBackupFile(file)
+          const { projects: importedProjects, folders: importedFolders } = await importJsonBackupFile(file);
+          if (importedProjects && importedProjects.length > 0) {
+            for (const proj of importedProjects) {
+              await saveProjectToDB(proj);
+            }
+          }
+          if (importedFolders && importedFolders.length > 0) {
+            for (const folder of importedFolders) {
+              await saveFolderToDB(folder);
+            }
+          }
           if (props.onReloadProjects) {
             await (props.onReloadProjects as () => void | Promise<void>)()
           }

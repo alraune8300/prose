@@ -302,8 +302,21 @@ function WelcomeScreen({ theme, themeMode, onSelectTheme, onOpenThemeModal, uiFo
       const file = target.files?.[0];
       if (file) {
         try {
-          await importJsonBackupFile(file);
+          const { projects: importedProjects, folders: importedFolders } = await importJsonBackupFile(file);
+          if (importedProjects && importedProjects.length > 0) {
+            for (const proj of importedProjects) {
+              await saveProjectToDB(proj);
+            }
+          }
+          if (importedFolders && importedFolders.length > 0) {
+            for (const folder of importedFolders) {
+              await saveFolderToDB(folder);
+            }
+          }
           await loadData();
+          if (onReloadProjects) {
+            await onReloadProjects();
+          }
           setToastMsg({ text: t(lang, 'backupSuccess'), type: 'success' });
         } catch (err) {
           console.error('Import backup error:', err);

@@ -1,5 +1,5 @@
 import TurndownService from 'turndown';
-import { Project } from './db';
+import { Project, Folder } from './types';
 import { saveAs } from 'file-saver';
 
 // --- ODT Export ---
@@ -32,21 +32,26 @@ export async function exportToMarkdownFile(title: string, contentHtml: string) {
 }
 
 // --- JSON Backup ---
-export async function exportToJsonBackup(projects: Project[]) {
-  const json = JSON.stringify(projects, null, 2);
+export async function exportToJsonBackup(projects: Project[], folders: Folder[] = []) {
+  const data = { projects, folders };
+  const json = JSON.stringify(data, null, 2);
   const blob = new Blob([json], { type: 'application/json;charset=utf-8' });
   saveAs(blob, `backup_${new Date().toISOString().slice(0, 10)}.json`);
 }
 
 // --- JSON Import ---
-export async function importJsonBackupFile(file: File): Promise<Project[]> {
+export async function importJsonBackupFile(file: File): Promise<{projects: Project[], folders: Folder[]}> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = (e) => {
       try {
         const result = e.target?.result as string;
-        const projects = JSON.parse(result);
-        resolve(projects);
+        const data = JSON.parse(result);
+        if (Array.isArray(data)) {
+          resolve({ projects: data, folders: [] });
+        } else {
+          resolve({ projects: data.projects || [], folders: data.folders || [] });
+        }
       } catch (err) {
         reject(err);
       }
@@ -59,30 +64,47 @@ export async function importJsonBackupFile(file: File): Promise<Project[]> {
 // --- File Import (MD, TXT) ---
 export async function importFile(file: File): Promise<{title: string, htmlContent: string}> {
   return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      try {
-        const text = e.target?.result as string;
-        const title = file.name.replace(/\.[^/.]+$/, '');
-        let htmlContent = text;
-        
-        if (file.name.endsWith('.md')) {
-          try {
-            const { marked } = await import('marked');
-            htmlContent = await marked.parse(text);
-          } catch (_err) {
-            htmlContent = '<p>' + text.replace(/\n/g, '<br>') + '</p>';
-          }
-        } else if (file.name.endsWith('.txt')) {
-           htmlContent = '<p>' + text.replace(/\n/g, '<br>') + '</p>';
+    const title = file.name.replace(/\.[^/.]+$/, '');
+
+    if (file.name.toLowerCase().endsWith('.docx')) {
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        try {
+          const arrayBuffer = e.target?.result as ArrayBuffer;
+          const mammoth = await import('mammoth');
+          const result = await mammoth.convertToHtml({ arrayBuffer });
+          resolve({ title, htmlContent: result.value });
+        } catch (err) {
+          reject(err);
         }
-        
-        resolve({ title, htmlContent });
-      } catch (err) {
-        reject(err);
-      }
-    };
-    reader.onerror = () => reject(new Error('Failed to read file'));
-    reader.readAsText(file);
+      };
+      reader.onerror = () => reject(new Error('Failed to read docx file'));
+      reader.readAsArrayBuffer(file);
+    } else {
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        try {
+          const text = e.target?.result as string;
+          let htmlContent = text;
+          
+          if (file.name.toLowerCase().endsWith('.md')) {
+            try {
+              const { marked } = await import('marked');
+              htmlContent = await marked.parse(text);
+            } catch (_err) {
+              htmlContent = '<p>' + text.replace(/\n/g, '<br>') + '</p>';
+            }
+          } else if (file.name.toLowerCase().endsWith('.txt')) {
+             htmlContent = '<p>' + text.replace(/\n/g, '<br>') + '</p>';
+          }
+          
+          resolve({ title, htmlContent });
+        } catch (err) {
+          reject(err);
+        }
+      };
+      reader.onerror = () => reject(new Error('Failed to read file'));
+      reader.readAsText(file);
+    }
   });
 }

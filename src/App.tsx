@@ -1860,6 +1860,24 @@ export default function App() {
 
   const handleImportFile = useCallback(async (file: File) => {
     try {
+      if (file.name.toLowerCase().endsWith('.json')) {
+        const { importJsonBackupFile } = await import('./fileHandlers');
+        const { projects: importedProjects, folders: importedFolders } = await importJsonBackupFile(file);
+        if (importedProjects && importedProjects.length > 0) {
+          for (const proj of importedProjects) {
+            await saveProjectToDB(proj);
+          }
+        }
+        if (importedFolders && importedFolders.length > 0) {
+          for (const folder of importedFolders) {
+            await saveFolderToDB(folder);
+          }
+        }
+        const projs = await getAllProjectsFromDB();
+        setProjects(projs);
+        return;
+      }
+      
       const { title, htmlContent } = await importFile(file);
       const newProjId = 'proj-' + Date.now();
       const newPageId = 'page-' + Date.now();
@@ -2056,8 +2074,9 @@ export default function App() {
     exportToMarkdownFile(activePage?.title || 'Document', safeActiveContent);
   }, [activePage]);
 
-  const handleExportJsonBackupAll = useCallback(() => {
-    exportToJsonBackup(projects);
+  const handleExportJsonBackupAll = useCallback(async () => {
+    const folders = await getAllFoldersFromDB();
+    exportToJsonBackup(projects, folders);
   }, [projects]);
 
   const handleSaveApiKey = useCallback((key: string) => { setApiKey(key); saveApiKey(key); }, []);
