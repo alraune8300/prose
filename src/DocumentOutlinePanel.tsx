@@ -125,8 +125,8 @@ export function DocumentOutlinePanel({ theme, uiFont, lang }: DocumentOutlinePan
       {/* HEADER */}
       <div className="flex items-center justify-between gap-2 px-4 py-3 border-b shrink-0" style={{ borderColor: theme.borderFaint || theme.border, backgroundColor: theme.surface || 'transparent' }}>
         <div className="flex items-center gap-2 min-w-0 flex-1">
-          <List size={16} className="shrink-0 opacity-70" style={{ color: theme.text }} />
-          <span className="font-bold text-xs uppercase tracking-wider truncate min-w-0 flex-1 opacity-70" style={{ color: theme.text, fontFamily: uiFont }}>
+          <List size={16} className="shrink-0" style={{ color: theme.text }} />
+          <span className="font-bold text-sm uppercase tracking-wider truncate min-w-0 flex-1" style={{ color: theme.text, fontFamily: uiFont }}>
             {t(lang, 'documentOutline') || t(lang, 'outline') || 'Document Outline'}
           </span>
           {outline.length > 0 && (

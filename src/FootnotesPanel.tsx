@@ -156,15 +156,15 @@ export default function FootnotesPanel({
   return (
     <div className="flex flex-col h-full overflow-hidden select-none" style={{ color: theme.text, fontFamily: uiFont }}>
       {/* Header with Title & Add Action */}
-      <div className="flex items-center justify-between gap-2 px-4 py-3 border-b shrink-0" style={{ borderColor: theme.border, backgroundColor: theme.surface }}>
+      <div className="flex items-center justify-between gap-2 px-4 py-3 border-b shrink-0" style={{ borderColor: theme.borderFaint || theme.border, backgroundColor: theme.surface }}>
         <div className="flex items-center gap-2 min-w-0 flex-1">
           <Bookmark size={16} className="shrink-0" style={{ color: theme.text }} />
-          <span className="font-semibold text-sm truncate min-w-0 flex-1" style={{ color: theme.text }}>
-            {t(lang, 'contextualFootnotes')}
+          <span className="font-bold text-sm uppercase tracking-wider truncate min-w-0 flex-1" style={{ color: theme.text }}>
+            {t(lang, 'contextualFootnotes') || 'Footnotes'}
           </span>
           <span 
             className="text-[10px] px-1.5 py-0.5 rounded-full font-mono font-semibold shrink-0" 
-            style={{ backgroundColor: theme.isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)', color: theme.text, border: `1px solid ${theme.border}` }}
+            style={{ backgroundColor: theme.isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)', color: theme.text, border: `1px solid ${theme.borderFaint || theme.border}` }}
           >
             {footnotes.length}
           </span>

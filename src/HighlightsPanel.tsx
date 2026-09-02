@@ -224,11 +224,11 @@ export default function HighlightsPanel({ theme, editor, lang, uiFont }: Props) 
   return (
     <div className="flex flex-col h-full overflow-hidden" style={{ fontFamily: uiFont }}>
       {/* Header */}
-      <div className="flex-none p-4 pb-2 border-b" style={{ borderColor: theme.borderFaint || theme.border }}>
-        <h3 className="text-sm font-semibold mb-3 flex items-center justify-between" style={{ color: theme.text }}>
+      <div className="flex-none px-4 py-3 border-b" style={{ borderColor: theme.borderFaint || theme.border, backgroundColor: theme.surface }}>
+        <h3 className="text-sm font-bold uppercase tracking-wider flex items-center justify-between" style={{ color: theme.text }}>
           <div className="flex items-center gap-2">
             <Highlighter size={16} />
-            {t('title')}
+            {t('title') || 'Highlights & Annotations'}
           </div>
         </h3>
         

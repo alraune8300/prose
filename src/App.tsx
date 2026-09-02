@@ -253,7 +253,7 @@ export default function App() {
     } catch { return []; }
   });
   const [citationStyle, setCitationStyle] = useState<CitationStyle>('apa');
-  const [leftSidebarMainTab, setLeftSidebarMainTab] = useState<'files' | 'footnotes' | 'citations' | 'table' | 'highlights' | 'editorial' | 'codex' | 'outline'>('files');
+  const [leftSidebarMainTab, setLeftSidebarMainTab] = useState<'files' | 'footnotes' | 'citations' | 'table' | 'highlights' | 'outline'>('files');
   const previousLeftSidebarTabRef = useRef<'files' | 'footnotes' | 'citations'>('files');
 
   // Command Palette states
@@ -2161,14 +2161,6 @@ export default function App() {
         } else if (dx < 0 && currentIndex !== -1 && currentIndex < allPagesInActiveProj.length - 1) { 
           setActivePageId(allPagesInActiveProj[currentIndex + 1].id);
         }
-      } else {
-        if (dx > 0) {
-          if (rightOpen) setRightOpen(false);
-          else if (touchStartX.current < 40) setSidebarOpen(true);
-        } else {
-          if (sidebarOpen) setSidebarOpen(false);
-          else if (window.innerWidth - touchStartX.current < 40) setRightOpen(true);
-        }
       }
     }
     touchStartX.current = null;
@@ -2292,8 +2284,6 @@ export default function App() {
   return (
     <div
       className="h-full w-full flex overflow-hidden relative"
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
       style={{
         background: theme.bg,
         color: theme.text,
@@ -2763,10 +2753,10 @@ export default function App() {
         className={`
           fixed md:relative top-0 right-0 h-full z-40 flex-shrink-0
           transition-all duration-300 ease-in-out transform shadow-2xl md:shadow-none kgv-adaptive-panel kgv-hardware-accelerated
-          ${rightOpen && !isFocusMode && !isPreviewMode ? 'translate-x-0 opacity-100 w-[85vw] sm:w-[300px]' : 'translate-x-full opacity-0 w-0 pointer-events-none'}
+          ${rightOpen && !isFocusMode && !isPreviewMode ? 'translate-x-0 opacity-100 w-[85vw] sm:w-[320px]' : 'translate-x-full opacity-0 w-0 pointer-events-none'}
         `}
       >
-        <div className="w-[85vw] sm:w-[300px] h-full overflow-hidden flex flex-col">
+        <div className="w-[85vw] sm:w-[320px] h-full overflow-hidden flex flex-col">
           <RightPanel
           key={activeProjectId}
           panel={rightPanelTab}

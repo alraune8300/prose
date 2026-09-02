@@ -1,5 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useMemo, useEffect } from 'react';
-import { Search, X, Plus, RotateCcw, PenTool, Type, Droplet, LayoutTemplate, BoxSelect, Check, Trash2, Square } from 'lucide-react';
+import { Search, X, Plus, RotateCcw, PenTool, Type, LayoutTemplate, Trash2, Square } from 'lucide-react';
 import { HexColorPicker, HexColorInput } from 'react-colorful';
 import { THEME_CATEGORIES, PRESETS } from './theme';
 import { ThemeColors, ThemeMode, ThemeConfig, Lang } from './types';
@@ -85,7 +86,7 @@ export default function ThemeStudioModal({
       name: t.newCustomTheme || 'New Custom Theme',
       isCustom: true,
       bg: '#ffffff',
-      surface: '#f8fafc',
+      surface: '#ffffff',
       text: '#0f172a',
       textMuted: '#64748b',
       accent: '#3b82f6',
@@ -99,12 +100,8 @@ export default function ThemeStudioModal({
   const updateColor = (field: keyof ThemeConfig, value: string) => {
     if (!editingTheme) return;
     const updated = { ...editingTheme, [field]: value };
-    
-    // Auto-calculate border opacity from text if border isn't manually set? 
-    // Wait, prompt says: "Trường border tự động tính toán từ text với opacity 0.15"
-    if (field === 'text') {
-       // A simple approach: use the text color, but ideally we add opacity.
-       // Let's just set it to text color for now or attempt hex to rgba conversion.
+    if (field === 'bg') {
+      updated.surface = value;
     }
     setEditingTheme(updated);
   };
@@ -112,8 +109,8 @@ export default function ThemeStudioModal({
   if (!isOpen) return null;
 
   return (
-    <div className="absolute inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', fontFamily: uiFont }} onClick={handleClose}>
-      <div className="w-full max-w-3xl max-h-[85vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-fade-in-up" style={{ backgroundColor: theme.surface, border: `1px solid ${theme.border}`, color: theme.text }} onClick={e => e.stopPropagation()}>
+    <div className="absolute inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(6px)', fontFamily: uiFont }} onClick={handleClose}>
+      <div className="w-full max-w-3xl max-h-[85vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-fade-in-up" style={{ backgroundColor: theme.bg, border: `1px solid ${theme.border}`, color: theme.text }} onClick={e => e.stopPropagation()}>
         
         {/* Modal Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b" style={{ borderColor: theme.borderFaint }}>
@@ -181,7 +178,7 @@ export default function ThemeStudioModal({
 
         {/* Modal Body */}
         {isBuilderMode ? (
-          <div className="flex-1 overflow-y-auto p-6" style={{ backgroundColor: theme.surface }} onClick={() => setActiveColorPicker(null)}>
+          <div className="flex-1 overflow-y-auto p-6" style={{ backgroundColor: 'transparent' }} onClick={() => setActiveColorPicker(null)}>
              <div className="max-w-2xl mx-auto space-y-6">
                 
                 <div>
@@ -202,8 +199,7 @@ export default function ThemeStudioModal({
 
                 <div className="space-y-4 mt-6">
                   {[
-                    { key: 'bg', label: t.mainBackground || 'Main background', desc: t.bgDesc || 'Overall app background', icon: <LayoutTemplate size={14} /> },
-                    { key: 'surface', label: t.writingSurface || 'Writing surface', desc: t.surfaceDesc || 'Writing surface & panels', icon: <BoxSelect size={14} /> },
+                    { key: 'bg', label: t.mainBackground || 'Theme Background & Writing Surface', desc: t.bgDesc || 'Unified canvas and background color', icon: <LayoutTemplate size={14} /> },
                     { key: 'text', label: t.textColor || 'Text color', desc: t.textDesc || 'Main text, headings & icons', icon: <Type size={14} /> },
                     { key: 'textMuted', label: t.subtextColor || 'Subtext color', desc: t.subtextDesc || 'Muted text & secondary icons', icon: <Type size={14} opacity={0.6} /> },
                     { key: 'accent', label: t.accentColor || 'Accent color', desc: t.accentDesc || 'Buttons & focus highlights', icon: <PenTool size={14} /> },
@@ -236,7 +232,7 @@ export default function ThemeStudioModal({
                             {activeColorPicker === field.key && (
                               <div 
                                 className="absolute right-0 top-full mt-2 z-50 p-3 rounded-xl shadow-2xl border flex flex-col items-center animate-fade-in-up"
-                                style={{ backgroundColor: theme.surface, borderColor: theme.border }}
+                                style={{ backgroundColor: theme.bg, borderColor: theme.border }}
                                 onClick={(e) => e.stopPropagation()}
                               >
                                 <HexColorPicker 
@@ -331,16 +327,15 @@ export default function ThemeStudioModal({
             )}
             
             {/* Sidebar categories */}
-            <div className="w-full md:w-56 p-4 border-r overflow-y-auto flex md:flex-col gap-1.5 flex-shrink-0" style={{ borderColor: theme.borderFaint, background: theme.bg }}>
+            <div className="w-full md:w-56 p-3 border-r overflow-y-auto flex md:flex-col gap-1 flex-shrink-0" style={{ borderColor: theme.borderFaint, backgroundColor: 'transparent' }}>
               <button
                 onClick={() => setThemeCategoryFilter('all')}
-                className="flex items-center justify-between px-3 py-2 rounded-lg text-xs transition-all text-left cursor-pointer"
+                className="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs transition-all text-left cursor-pointer"
                 style={{
-                  backgroundColor: themeCategoryFilter === 'all' ? theme.accentLight : 'transparent',
+                  backgroundColor: themeCategoryFilter === 'all' ? (theme.isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)') : 'transparent',
                   color: themeCategoryFilter === 'all' ? theme.accent : theme.text,
-                  fontWeight: themeCategoryFilter === 'all' ? 600 : 400,
+                  fontWeight: themeCategoryFilter === 'all' ? 700 : 500,
                   fontFamily: uiFont,
-                  border: `1px solid ${themeCategoryFilter === 'all' ? theme.accent : theme.borderFaint}`
                 }}
               >
                 <span>{t.allThemes || 'All themes'}</span>
@@ -353,13 +348,12 @@ export default function ThemeStudioModal({
                   <button
                     key={cat.id}
                     onClick={() => setThemeCategoryFilter(cat.id)}
-                    className="flex items-center justify-between px-3 py-2 rounded-lg text-xs transition-all text-left truncate cursor-pointer"
+                    className="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs transition-all text-left truncate cursor-pointer"
                     style={{
-                      backgroundColor: isActive ? theme.accentLight : 'transparent',
+                      backgroundColor: isActive ? (theme.isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)') : 'transparent',
                       color: isActive ? theme.accent : theme.text,
-                      fontWeight: isActive ? 600 : 400,
+                      fontWeight: isActive ? 700 : 500,
                       fontFamily: uiFont,
-                      border: `1px solid ${isActive ? theme.accent : theme.borderFaint}`
                     }}
                   >
                     <span className="truncate mr-2">{cat.label}</span>
@@ -370,7 +364,7 @@ export default function ThemeStudioModal({
             </div>
 
             {/* Theme Grid */}
-            <div className="flex-1 p-6 overflow-y-auto" style={{ backgroundColor: theme.surface }}>
+            <div className="flex-1 p-6 overflow-y-auto" style={{ backgroundColor: 'transparent' }}>
               
               {/* Custom Themes Section */}
               {(themeCategoryFilter === 'all' || themeSearchQuery) && (
@@ -402,8 +396,8 @@ export default function ThemeStudioModal({
                             onClick={() => onSelectTheme(cTheme.id)}
                             className="group relative p-4 rounded-xl border flex flex-col justify-between cursor-pointer transition-all hover:-translate-y-0.5 shadow-xs"
                             style={{
-                              background: isActive ? theme.accentLight : theme.bg,
-                              borderColor: isActive ? theme.accent : theme.border,
+                              backgroundColor: isActive ? (theme.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)') : (theme.isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.015)'),
+                              borderColor: isActive ? theme.accent : theme.borderFaint,
                             }}
                           >
                             <div className="flex items-center justify-between mb-3">
@@ -419,7 +413,7 @@ export default function ThemeStudioModal({
                                   {[
                                     { bg: cTheme.text, border: cTheme.bg },
                                     { bg: cTheme.accent, border: cTheme.bg },
-                                    { bg: cTheme.surface, border: cTheme.border }
+                                    { bg: cTheme.bg, border: cTheme.border }
                                   ].map((item, idx) => (
                                     <div
                                       key={idx}
@@ -434,7 +428,7 @@ export default function ThemeStudioModal({
                                   ))}
                                   <div style={{
                                     width: 17, height: 17, borderRadius: '50%',
-                                    background: cTheme.surface,
+                                    background: cTheme.bg,
                                     color: isActive ? cTheme.accent : cTheme.text,
                                     border: `1.5px solid ${cTheme.accent}`,
                                     marginLeft: -6,
@@ -448,24 +442,24 @@ export default function ThemeStudioModal({
                               </div>
                               <div className="flex items-center gap-1 transition-opacity">
                                 <button
-    onClick={(e) => handleEditTheme(e, cTheme, false)}
-    className="p-2 rounded-full transition-colors cursor-pointer hover:bg-black/5 dark:hover:bg-white/5"
-    style={{ backgroundColor: theme.surface, border: `1px solid ${theme.border}`, color: theme.textMuted }}
-  >
+                                  onClick={(e) => handleEditTheme(e, cTheme, false)}
+                                  className="p-2 rounded-full transition-colors cursor-pointer hover:bg-black/5 dark:hover:bg-white/5"
+                                  style={{ backgroundColor: 'transparent', border: `1px solid ${theme.borderFaint}`, color: theme.textMuted }}
+                                >
                                   <PenTool size={13} />
                                 </button>
                                 <button
-    onClick={(e) => {
-      e.stopPropagation();
-      if (isActive) {
-        setDeleteAlertMsg(t.cannotDeleteActiveTheme);
-        setTimeout(() => setDeleteAlertMsg(null), 3000);
-        return;
-      }
-      setDeleteConfirmThemeId(cTheme.id);
-    }}
-    className="p-2 rounded-full transition-colors cursor-pointer hover:bg-black/5 dark:hover:bg-white/5"
-                                  style={{ backgroundColor: theme.surface, border: `1px solid ${theme.border}`, color: isActive ? theme.border : '#ef4444' }}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (isActive) {
+                                      setDeleteAlertMsg(t.cannotDeleteActiveTheme);
+                                      setTimeout(() => setDeleteAlertMsg(null), 3000);
+                                      return;
+                                    }
+                                    setDeleteConfirmThemeId(cTheme.id);
+                                  }}
+                                  className="p-2 rounded-full transition-colors cursor-pointer hover:bg-black/5 dark:hover:bg-white/5"
+                                  style={{ backgroundColor: 'transparent', border: `1px solid ${theme.borderFaint}`, color: isActive ? theme.border : '#ef4444' }}
                                   title={isActive ? "Vui lòng chọn 1 theme khác trước khi xoá theme đang sử dụng" : "Xoá theme"}
                                 >
                                   <Trash2 size={13} />
@@ -487,7 +481,7 @@ export default function ThemeStudioModal({
 
               {/* Presets */}
               <div>
-                <h3 className="text-sm font-serif font-semibold mb-4" style={{ color: theme.text }}>Presets <span className="text-xs font-mono px-1.5 py-0.5 rounded ml-2" style={{ background: theme.bg, border: `1px solid ${theme.border}` }}>{PRESETS.length}</span></h3>
+                <h3 className="text-sm font-serif font-semibold mb-4" style={{ color: theme.text }}>Presets <span className="text-xs font-mono px-1.5 py-0.5 rounded ml-2" style={{ background: theme.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)', border: `1px solid ${theme.borderFaint}` }}>{PRESETS.length}</span></h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {PRESETS.filter(preset => {
                     const matchesCategory = themeCategoryFilter === 'all' || 
@@ -504,8 +498,8 @@ export default function ThemeStudioModal({
                         }}
                         className="group relative p-4 rounded-xl border flex flex-col justify-between cursor-pointer transition-all hover:-translate-y-0.5 shadow-xs"
                         style={{
-                          background: isActive ? theme.accentLight : theme.bg,
-                          borderColor: isActive ? theme.accent : theme.border,
+                          backgroundColor: isActive ? (theme.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)') : (theme.isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.015)'),
+                          borderColor: isActive ? theme.accent : theme.borderFaint,
                         }}
                       >
                         <div className="flex items-center justify-between mb-3">
@@ -522,7 +516,7 @@ export default function ThemeStudioModal({
                                 { bg: preset.text, border: preset.bg },
                                 { bg: preset.accent, border: preset.bg },
                                 { bg: preset.accentMid, border: preset.bg },
-                                { bg: preset.surface, border: preset.border }
+                                { bg: preset.bg, border: preset.border }
                               ].map((item, idx) => (
                                 <div
                                   key={idx}
@@ -537,7 +531,7 @@ export default function ThemeStudioModal({
                               ))}
                               <div style={{
                                 width: 17, height: 17, borderRadius: '50%',
-                                background: preset.surface,
+                                background: preset.bg,
                                 color: isActive ? preset.accent : preset.text,
                                 border: `1.5px solid ${preset.accent}`,
                                 marginLeft: -6,
@@ -552,7 +546,7 @@ export default function ThemeStudioModal({
                           <button
                             onClick={(e) => handleEditTheme(e, preset, true)}
                             className="p-2 rounded-full transition-opacity cursor-pointer hover:bg-black/5 dark:hover:bg-white/5"
-                            style={{ backgroundColor: theme.surface, border: `1px solid ${theme.border}`, color: theme.textMuted }}
+                            style={{ backgroundColor: 'transparent', border: `1px solid ${theme.borderFaint}`, color: theme.textMuted }}
                           >
                             <PenTool size={13} />
                           </button>

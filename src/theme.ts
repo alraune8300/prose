@@ -4308,10 +4308,11 @@ export const PRESETS: PresetColors[] = [
 export function buildPresetTheme(p: PresetColors, overrides?: Partial<PresetColors>): Theme {
   const m = { ...p, ...overrides }
   const headerSuffix = m.isDark ? 'd8' : 'e8'
+  const unifiedBg = m.bg
   return {
-    bg: `linear-gradient(150deg, ${m.bg} 0%, ${m.bgAlt} 100%)`,
-    heroGrad: `linear-gradient(148deg, ${m.bg} 0%, ${m.bgAlt} 55%, ${m.bg} 100%)`,
-    cardGrad: `linear-gradient(135deg, ${m.surface} 0%, ${m.bgAlt} 100%)`,
+    bg: unifiedBg,
+    heroGrad: unifiedBg,
+    cardGrad: unifiedBg,
     text: m.text,
     textMuted: m.textMuted,
     textFaint: m.textFaint,
@@ -4320,9 +4321,9 @@ export function buildPresetTheme(p: PresetColors, overrides?: Partial<PresetColo
     accentMid: m.accentMid,
     border: m.border,
     borderFaint: m.borderFaint,
-    surface: m.surface,
+    surface: unifiedBg,
     header: m.bg + headerSuffix,
-    panel: m.surface,
+    panel: unifiedBg,
     status: m.bg,
     isDark: m.isDark,
     muted: m.textMuted,
@@ -4336,10 +4337,11 @@ export function buildHueTheme(hue: number, isDark: boolean = false): Theme {
     const muted = `hsl(${hue}, 12%, 80%)`
     const faint = `hsl(${hue}, 10%, 65%)`
     const accentLight = `hsla(${hue}, 68%, 50%, 0.22)`
+    const darkBg = `hsl(${hue}, 20%, 2%)`
     return {
-      bg: `linear-gradient(150deg, #000000 0%, hsl(${(hue + 20) % 360}, 28%, 2%) 100%)`,
-      heroGrad: `linear-gradient(148deg, #000000 0%, hsl(${(hue + 20) % 360}, 28%, 2%) 100%)`,
-      cardGrad: `linear-gradient(135deg, hsl(${hue}, 20%, 1%) 0%, hsl(${(hue + 20) % 360}, 22%, 2%) 100%)`,
+      bg: darkBg,
+      heroGrad: darkBg,
+      cardGrad: darkBg,
       text: '#f8fafc',
       textMuted: muted,
       textFaint: faint,
@@ -4348,10 +4350,10 @@ export function buildHueTheme(hue: number, isDark: boolean = false): Theme {
       accentMid: `hsl(${hue}, 65%, 50%)`,
       border: `hsl(${hue}, 15%, 15%)`,
       borderFaint: `hsl(${hue}, 15%, 8%)`,
-      surface: `hsl(${hue}, 20%, 2%)`,
-      header: `hsla(0, 0%, 0%, 0.9)`,
-      panel: `hsl(${hue}, 20%, 2%)`,
-      status: `#000000`,
+      surface: darkBg,
+      header: darkBg,
+      panel: darkBg,
+      status: darkBg,
       isDark: true,
       muted,
       faint,
@@ -4362,10 +4364,11 @@ export function buildHueTheme(hue: number, isDark: boolean = false): Theme {
   const muted = `hsl(${hue}, 12%, 40%)`
   const faint = `hsl(${hue}, 10%, 55%)`
   const accentLight = `hsl(${hue}, 68%, 95%)`
+  const lightBg = `hsl(${hue}, 26%, 97%)`
   return {
-    bg: `linear-gradient(150deg, hsl(${hue}, 26%, 97%) 0%, hsl(${(hue + 48) % 360}, 20%, 93%) 100%)`,
-    heroGrad: `linear-gradient(148deg, hsl(${hue}, 34%, 95%) 0%, hsl(${(hue + 28) % 360}, 28%, 91%) 55%, hsl(${(hue + 68) % 360}, 26%, 94%) 100%)`,
-    cardGrad: `linear-gradient(135deg, hsl(${hue}, 16%, 99%) 0%, hsl(${(hue + 22) % 360}, 14%, 97%) 100%)`,
+    bg: lightBg,
+    heroGrad: lightBg,
+    cardGrad: lightBg,
     text: `hsl(${hue}, 25%, 12%)`,
     textMuted: muted,
     textFaint: faint,
@@ -4374,10 +4377,10 @@ export function buildHueTheme(hue: number, isDark: boolean = false): Theme {
     accentMid: `hsl(${hue}, 44%, 72%)`,
     border: `hsl(${hue}, 14%, 87%)`,
     borderFaint: `hsl(${hue}, 14%, 92%)`,
-    surface: `hsl(${hue}, 14%, 99%)`,
-    header: `hsla(${hue}, 20%, 98%, 0.9)`,
-    panel: `hsl(${hue}, 13%, 98%)`,
-    status: `hsl(${hue}, 13%, 97%)`,
+    surface: lightBg,
+    header: lightBg,
+    panel: lightBg,
+    status: lightBg,
     isDark: false,
     muted,
     faint,
@@ -4441,7 +4444,7 @@ import { ThemeConfig } from './types'
 
 export function deriveCustomTheme(config: ThemeConfig): Theme {
   const isDark = isHexDark(config.bg)
-  let textColor = config.text
+  const textColor = config.text
   const muted = config.textMuted || (isDark ? '#cbd5e1' : '#475569')
   const faint = isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.6)'
   const accentSoft = isDark ? 'rgba(255, 255, 255, 0.12)' : (config.accent.startsWith('#') ? config.accent + '22' : 'rgba(37, 99, 235, 0.12)')
@@ -4457,9 +4460,9 @@ export function deriveCustomTheme(config: ThemeConfig): Theme {
     accentMid: config.accent.startsWith('#') ? config.accent + '88' : config.accent,
     border: config.border || (isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.12)'),
     borderFaint: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)',
-    surface: config.surface || (isDark ? 'rgba(255, 255, 255, 0.04)' : config.bg),
+    surface: config.bg,
     header: config.bg,
-    panel: config.surface || (isDark ? '#18181b' : config.bg),
+    panel: config.bg,
     status: config.bg,
     isDark,
     muted,
