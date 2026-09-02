@@ -23,6 +23,7 @@ interface WelcomeScreenProps {
   onEmptyAllTrash?: () => Promise<void> | void;
   onReloadProjects?: () => Promise<void> | void;
   refreshTrigger?: number;
+  
 }
 
 const LANGUAGES: {value: Lang, label: string}[] = [
@@ -37,7 +38,7 @@ const LANGUAGES: {value: Lang, label: string}[] = [
   {value: 'ja', label: '日本語'}
 ];
 
-type SortOption = 'updated' | 'newest' | 'oldest' | 'nameAZ' | 'nameZA' | 'pages';
+type SortOption = 'lastOpened' | 'updated' | 'newest' | 'oldest' | 'nameAZ' | 'nameZA' | 'pages';
 
 function WelcomeScreen({ theme, themeMode, onSelectTheme, onOpenThemeModal, uiFont, lang = 'vi', onChangeLang, onOpenProject, onImport, onExportAll, onOpenGithubCloudSave, onEmptyAllTrash, onReloadProjects, refreshTrigger }: WelcomeScreenProps) {
     
@@ -61,7 +62,7 @@ function WelcomeScreen({ theme, themeMode, onSelectTheme, onOpenThemeModal, uiFo
   const [currentFolderId, setCurrentFolderId] = useState<string | null>(null);
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState<SortOption>('updated');
+  const [sortBy, setSortBy] = useState<SortOption>('lastOpened');
   const [isNewMenuOpen, setIsNewMenuOpen] = useState(false);
   const [isDataMenuOpen, setIsDataMenuOpen] = useState(false);
   
@@ -322,6 +323,11 @@ function WelcomeScreen({ theme, themeMode, onSelectTheme, onOpenThemeModal, uiFo
   });
 
   const displayedProjects = [...filteredProjects].sort((a, b) => {
+    if (sortBy === 'lastOpened') {
+      const aTime = new Date(a.lastOpened || a.lastModified || a.createdAt || 0).getTime();
+      const bTime = new Date(b.lastOpened || b.lastModified || b.createdAt || 0).getTime();
+      return bTime - aTime;
+    }
     if (sortBy === 'updated') {
       return new Date(b.lastModified || b.createdAt || 0).getTime() - new Date(a.lastModified || a.createdAt || 0).getTime();
     }
@@ -705,6 +711,7 @@ function WelcomeScreen({ theme, themeMode, onSelectTheme, onOpenThemeModal, uiFo
                   buttonClassName="bg-transparent text-xs outline-none font-medium flex items-center gap-1"
                   buttonStyle={{ fontFamily: uiFont }}
                   options={[
+                    { value: 'lastOpened', label: t(lang, 'sortRecentlyOpened') || 'Vừa xem' },
                     { value: 'updated', label: t(lang, 'sortUpdated') },
                     { value: 'newest', label: t(lang, 'sortNewest') },
                     { value: 'oldest', label: t(lang, 'sortOldest') },

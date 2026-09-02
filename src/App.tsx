@@ -1289,6 +1289,27 @@ export default function App() {
     setActiveProjectId(projectId);
     LS.set('kgv-active-project-id', projectId);
     
+    setProjects(prev => {
+      const now = new Date().toISOString();
+      let changed = false;
+      const updated = prev.map(p => {
+        if (p.id === projectId) {
+          changed = true;
+          return { ...p, lastOpened: now };
+        }
+        return p;
+      });
+      
+      if (changed) {
+        const targetProj = updated.find((p) => p.id === projectId);
+        if (targetProj) {
+          scheduleSaveProject(targetProj);
+        }
+        return updated;
+      }
+      return prev;
+    });
+
     const targetProj = projects.find((p) => p.id === projectId);
     if (targetProj) {
       const firstPage = targetProj.pages?.[0] || targetProj.drafts?.[0];
@@ -1298,7 +1319,7 @@ export default function App() {
         setActivePageId('');
       }
     }
-  }, [projects]);
+  }, [projects, scheduleSaveProject]);
 
   // Create New Document / Project
   const handleCreateNewProject = useCallback(async () => {

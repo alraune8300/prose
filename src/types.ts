@@ -23,6 +23,7 @@ export interface Page {
   isDraft: boolean
   createdAt: string
   lastModified: string
+  lastOpened?: string
   folderId?: string | null
   originalPageId?: string | null
 }
@@ -36,6 +37,7 @@ export interface Project {
   bin: Page[]
   createdAt: string
   lastModified: string
+  lastOpened?: string
   folderId?: string | null
   isDeleted?: boolean
   deletedAt?: string | null

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
-import { X, GripVertical, Type, Heading1, Heading2, Heading3, Quote, Copy, Trash2, ArrowRightLeft } from 'lucide-react';
+import { X, GripVertical, ArrowUp, ArrowDown, Type, Heading1, Heading2, Heading3, Quote, Copy, Trash2, ArrowRightLeft } from 'lucide-react';
 import { type Editor as TiptapEditorType, useEditor, EditorContent, JSONContent } from '@tiptap/react';
 import type { Node as ProsemirrorNode } from 'prosemirror-model';
 import { getEditorExtensions } from './Editor';
@@ -351,6 +351,36 @@ export default function BlockOrganizerPanel({
     setActiveMenu(null);
   };
 
+  const handleMoveUp = (block: BlockItem) => {
+    if (!editor) return;
+    if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
+    const index = blocks.findIndex(b => b.id === block.id);
+    if (index > 0) {
+      const newBlocks = [...blocks];
+      const temp = newBlocks[index - 1];
+      newBlocks[index - 1] = newBlocks[index];
+      newBlocks[index] = temp;
+      setBlocks(newBlocks);
+      flushToMainEditor(newBlocks);
+    }
+    setActiveMenu(null);
+  };
+
+  const handleMoveDown = (block: BlockItem) => {
+    if (!editor) return;
+    if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
+    const index = blocks.findIndex(b => b.id === block.id);
+    if (index < blocks.length - 1) {
+      const newBlocks = [...blocks];
+      const temp = newBlocks[index + 1];
+      newBlocks[index + 1] = newBlocks[index];
+      newBlocks[index] = temp;
+      setBlocks(newBlocks);
+      flushToMainEditor(newBlocks);
+    }
+    setActiveMenu(null);
+  };
+
   const handleTurnInto = (block: BlockItem, targetType: string) => {
     if (!editor) return;
     if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
@@ -483,17 +513,18 @@ export default function BlockOrganizerPanel({
                               style={{
                                 color: theme.textMuted,
                                 cursor: 'grab',
-                                padding: '2px 4px',
+                                padding: '4px 6px',
                                 background: theme.panel,
-                                borderRadius: '4px',
+                                borderRadius: '6px',
                                 border: `1px solid ${theme.borderFaint}`,
                                 display: 'flex',
                                 alignItems: 'center',
+                                boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
                               }}
-                              className="hover:text-blue-500 transition-colors"
+                              className="hover:bg-blue-500/10 hover:border-blue-500/30 hover:text-blue-500 transition-colors"
                               title={getBlockT(lang, 'dragToReorder')}
                             >
-                              <GripVertical size={13} />
+                              <GripVertical size={15} />
                             </div>
 
                             <div
@@ -604,6 +635,10 @@ export default function BlockOrganizerPanel({
                                   <button onClick={() => handleTurnInto(block, 'heading2')} style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '6px 8px', background: 'none', border: 'none', color: theme.text, cursor: 'pointer', borderRadius: '4px', fontSize: '0.85rem' }} className="hover:bg-black/5 dark:hover:bg-white/10"><Heading2 size={14} /> {getBlockT(lang, 'heading2')}</button>
                                   <button onClick={() => handleTurnInto(block, 'heading3')} style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '6px 8px', background: 'none', border: 'none', color: theme.text, cursor: 'pointer', borderRadius: '4px', fontSize: '0.85rem' }} className="hover:bg-black/5 dark:hover:bg-white/10"><Heading3 size={14} /> {getBlockT(lang, 'heading3')}</button>
                                   <button onClick={() => handleTurnInto(block, 'blockquote')} style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '6px 8px', background: 'none', border: 'none', color: theme.text, cursor: 'pointer', borderRadius: '4px', fontSize: '0.85rem' }} className="hover:bg-black/5 dark:hover:bg-white/10"><Quote size={14} /> {getBlockT(lang, 'quote')}</button>
+                                </div>
+                                <div style={{ padding: '8px', borderBottom: `1px solid ${theme.borderFaint}` }}>
+                                  <button onClick={() => handleMoveUp(block)} style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '6px 8px', background: 'none', border: 'none', color: theme.text, cursor: 'pointer', borderRadius: '4px', fontSize: '0.85rem' }} className="hover:bg-black/5 dark:hover:bg-white/10"><ArrowUp size={14} /> {lang === 'vi' ? 'Di chuyển lên' : 'Move Up'}</button>
+                                  <button onClick={() => handleMoveDown(block)} style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '6px 8px', background: 'none', border: 'none', color: theme.text, cursor: 'pointer', borderRadius: '4px', fontSize: '0.85rem' }} className="hover:bg-black/5 dark:hover:bg-white/10"><ArrowDown size={14} /> {lang === 'vi' ? 'Di chuyển xuống' : 'Move Down'}</button>
                                 </div>
                                 <div style={{ padding: '8px' }}>
                                   <button onClick={() => handleDuplicate(block)} style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '6px 8px', background: 'none', border: 'none', color: theme.text, cursor: 'pointer', borderRadius: '4px', fontSize: '0.85rem' }} className="hover:bg-black/5 dark:hover:bg-white/10"><Copy size={14} /> {getBlockT(lang, 'duplicate')}</button>
