@@ -8,7 +8,7 @@ import { exportTxt, exportJson } from './exportUtils';
 import { isMarkdownText, parseMarkdownToHtml } from "./clipboardEngine";
 import { importFile, exportToOdt, exportToHtmlFile, exportToMarkdownFile, exportToJsonBackup } from './fileHandlers';
 import { saveApiKey, loadApiKey, injectGoogleFont, reinjectSavedFonts } from './googleFontsApi';
-import {  X, Plus, Minus, ZoomIn, Eye, Maximize2, PanelLeft, Hourglass, Coffee, Settings, LayoutList, Columns, Brain, FileText, GitCompare, Table, FoldVertical, UnfoldVertical, Terminal, Sparkles, Trash2 , Activity, Type } from 'lucide-react';
+import {  X, Plus, Minus, ZoomIn, Eye, Maximize2, PanelLeft, Hourglass, Coffee, Settings, LayoutList, Columns, Brain, FileText, GitCompare, Table, FoldVertical, UnfoldVertical, Terminal, Sparkles, Trash2 , Activity, Type, ArrowLeft, FolderOpen, ChevronRight, Home } from 'lucide-react';
 import type { Editor as TiptapEditorType } from '@tiptap/react';
 import LeftPanel from './LeftPanel';
 import RightPanel from './RightPanel';
@@ -125,6 +125,8 @@ async function applyCustomFont(f: CustomFont): Promise<string> {
 
 export default function App() {
   const [projects, setProjects] = useState<Project[]>([]);
+  const [workspaceFolders, setWorkspaceFolders] = useState<Folder[]>([]);
+  const [welcomeFolderId, setWelcomeFolderId] = useState<string | null>(null);
   const [activeProjectId, setActiveProjectId] = useState('');
   const [activePageId, setActivePageId] = useState('');
   const [isWorkspaceActive, setIsWorkspaceActive] = useState(false);
@@ -132,6 +134,41 @@ export default function App() {
   const activeProject = useMemo(() => {
     return projects.find((p) => p.id === activeProjectId) || projects[0];
   }, [projects, activeProjectId]);
+
+  const activeProjectFolder = useMemo(() => {
+    if (!activeProject?.folderId) return null;
+    return workspaceFolders.find(f => f.id === activeProject.folderId) || null;
+  }, [workspaceFolders, activeProject?.folderId]);
+
+  const projectFolderBreadcrumbs = useMemo(() => {
+    if (!activeProjectFolder) return [];
+    const crumbs: Folder[] = [];
+    let curr: Folder | undefined = activeProjectFolder;
+    const visited = new Set<string>();
+    while (curr && !visited.has(curr.id)) {
+      visited.add(curr.id);
+      crumbs.unshift(curr);
+      curr = curr.parentId ? workspaceFolders.find(f => f.id === curr!.parentId) : undefined;
+    }
+    return crumbs;
+  }, [activeProjectFolder, workspaceFolders]);
+
+  const handleExitWorkspace = useCallback((targetFolderId?: string | null) => {
+    const destFolderId = targetFolderId !== undefined ? targetFolderId : (activeProject?.folderId || null);
+    setWelcomeFolderId(destFolderId);
+    setIsWorkspaceActive(false);
+    if (window.history.state?.workspace) {
+      window.history.back();
+    }
+  }, [activeProject?.folderId]);
+
+  const handleGoToRootWelcome = useCallback(() => {
+    setWelcomeFolderId(null);
+    setIsWorkspaceActive(false);
+    if (window.history.state?.workspace) {
+      window.history.back();
+    }
+  }, []);
 
   const allPagesInActiveProj = useMemo(() => {
     if (!activeProject) return [];
@@ -1062,14 +1099,20 @@ export default function App() {
 
     (async () => {
       let dbProjects: Project[] = [];
+      let dbFolders: Folder[] = [];
       let settings;
       try {
-        [dbProjects, settings] = await Promise.all([
+        [dbProjects, dbFolders, settings] = await Promise.all([
           getAllProjectsFromDB(),
+          getAllFoldersFromDB(),
           getAppSettings(),
         ]);
       } catch (err) {
         console.warn('Error loading from Dexie:', err);
+      }
+
+      if (dbFolders) {
+        setWorkspaceFolders(dbFolders);
       }
 
       const dict = getDict(loadLang());
@@ -2153,8 +2196,14 @@ export default function App() {
           onChangeLang={handleSelectLang}
           onEmptyAllTrash={emptyAllTrash}
           refreshTrigger={refreshTrigger}
+          initialFolderId={welcomeFolderId}
+          onFolderChange={setWelcomeFolderId}
           onOpenGithubCloudSave={handleOpenGithubCloudSave}
           onOpenProject={(projectId, pageId) => {
+            const target = projects.find(p => p.id === projectId);
+            if (target?.folderId) {
+              setWelcomeFolderId(target.folderId);
+            }
             handleSelectProject(projectId);
             if (pageId) setActivePageId(pageId);
             setSidebarOpen(false);
@@ -2163,7 +2212,9 @@ export default function App() {
           }}
           onReloadProjects={async () => {
             const projs = await getAllProjectsFromDB();
+            const flds = await getAllFoldersFromDB();
             setProjects(projs);
+            setWorkspaceFolders(flds);
           }}
           onImport={() => {
             const input = document.createElement('input');
@@ -2181,9 +2232,7 @@ export default function App() {
             };
             input.click();
           }}
-          onExportAll={() => {
-            exportToJsonBackup(projects);
-          }}
+          onExportAll={handleExportJsonBackupAll}
         />
               
       <GithubCloudSaveModal
@@ -2289,13 +2338,11 @@ export default function App() {
           onScrollToEditorMarker={handleScrollToEditorMarker}
           activeFootnoteHighlight={activeFootnoteHighlight}
           onClearFootnoteHighlight={() => setActiveFootnoteHighlight(null)}
-          docFont={docFont}
-          onGoHome={() => {
-            setIsWorkspaceActive(false);
-            if (window.history.state?.workspace) {
-              window.history.back();
-            }
-          }}
+          activeProjectFolder={activeProjectFolder}
+          projectFolderBreadcrumbs={projectFolderBreadcrumbs}
+          onGoHome={() => handleExitWorkspace()}
+          onGoToRoot={handleGoToRootWelcome}
+          onGoToFolder={(folderId?: string | null) => handleExitWorkspace(folderId)}
           theme={theme}
           themeMode={themeMode}
           onSelectTheme={handleSelectTheme}
@@ -2324,7 +2371,9 @@ export default function App() {
           onImportFile={handleImportFile}
           onReloadProjects={async () => {
             const projs = await getAllProjectsFromDB();
+            const flds = await getAllFoldersFromDB();
             setProjects(projs);
+            setWorkspaceFolders(flds);
           }}
         />
       </div>
@@ -2339,7 +2388,7 @@ export default function App() {
             {!sidebarOpen && (
               <button
                 onClick={() => setSidebarOpen(true)}
-                className="absolute top-4 left-4 z-50 p-2 rounded-lg transition-all hover:opacity-80 active:scale-95 shadow-sm"
+                className="absolute top-4 left-4 z-50 p-2 rounded-lg transition-all hover:opacity-80 active:scale-95 shadow-sm cursor-pointer"
                 style={{
                   backgroundColor: theme.surface,
                   color: theme.text,
@@ -2354,7 +2403,7 @@ export default function App() {
             <div className={`absolute top-4 z-50 hidden lg:flex items-center p-1 rounded-xl border shadow-xs gap-0.5 transition-all duration-300 ${sidebarOpen ? 'left-4' : 'left-16'}`} style={{ backgroundColor: theme.surface, borderColor: theme.border }}>
               <button
                 onClick={() => { setViewMode('normal'); setBlockViewOpen(false); }}
-                className="p-2 rounded-lg transition-all flex items-center justify-center"
+                className="p-2 rounded-lg transition-all flex items-center justify-center cursor-pointer"
                 style={{
                   backgroundColor: viewMode === 'normal' && !blockViewOpen ? (theme.isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)') : 'transparent',
                   color: viewMode === 'normal' && !blockViewOpen ? theme.text : theme.textMuted
@@ -2366,7 +2415,7 @@ export default function App() {
 
               <button
                 onClick={() => { setViewMode('flashcard'); setBlockViewOpen(false); setIsFocusMode(false); setIsPreviewMode(false); }}
-                className="p-2 rounded-lg transition-all flex items-center justify-center"
+                className="p-2 rounded-lg transition-all flex items-center justify-center cursor-pointer"
                 style={{
                   backgroundColor: viewMode === 'flashcard' ? (theme.isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)') : 'transparent',
                   color: viewMode === 'flashcard' ? theme.text : theme.textMuted

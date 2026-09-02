@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react'
 import { Page, Folder, SyncStatus, Project } from './types'
 import { Lang, t as i18nT } from './i18n'
-import { Home, Highlighter,  Folder as FolderIcon, Edit2, FileText, Trash2, ChevronDown, RotateCcw, X, MoreHorizontal, Upload, Plus, PanelLeftClose, Bookmark, BookOpen, Activity, Type, Table as TableIcon, List } from 'lucide-react'
+import { Home, Highlighter, Folder as FolderIcon, FolderOpen, ArrowLeft, Edit2, FileText, Trash2, ChevronDown, RotateCcw, X, MoreHorizontal, Upload, Plus, PanelLeftClose, Bookmark, BookOpen, Activity, Type, Table as TableIcon, List } from 'lucide-react'
 import { importJsonBackupFile } from './fileHandlers';
 import { saveProjectToDB, saveFolderToDB } from './db';
 import FootnotesPanel from './FootnotesPanel'
@@ -80,6 +80,10 @@ function LeftPanel(props: Record<string, unknown>) {
   const onRenameProject = (props.onRenameProject || (() => {})) as (id: string, name: string) => void
   const onDeleteProject = (props.onDeleteProject || (() => {})) as (id: string) => void
   const onGoHome = props.onGoHome as (() => void) | undefined
+  const onGoToRoot = props.onGoToRoot as (() => void) | undefined
+  const onGoToFolder = props.onGoToFolder as ((folderId?: string | null) => void) | undefined
+  const activeProjectFolder = (props.activeProjectFolder || null) as Folder | null
+  const projectFolderBreadcrumbs = (props.projectFolderBreadcrumbs || []) as Folder[]
   const onCloseSidebar = (props.onCloseSidebar || props.onClose) as (() => void) | undefined
 
   const docsProp = props.docs as Array<Record<string, unknown>> | undefined
@@ -501,7 +505,7 @@ const renderFolder = (folder: Folder, depth = 0) => {
         {onGoHome && (
           <button
             onClick={onGoHome}
-            title={t(lang, 'returnToWelcome') || 'Return to Welcome Screen'}
+            title={activeProjectFolder ? (lang === 'vi' ? `Quay lại thư mục: ${activeProjectFolder.name}` : `Back to folder: ${activeProjectFolder.name}`) : (t(lang, 'returnToWelcome') || 'Return to Welcome Screen')}
             style={{
               width: 36, height: 36,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -510,7 +514,7 @@ const renderFolder = (folder: Folder, depth = 0) => {
               color: c.textMuted,
               cursor: 'pointer', transition: 'all 0.15s',
             }}
-            onMouseEnter={e => { e.currentTarget.style.color = c.text; e.currentTarget.style.background = c.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)' }}
+            onMouseEnter={e => { e.currentTarget.style.color = c.text; e.currentTarget.style.background = c.isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)' }}
             onMouseLeave={e => { e.currentTarget.style.color = c.textMuted; e.currentTarget.style.background = 'transparent' }}
           >
             <Home size={18} />
@@ -568,40 +572,137 @@ const renderFolder = (folder: Folder, depth = 0) => {
         }}
       >
         {/* Header */}
-      <div style={{ padding: '16px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, borderBottom: `1px solid ${c.borderFaint}`, gap: 8 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, height: 24, minWidth: 0, overflow: 'hidden' }}>
-          <div 
-            style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', flex: 1, overflow: 'hidden' }}
-            onClick={() => setShowProjSearch(v => !v)}
-            title={t(lang, 'switchProject') || 'Switch Project'}
-          >
-            <div style={{ position: 'relative', width: 18, height: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <FolderIcon size={18} style={{ color: c.accent, fill: c.accent, opacity: 0.2, position: 'absolute' }} />
-              <FolderIcon size={18} style={{ color: c.accent, position: 'absolute' }} />
+      <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 6, flexShrink: 0, borderBottom: `1px solid ${c.borderFaint}` }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0, overflow: 'hidden' }}>
+            <div 
+              style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', flex: 1, overflow: 'hidden' }}
+              onClick={() => setShowProjSearch(v => !v)}
+              title={t(lang, 'switchProject') || 'Switch Project'}
+            >
+              <div style={{ position: 'relative', width: 18, height: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <FolderIcon size={18} style={{ color: c.accent, fill: c.accent, opacity: 0.2, position: 'absolute' }} />
+                <FolderIcon size={18} style={{ color: c.accent, position: 'absolute' }} />
+              </div>
+              <span style={{ fontSize: '1.05rem', fontWeight: 600, color: c.text, fontFamily: uiFont, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', lineHeight: '18px', display: 'flex', alignItems: 'center' }}>
+                {activeProject?.title || 'English'}
+              </span>
             </div>
-            <span style={{ fontSize: '1.05rem', fontWeight: 600, color: c.text, fontFamily: uiFont, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', lineHeight: '18px', display: 'flex', alignItems: 'center' }}>
-              {activeProject?.title || 'English'}
-            </span>
           </div>
+
+          {onCloseSidebar && (
+            <button
+              type="button"
+              onClick={onCloseSidebar}
+              title={t(lang, 'collapse') || 'Collapse'}
+              style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                background: 'transparent', border: 'none', color: c.textMuted,
+                cursor: 'pointer', padding: 4, borderRadius: 6, transition: 'all 0.15s',
+                flexShrink: 0,
+              }}
+              onMouseEnter={e => { e.currentTarget.style.color = c.text; e.currentTarget.style.background = c.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)' }}
+              onMouseLeave={e => { e.currentTarget.style.color = c.textMuted; e.currentTarget.style.background = 'transparent' }}
+            >
+              <PanelLeftClose size={16} />
+            </button>
+          )}
         </div>
 
-        {onCloseSidebar && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', paddingTop: 2 }}>
+          {/* Home / Return button */}
           <button
-            type="button"
-            onClick={onCloseSidebar}
-            title={t(lang, 'collapse') || 'Collapse'}
+            onClick={onGoToRoot || onGoHome}
+            title={lang === 'vi' ? 'Quay về trang chủ' : 'Return to Home'}
             style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              background: 'transparent', border: 'none', color: c.textMuted,
-              cursor: 'pointer', padding: 4, borderRadius: 6, transition: 'all 0.15s',
-              flexShrink: 0,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 4,
+              padding: '3px 8px',
+              borderRadius: 6,
+              fontSize: '0.72rem',
+              fontWeight: 500,
+              background: c.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
+              color: c.textMuted,
+              border: `1px solid ${c.borderFaint}`,
+              cursor: 'pointer',
+              transition: 'all 0.15s',
+              fontFamily: uiFont,
             }}
-            onMouseEnter={e => { e.currentTarget.style.color = c.text; e.currentTarget.style.background = c.isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)' }}
-            onMouseLeave={e => { e.currentTarget.style.color = c.textMuted; e.currentTarget.style.background = 'transparent' }}
+            onMouseEnter={e => { e.currentTarget.style.color = c.text; e.currentTarget.style.borderColor = c.border; }}
+            onMouseLeave={e => { e.currentTarget.style.color = c.textMuted; e.currentTarget.style.borderColor = c.borderFaint; }}
           >
-            <PanelLeftClose size={17} />
+            <Home size={12} style={{ flexShrink: 0 }} />
+            <span>{lang === 'vi' ? 'Trang chủ' : 'Home'}</span>
           </button>
-        )}
+
+          {/* Folder Breadcrumb / Badge(s) */}
+          {projectFolderBreadcrumbs && projectFolderBreadcrumbs.length > 0 ? (
+            projectFolderBreadcrumbs.map((crumb, idx) => (
+              <React.Fragment key={crumb.id}>
+                <span style={{ color: c.textMuted, opacity: 0.35, fontSize: '0.65rem' }}>/</span>
+                <button
+                  onClick={() => onGoToFolder ? onGoToFolder(crumb.id) : (onGoHome && onGoHome())}
+                  title={lang === 'vi' ? `Quay lại thư mục: ${crumb.name}` : `Back to folder: ${crumb.name}`}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 4,
+                    padding: '3px 8px',
+                    borderRadius: 6,
+                    fontSize: '0.72rem',
+                    fontWeight: 500,
+                    background: c.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
+                    color: c.accent,
+                    border: `1px solid ${c.borderFaint}`,
+                    cursor: 'pointer',
+                    maxWidth: 130,
+                    transition: 'all 0.15s',
+                    fontFamily: uiFont,
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.background = c.isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)'; e.currentTarget.style.borderColor = c.accent; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = c.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'; e.currentTarget.style.borderColor = c.borderFaint; }}
+                >
+                  <FolderOpen size={11} style={{ flexShrink: 0 }} />
+                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {crumb.name}
+                  </span>
+                </button>
+              </React.Fragment>
+            ))
+          ) : activeProjectFolder ? (
+            <>
+              <span style={{ color: c.textMuted, opacity: 0.35, fontSize: '0.65rem' }}>/</span>
+              <button
+                onClick={() => onGoToFolder ? onGoToFolder(activeProjectFolder.id) : (onGoHome && onGoHome())}
+                title={lang === 'vi' ? `Quay lại thư mục: ${activeProjectFolder.name}` : `Back to folder: ${activeProjectFolder.name}`}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  padding: '3px 8px',
+                  borderRadius: 6,
+                  fontSize: '0.72rem',
+                  fontWeight: 500,
+                  background: c.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
+                  color: c.accent,
+                  border: `1px solid ${c.borderFaint}`,
+                  cursor: 'pointer',
+                  maxWidth: 130,
+                  transition: 'all 0.15s',
+                  fontFamily: uiFont,
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = c.isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.08)'; e.currentTarget.style.borderColor = c.accent; }}
+                onMouseLeave={e => { e.currentTarget.style.background = c.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'; e.currentTarget.style.borderColor = c.borderFaint; }}
+              >
+                <FolderOpen size={11} style={{ flexShrink: 0 }} />
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {activeProjectFolder.name}
+                </span>
+              </button>
+            </>
+          ) : null}
+        </div>
       </div>
       {/* Project Switcher Dropdown (Conditional) */}
       {showProjSearch && (

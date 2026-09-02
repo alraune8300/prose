@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { FileText, FolderOpen, FolderInput, Plus, Download, Upload, Grid, List, Trash2, Edit2, Check, X, RotateCcw, Home, AlertCircle, Search, ArrowUpDown, FileJson, Clock, Palette } from 'lucide-react';
+import { FileText, FolderOpen, FolderInput, Plus, Download, Upload, Grid, List, Trash2, Edit2, Check, X, RotateCcw, Home, AlertCircle, Search, ArrowUpDown, FileJson, Clock, Palette, ArrowLeft, ChevronRight } from 'lucide-react';
 
 import { Project, ThemeColors, Folder } from './types';
 import { db, getAllProjectsFromDB, saveProjectToDB, deleteProjectFromDB, getAllFoldersFromDB, saveFolderToDB } from './db';
@@ -23,7 +23,8 @@ interface WelcomeScreenProps {
   onEmptyAllTrash?: () => Promise<void> | void;
   onReloadProjects?: () => Promise<void> | void;
   refreshTrigger?: number;
-  
+  initialFolderId?: string | null;
+  onFolderChange?: (folderId: string | null) => void;
 }
 
 const LANGUAGES: {value: Lang, label: string}[] = [
@@ -40,7 +41,7 @@ const LANGUAGES: {value: Lang, label: string}[] = [
 
 type SortOption = 'lastOpened' | 'updated' | 'newest' | 'oldest' | 'nameAZ' | 'nameZA' | 'pages';
 
-function WelcomeScreen({ theme, themeMode, onSelectTheme, onOpenThemeModal, uiFont, lang = 'vi', onChangeLang, onOpenProject, onImport, onExportAll, onOpenGithubCloudSave, onEmptyAllTrash, onReloadProjects, refreshTrigger }: WelcomeScreenProps) {
+function WelcomeScreen({ theme, themeMode, onSelectTheme, onOpenThemeModal, uiFont, lang = 'vi', onChangeLang, onOpenProject, onImport, onExportAll, onOpenGithubCloudSave, onEmptyAllTrash, onReloadProjects, refreshTrigger, initialFolderId, onFolderChange }: WelcomeScreenProps) {
     
   const [projects, setProjects] = useState<Project[]>([]);
   const activeProjects = projects.filter(p => !p.isDeleted);
@@ -59,7 +60,20 @@ function WelcomeScreen({ theme, themeMode, onSelectTheme, onOpenThemeModal, uiFo
   const [editingFolderId, setEditingFolderId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
   
-  const [currentFolderId, setCurrentFolderId] = useState<string | null>(null);
+  const [currentFolderId, setCurrentFolderId] = useState<string | null>(initialFolderId ?? null);
+
+  useEffect(() => {
+    if (initialFolderId !== undefined) {
+      setCurrentFolderId(initialFolderId);
+    }
+  }, [initialFolderId]);
+
+  const handleSelectFolder = useCallback((folderId: string | null) => {
+    setCurrentFolderId(folderId);
+    if (onFolderChange) {
+      onFolderChange(folderId);
+    }
+  }, [onFolderChange]);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>('lastOpened');
@@ -766,31 +780,55 @@ function WelcomeScreen({ theme, themeMode, onSelectTheme, onOpenThemeModal, uiFo
         </div>
         {/* Breadcrumbs */}
         {tab === 'active' && currentFolderId !== null && (
-          <div className="w-full max-w-5xl mb-4 flex items-center gap-2 text-sm" style={{ color: theme.textMuted }}>
-            <button 
-              onClick={() => setCurrentFolderId(null)} 
-              className={`hover:underline px-2 py-1 -ml-2 rounded transition-colors ${dragOverFolderId === 'root' ? 'bg-black/10 dark:bg-white/10' : ''}`}
-              onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); setDragOverFolderId('root'); }}
-              onDragLeave={(e) => { e.preventDefault(); e.stopPropagation(); setDragOverFolderId(null); }}
-              onDrop={(e) => {
-                e.preventDefault(); e.stopPropagation(); setDragOverFolderId(null);
-                if (dragProjectId) handleMoveProject(null, dragProjectId);
-              }}
-            >
-              {t(lang, 'home')}
-            </button>
-            {breadcrumbs.map((b, i) => (
-              <React.Fragment key={b.id}>
-                <span>/</span>
+          <div className="w-full max-w-5xl mb-4 flex items-center justify-between gap-3 text-sm animate-fade-in-up" style={{ color: theme.textMuted }}>
+            <div className="flex items-center gap-2 flex-wrap">
+              {/* Back to Parent Folder / Home Button */}
+              <button
+                onClick={() => {
+                  const currentFolder = folders.find(f => f.id === currentFolderId);
+                  const parentId = currentFolder?.parentId || null;
+                  handleSelectFolder(parentId);
+                }}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-medium transition-all hover:opacity-80 active:scale-95 cursor-pointer shadow-xs"
+                style={{
+                  backgroundColor: theme.surface,
+                  borderColor: theme.borderFaint,
+                  color: theme.text,
+                }}
+                title={lang === 'vi' ? 'Quay lại cấp trước' : 'Go back to parent folder'}
+              >
+                <ArrowLeft size={13} />
+                <span>{lang === 'vi' ? 'Quay lại' : 'Back'}</span>
+              </button>
+
+              <div className="flex items-center gap-1.5 text-xs sm:text-sm pl-1">
                 <button 
-                  onClick={() => setCurrentFolderId(b.id)}
-                  className={`hover:underline ${i === breadcrumbs.length - 1 ? 'font-medium' : ''}`}
-                  style={{ color: i === breadcrumbs.length - 1 ? theme.text : theme.textMuted }}
+                  onClick={() => handleSelectFolder(null)} 
+                  className={`hover:underline px-2 py-1 rounded-lg transition-colors cursor-pointer ${dragOverFolderId === 'root' ? 'bg-black/10 dark:bg-white/10' : ''}`}
+                  onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); setDragOverFolderId('root'); }}
+                  onDragLeave={(e) => { e.preventDefault(); e.stopPropagation(); setDragOverFolderId(null); }}
+                  onDrop={(e) => {
+                    e.preventDefault(); e.stopPropagation(); setDragOverFolderId(null);
+                    if (dragProjectId) handleMoveProject(null, dragProjectId);
+                  }}
+                  style={{ color: theme.textMuted }}
                 >
-                  {b.name}
+                  {t(lang, 'home')}
                 </button>
-              </React.Fragment>
-            ))}
+                {breadcrumbs.map((b, i) => (
+                  <React.Fragment key={b.id}>
+                    <ChevronRight size={13} className="opacity-40" />
+                    <button 
+                      onClick={() => handleSelectFolder(b.id)}
+                      className={`hover:underline px-1.5 py-0.5 rounded-lg transition-colors cursor-pointer ${i === breadcrumbs.length - 1 ? 'font-semibold' : ''}`}
+                      style={{ color: i === breadcrumbs.length - 1 ? theme.text : theme.textMuted }}
+                    >
+                      {b.name}
+                    </button>
+                  </React.Fragment>
+                ))}
+              </div>
+            </div>
           </div>
         )}
         {tab === 'trash' && (trashedProjects.length > 0 || trashedFolders.length > 0) && (
@@ -830,7 +868,7 @@ function WelcomeScreen({ theme, themeMode, onSelectTheme, onOpenThemeModal, uiFo
                   return (
                     <div 
                       key={folder.id}
-                      onClick={() => tab === 'active' && setCurrentFolderId(folder.id)}
+                      onClick={() => tab === 'active' && handleSelectFolder(folder.id)}
                       className={`group relative w-full h-[140px] pt-[16px] transition-all ${tab === 'active' ? 'cursor-pointer hover:-translate-y-1' : ''}`}
                       onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); setDragOverFolderId(folder.id); }}
                       onDragLeave={(e) => { e.preventDefault(); e.stopPropagation(); setDragOverFolderId(null); }}
@@ -922,7 +960,7 @@ function WelcomeScreen({ theme, themeMode, onSelectTheme, onOpenThemeModal, uiFo
                 return (
                   <div 
                     key={folder.id}
-                  onClick={() => tab === 'active' && setCurrentFolderId(folder.id)}
+                  onClick={() => tab === 'active' && handleSelectFolder(folder.id)}
                   className={`group relative flex flex-col justify-center px-4 py-3 rounded-md border transition-colors ${tab === 'active' ? 'cursor-pointer hover:-translate-y-0.5 shadow-sm' : ''}`}
                   onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); setDragOverFolderId(folder.id); }}
                   onDragLeave={(e) => { e.preventDefault(); e.stopPropagation(); setDragOverFolderId(null); }}
