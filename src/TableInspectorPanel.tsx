@@ -63,20 +63,107 @@ export default function TableInspectorPanel({
     transition: 'all 0.15s ease'
   };
 
+  const [createRows, setCreateRows] = useState(3);
+  const [createCols, setCreateCols] = useState(3);
+  const [withHeader, setWithHeader] = useState(true);
+
   if (!tableInfo) {
     return (
-      <div className="flex flex-col h-full w-full select-none" style={{ fontFamily: uiFont, backgroundColor: theme.bg, padding: 16 }} onMouseDown={(e) => e.preventDefault()}>
-        <button
-          onClick={() => editor?.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
-          style={{
-            width: '100%', padding: '10px 14px', borderRadius: 8, border: 'none',
-            background: theme.accent, color: '#fff', fontFamily: uiFont, fontSize: '0.8rem', fontWeight: 600,
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, cursor: 'pointer'
-          }}
-        >
-          <TableIcon size={16} />
-          {t(l, 'insertTable') || 'Insert Table'}
-        </button>
+      <div className="flex flex-col h-full w-full select-none overflow-y-auto" style={{ fontFamily: uiFont, backgroundColor: theme.bg, padding: 16 }} onMouseDown={(e) => e.preventDefault()}>
+        <div className="space-y-4">
+          <div className="text-center py-2">
+            <span className="text-xs font-semibold opacity-75" style={{ color: theme.textMuted }}>
+              {t(l, 'noTableSelected') || 'No Table Selected'}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="flex flex-col gap-1.5">
+              <span className="text-[10px] uppercase tracking-wider font-medium" style={{ color: theme.textMuted }}>
+                {t(l, 'rows') || 'Rows'}
+              </span>
+              <div className="flex items-center" style={{ border: `1px solid ${theme.borderFaint}`, borderRadius: 6, overflow: 'hidden' }}>
+                <button
+                  style={{ flex: 1, padding: 6, background: theme.surface, color: theme.text }}
+                  onClick={() => setCreateRows(prev => Math.max(1, prev - 1))}
+                >
+                  <Minus size={13} className="mx-auto" />
+                </button>
+                <span className="w-8 text-center text-xs font-mono">{createRows}</span>
+                <button
+                  style={{ flex: 1, padding: 6, background: theme.surface, color: theme.text }}
+                  onClick={() => setCreateRows(prev => Math.min(20, prev + 1))}
+                >
+                  <Plus size={13} className="mx-auto" />
+                </button>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <span className="text-[10px] uppercase tracking-wider font-medium" style={{ color: theme.textMuted }}>
+                {t(l, 'columns') || 'Columns'}
+              </span>
+              <div className="flex items-center" style={{ border: `1px solid ${theme.borderFaint}`, borderRadius: 6, overflow: 'hidden' }}>
+                <button
+                  style={{ flex: 1, padding: 6, background: theme.surface, color: theme.text }}
+                  onClick={() => setCreateCols(prev => Math.max(1, prev - 1))}
+                >
+                  <Minus size={13} className="mx-auto" />
+                </button>
+                <span className="w-8 text-center text-xs font-mono">{createCols}</span>
+                <button
+                  style={{ flex: 1, padding: 6, background: theme.surface, color: theme.text }}
+                  onClick={() => setCreateCols(prev => Math.min(15, prev + 1))}
+                >
+                  <Plus size={13} className="mx-auto" />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Quick preset sizes */}
+          <div className="flex gap-1.5">
+            {[[2, 2], [3, 3], [4, 4], [5, 4]].map(([r, c]) => (
+              <button
+                key={`${r}x${c}`}
+                onClick={() => { setCreateRows(r); setCreateCols(c); }}
+                className={`flex-1 py-1 text-[11px] font-mono rounded border transition-all cursor-pointer ${
+                  createRows === r && createCols === c ? 'font-bold shadow-xs' : 'opacity-70 hover:opacity-100'
+                }`}
+                style={{
+                  borderColor: createRows === r && createCols === c ? theme.accent : theme.borderFaint,
+                  backgroundColor: createRows === r && createCols === c ? (theme.accentLight || 'rgba(59,130,246,0.12)') : 'transparent',
+                  color: createRows === r && createCols === c ? theme.accent : theme.text
+                }}
+              >
+                {r}×{c}
+              </button>
+            ))}
+          </div>
+
+          <label className="flex items-center gap-2 text-xs cursor-pointer select-none pt-1" style={{ color: theme.text }}>
+            <input
+              type="checkbox"
+              checked={withHeader}
+              onChange={e => setWithHeader(e.target.checked)}
+              className="rounded"
+              style={{ accentColor: theme.accent }}
+            />
+            <span>{t(l, 'headerRow') || 'Header Row'}</span>
+          </label>
+
+          <button
+            onClick={() => editor?.chain().focus().insertTable({ rows: createRows, cols: createCols, withHeaderRow: withHeader }).run()}
+            style={{
+              width: '100%', padding: '10px 14px', borderRadius: 8, border: 'none',
+              background: theme.accent, color: '#fff', fontFamily: uiFont, fontSize: '0.8rem', fontWeight: 600,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, cursor: 'pointer'
+            }}
+          >
+            <TableIcon size={16} />
+            {t(l, 'insertTable') || 'Insert Table'} ({createRows}×{createCols})
+          </button>
+        </div>
       </div>
     );
   }

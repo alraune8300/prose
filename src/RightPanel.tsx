@@ -540,7 +540,7 @@ ${content.split('\n\n').map(para => {
   const TABS: { key: Exclude<Panel, 'none' | 'preview' | 'importexport'>; icon: React.ComponentType<{ size?: number; style?: React.CSSProperties }>; label: string }[] = [
     { key: 'outline', icon: List, label: t(lang, 'outline') || 'Outline' },
     { key: 'format', icon: Sliders, label: t(lang, 'format') || 'Format' },
-    { key: 'table', icon: TableIcon, label: t(lang, 'insertTable') || 'Table' },
+    { key: 'table', icon: TableIcon, label: t(lang, 'table') || t(lang, 'insertTable') || 'Table' },
     { key: 'export', icon: Download, label: t(lang, 'export') || 'Export & Snapshots' },
     { key: 'fonts', icon: Type, label: t(lang, 'fonts') || 'Fonts' },
     { key: 'archive', icon: Archive, label: t(lang, 'archive') || 'Archive' },
@@ -612,7 +612,7 @@ ${content.split('\n\n').map(para => {
               <span style={{ fontFamily: uiFont, fontSize: '0.88rem', fontWeight: 700, color: c.text, letterSpacing: '0.08em', textTransform: 'uppercase', flex: 1, paddingRight: 8, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {panel === 'outline' ? (t(lang, 'outline') || 'Outline') :
                  panel === 'format' ? (t(lang, 'format') || 'Format') :
-                 panel === 'table' ? (t(lang, 'insertTable') || 'Insert Table') :
+                 panel === 'table' ? (t(lang, 'table') || t(lang, 'insertTable') || 'Table') :
                  panel === 'export' ? 'Import / Export & Snapshots' :
                  panel === 'fonts' ? (t(lang, 'fonts') || 'Fonts') :
                  panel === 'archive' ? (t(lang, 'archive') || 'Archive') :

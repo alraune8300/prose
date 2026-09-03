@@ -948,43 +948,7 @@ function LeftPanel(props: Record<string, unknown>) {
             )}
           </div>
           
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <button
-                id="left-panel-archive-btn"
-                onClick={handleOpenArchive}
-                style={{
-                  background: 'none', border: 'none', cursor: 'pointer', color: c.textMuted,
-                  display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.68rem', fontWeight: 500,
-                  padding: '3px 6px', borderRadius: 5, transition: 'all 0.12s'
-                }}
-                title={t(lang, 'archive') || "Archive"}
-                onMouseEnter={e => { e.currentTarget.style.color = c.accent; e.currentTarget.style.background = c.isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)'; }}
-                onMouseLeave={e => { e.currentTarget.style.color = c.textMuted; e.currentTarget.style.background = 'transparent'; }}
-              >
-                <Archive size={12} />
-                <span>{t(lang, 'archive') || 'Archive'}</span>
-                {archive.length > 0 && <span style={{ opacity: 0.75, fontSize: '0.64rem' }}>({archive.length})</span>}
-              </button>
-
-              <button
-                id="left-panel-trash-btn"
-                onClick={handleOpenTrash}
-                style={{
-                  background: 'none', border: 'none', cursor: 'pointer', color: c.textMuted,
-                  display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.68rem', fontWeight: 500,
-                  padding: '3px 6px', borderRadius: 5, transition: 'all 0.12s'
-                }}
-                title={t(lang, 'bin') || "Trash"}
-                onMouseEnter={e => { e.currentTarget.style.color = '#e05050'; e.currentTarget.style.background = 'rgba(224, 80, 80, 0.08)'; }}
-                onMouseLeave={e => { e.currentTarget.style.color = c.textMuted; e.currentTarget.style.background = 'transparent'; }}
-              >
-                <Trash2 size={12} />
-                <span>{t(lang, 'bin') || 'Bin'}</span>
-                {bin.length > 0 && <span style={{ opacity: 0.75, fontSize: '0.64rem' }}>({bin.length})</span>}
-              </button>
-            </div>
-            
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
             {/* Sync Status */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
               <span style={{ fontSize: '0.64rem', color: c.textMuted, fontFamily: uiFont }}>{syncLabel}</span>
