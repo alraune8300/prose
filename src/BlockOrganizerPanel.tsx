@@ -3,7 +3,7 @@ import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea
 import { X, GripVertical, ArrowUp, ArrowDown, Type, Heading1, Heading2, Heading3, Quote, Copy, Trash2, ArrowRightLeft } from 'lucide-react';
 import { type Editor as TiptapEditorType, useEditor, EditorContent, JSONContent } from '@tiptap/react';
 import type { Node as ProsemirrorNode } from 'prosemirror-model';
-import { getEditorExtensions } from './Editor';
+import { getEditorExtensions } from './editorExtensions';
 import { ThemeColors } from './types';
 import { t, Lang } from './i18n';
 

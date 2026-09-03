@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Search, RotateCw, X } from 'lucide-react';
+import { Accordion } from './components/Accordion';
 import { Lang, t } from './i18n';
 
 interface SearchPanelProps {
@@ -182,8 +183,8 @@ export default function SearchPanel({ c, uiFont, lang, }: SearchPanelProps) {
       </div>
 
       <div style={{ marginTop: 12 }}>
-        <SectionLabel label={t(lang, 'searchOptions')} />
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginTop: 14 }}>
+<Accordion title={t(lang, 'searchOptions')} uiFont={uiFont} c={c} defaultOpen>
+<div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
           <label style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}>
             <span style={{ fontFamily: uiFont, fontSize: '0.82rem', color: c.textMuted, flex: 1, paddingRight: 10, textAlign: 'left', lineHeight: 1.35 }}>{t(lang, 'matchCase')}</span>
             <div style={{
@@ -236,7 +237,8 @@ export default function SearchPanel({ c, uiFont, lang, }: SearchPanelProps) {
             <input type="checkbox" checked={regex} onChange={e => setRegex(e.target.checked)} style={{ display: 'none' }} />
           </label>
         </div>
-      </div>
+</Accordion>
+</div>
     </div>
   );
 }

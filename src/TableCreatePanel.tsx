@@ -283,7 +283,6 @@ export default function TableCreatePanel({
             color: activeTab === 'grid' ? theme.text : theme.textMuted,
           }}
         >
-          <Grid size={12} />
           <span>{dict.grid || (lang === 'vi' ? 'Ma trận' : 'Grid')}</span>
         </button>
         <button
@@ -297,7 +296,6 @@ export default function TableCreatePanel({
             color: activeTab === 'custom' ? theme.text : theme.textMuted,
           }}
         >
-          <Rows size={12} />
           <span>{dict.custom || (lang === 'vi' ? 'Tùy chỉnh' : 'Custom')}</span>
         </button>
         <button
@@ -311,7 +309,6 @@ export default function TableCreatePanel({
             color: activeTab === 'templates' ? theme.text : theme.textMuted,
           }}
         >
-          <LayoutTemplate size={12} />
           <span>{dict.templates || (lang === 'vi' ? 'Mẫu' : 'Templates')}</span>
         </button>
       </div>
@@ -389,7 +386,6 @@ export default function TableCreatePanel({
         <div className="space-y-3">
           <div className="space-y-1.5">
             <label className="text-[11px] font-semibold opacity-80 flex items-center gap-1">
-              <Rows size={12} style={{ color: theme.text }} />
               <span>{dict.rows || (lang === 'vi' ? 'Số hàng (Rows):' : 'Rows:')}:</span>
             </label>
             <div className="flex items-center gap-1.5">
@@ -427,7 +423,6 @@ export default function TableCreatePanel({
 
           <div className="space-y-1.5">
             <label className="text-[11px] font-semibold opacity-80 flex items-center gap-1">
-              <Columns size={12} style={{ color: theme.text }} />
               <span>{dict.cols || (lang === 'vi' ? 'Số cột (Columns):' : 'Columns:')}:</span>
             </label>
             <div className="flex items-center gap-1.5">
@@ -552,7 +547,6 @@ export default function TableCreatePanel({
                 color: alignment === 'left' ? theme.accent : theme.text,
               }}
             >
-              <AlignLeft size={12} />
               <span>{dict.left || 'Left'}</span>
             </button>
             <button
@@ -567,7 +561,6 @@ export default function TableCreatePanel({
                 color: alignment === 'center' ? theme.accent : theme.text,
               }}
             >
-              <AlignCenter size={12} />
               <span>{dict.center || 'Center'}</span>
             </button>
             <button

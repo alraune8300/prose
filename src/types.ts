@@ -45,6 +45,7 @@ export interface Project {
   pages: Page[]
   drafts: Page[]
   scratchpad?: Page[]
+  scratchpadName?: string
   folders: Folder[]
   bin: Page[]
   archive?: Page[]
@@ -117,7 +118,7 @@ export interface Footnote {
 
 export type SyncStatus = 'saved' | 'saving' | 'unsaved' | 'error'
 
-export type Panel = 'none' | 'format' | 'export' | 'preview' | 'timer' | 'colors' | 'fonts' | 'importexport' | 'settings' | 'history' | 'search' | 'spellcheck' | 'table' | 'codex' | 'inspector'
+export type Panel = 'none' | 'format' | 'export' | 'preview' | 'timer' | 'colors' | 'fonts' | 'importexport' | 'settings' | 'history' | 'search' | 'table' | 'codex' | 'inspector' | 'outline' | 'trash' | 'archive'
 
 export type PaperSize = 'A4' | 'Letter' | 'Legal' | 'A5' | 'Tabloid' | 'pageless'
 export type PageOrientation = 'portrait' | 'landscape'

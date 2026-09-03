@@ -1,7 +1,7 @@
 import { ReactRenderer } from '@tiptap/react';
 import tippy from 'tippy.js';
 import { MentionList } from './MentionList';
-import { globalCodexEntities } from './Editor';
+import { globalCodexEntities } from './editorExtensions';
 
 export default function getSuggestionOptions() {
   return {

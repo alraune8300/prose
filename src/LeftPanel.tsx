@@ -1,20 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect } from 'react'
-import { Page, Folder, SyncStatus, Project } from './types'
+import {  Page, Folder, SyncStatus, Project } from './types'
 import { Lang, t as i18nT } from './i18n'
 import {
   Home, Highlighter, Folder as FolderIcon, FolderOpen, Edit2, FileText, Trash2,
   ChevronDown, RotateCcw, X, MoreHorizontal, Upload, Plus, PanelLeftClose, Bookmark,
-  BookOpen, Table as TableIcon, List, Cloud, Archive, ArchiveRestore, Pin, StickyNote
-} from 'lucide-react'
+  BookOpen, Table as TableIcon, List,  Cloud, PaintRoller, Github,  Archive, ArchiveRestore, Pin, StickyNote
+ } from 'lucide-react'
 import { importJsonBackupFile } from './fileHandlers';
 import { saveProjectToDB, saveFolderToDB } from './db';
-import FootnotesPanel from './FootnotesPanel'
-import HighlightsPanel from './HighlightsPanel'
-import CitationsPanel from './CitationsPanel'
-import TableInspectorPanel from './TableInspectorPanel'
-import { DocumentOutlinePanel } from './DocumentOutlinePanel'
-import type { CitationSource, CitationStyle } from './citationsEngine'
 import type { Editor } from '@tiptap/react'
 
 function timeSince(date: Date, lang: Lang): string {
@@ -119,6 +113,7 @@ function LeftPanel(props: Record<string, unknown>) {
   const onEmptyBin = (props.onEmptyBin || (() => {})) as () => void
   const onArchivePage = (props.onArchivePage || (() => {})) as (id: string) => void
   const onUnarchivePage = (props.onUnarchivePage || (() => {})) as (id: string) => void
+  const onRenameScratchpadSection = (props.onRenameScratchpadSection || (() => {})) as (name: string) => void
 
   const folders: Folder[] = activeProject ? activeProject.folders : (Array.isArray(props.folders) ? (props.folders as Folder[]) : [])
   const activeFolders = folders.filter(f => !f.isDeleted)
@@ -127,7 +122,8 @@ function LeftPanel(props: Record<string, unknown>) {
   const onDeleteFolder = (props.onDeleteFolder || (() => {})) as (id: string) => void
   const onMovePageToFolder = (props.onMovePageToFolder || props.onMoveDoc || (() => {})) as (pageId: string, folderId: string | undefined) => void
   
-  const onOpenGithubCloudSave = (props.onOpenGithubCloudSave || (() => {})) as () => void
+  const onOpenGithubCloudSave = props.onOpenGithubCloudSave as (() => void) | undefined;
+  const onOpenThemeModal = props.onOpenThemeModal as (() => void) | undefined;
 
   const [renamingId, setRenamingId] = useState<string | null>(null)
   const [renameVal, setRenameVal] = useState('')
@@ -135,11 +131,11 @@ function LeftPanel(props: Record<string, unknown>) {
   const [projRenameVal, setProjRenameVal] = useState('')
   const [, setTick] = useState(0)
   const [activeTab, setActiveTab] = useState<'pages' | 'drafts'>('pages')
-  const [binOpen, setBinOpen] = useState(false)
-  const [archiveOpen, setArchiveOpen] = useState(false)
   const [collapsedFolders, setCollapsedFolders] = useState<Set<string>>(new Set())
   const [renamingFolderId, setRenamingFolderId] = useState<string | null>(null)
   const [folderRenameVal, setFolderRenameVal] = useState('')
+  const [renamingScratchpadTitle, setRenamingScratchpadTitle] = useState(false)
+  const [scratchpadTitleVal, setScratchpadTitleVal] = useState('')
   const [folderMenuOpenId, setFolderMenuOpenId] = useState<string | null>(null)
   
   const [dragPageId, setDragPageId] = useState<string | null>(null)
@@ -284,21 +280,12 @@ function LeftPanel(props: Record<string, unknown>) {
             </span>
           )}
           
-          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity" style={{ flexShrink: 0 }}>
-            <button
-              onClick={e => { e.stopPropagation(); onTogglePinPage(page.id); }}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, color: page.isPinned ? c.accent : c.textMuted, display: 'flex', alignItems: 'center' }}
-              onMouseEnter={e => (e.currentTarget.style.color = c.accent)}
-              onMouseLeave={e => (e.currentTarget.style.color = page.isPinned ? c.accent : c.textMuted)}
-              title={page.isPinned ? (t(lang, 'unpin') || "Unpin") : (t(lang, 'pin') || "Pin")}
-            >
-              <Pin size={12} style={page.isPinned ? { fill: c.accent } : {}} />
-            </button>
+          <div className="flex items-center gap-1" style={{ flexShrink: 0 }}>
             <button
               onClick={e => { e.stopPropagation(); setFolderMenuOpenId(null); setRenamingId(page.id); setRenameVal(page.title); }}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, color: c.accent, display: 'flex', alignItems: 'center' }}
-              onMouseEnter={e => (e.currentTarget.style.color = c.text)}
-              onMouseLeave={e => (e.currentTarget.style.color = c.accent)}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, color: c.textMuted, display: 'flex', alignItems: 'center' }}
+              onMouseEnter={e => (e.currentTarget.style.color = c.accent)}
+              onMouseLeave={e => (e.currentTarget.style.color = c.textMuted)}
               title={t(lang, 'rename') || "Rename"}
             >
               <Edit2 size={12} />
@@ -543,105 +530,83 @@ function LeftPanel(props: Record<string, unknown>) {
     )
   }
 
+  const handleOpenArchive = () => {
+    if (props.onOpenRightPanel) {
+      (props.onOpenRightPanel as (tab: string) => void)('archive');
+    } else {
+      window.dispatchEvent(new CustomEvent('kgv-open-right-panel', { detail: { tab: 'archive' } }));
+    }
+  };
+
+  const handleOpenTrash = () => {
+    if (props.onOpenRightPanel) {
+      (props.onOpenRightPanel as (tab: string) => void)('trash');
+    } else {
+      window.dispatchEvent(new CustomEvent('kgv-open-right-panel', { detail: { tab: 'trash' } }));
+    }
+  };
+
   return (
     <div
+      id="left-panel-root"
+      onClick={() => setFolderMenuOpenId(null)}
       style={{
-        width: 300, flexShrink: 0, display: 'flex', flexDirection: 'row',
-        height: '100%', maxHeight: '100%',
+        width: '100%',
+        height: '100%',
+        maxHeight: '100%',
+        display: 'flex',
+        flexDirection: 'column',
         background: c.panel,
+        borderRight: `1px solid ${c.borderFaint}`,
         overflow: 'hidden',
+        fontFamily: uiFont,
       }}
     >
-      {/* Vertical tab strip */}
-      <div style={{
-        width: 42, flexShrink: 0, height: '100%',
-        background: c.isDark ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.03)',
-        borderRight: `1px solid ${c.borderFaint}`,
-        display: 'flex', flexDirection: 'column',
-        paddingTop: 8, overflowY: 'auto', gap: 3, alignItems: 'center'
-      }}>
-        {onGoHome && (
-          <button
-            onClick={onGoHome}
-            title={activeProjectFolder ? (lang === 'vi' ? `Quay lại thư mục: ${activeProjectFolder.name}` : `Back to folder: ${activeProjectFolder.name}`) : (t(lang, 'returnToWelcome') || 'Return to Welcome Screen')}
+      {/* Header */}
+      <div style={{ padding: '12px 14px 10px', display: 'flex', flexDirection: 'column', gap: 8, flexShrink: 0, borderBottom: `1px solid ${c.borderFaint}` }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+          <div
             style={{
-              width: 34, height: 34,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              border: 'none', borderRadius: 7,
-              background: 'transparent',
-              color: c.textMuted,
-              cursor: 'pointer', transition: 'all 0.12s',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              cursor: 'pointer',
+              flex: 1,
+              minWidth: 0,
+              padding: '4px 6px',
+              marginLeft: -6,
+              borderRadius: 6,
+              transition: 'background 0.12s',
             }}
-            onMouseEnter={e => { e.currentTarget.style.color = c.text; e.currentTarget.style.background = c.isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)' }}
-            onMouseLeave={e => { e.currentTarget.style.color = c.textMuted; e.currentTarget.style.background = 'transparent' }}
+            onClick={() => setShowProjSearch(v => !v)}
+            title={t(lang, 'switchProject') || 'Switch Project'}
+            onMouseEnter={e => { e.currentTarget.style.background = c.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
           >
-            <Home size={16} />
-          </button>
-        )}
-        {onGoHome && <div style={{ width: 20, height: 1, background: c.borderFaint, margin: '2px 0' }} />}
-        {[
-          { key: 'files', icon: FileText, label: t(lang, 'files') || 'Files' },
-          { key: 'outline', icon: List, label: t(lang, 'outline') || 'Outline' },
-          { key: 'footnotes', icon: Bookmark, label: t(lang, 'footnotes') || 'Footnotes' },
-          { key: 'citations', icon: BookOpen, label: t(lang, 'citations') || 'Citations' },
-          { key: 'table', icon: TableIcon, label: t(lang, 'table') || 'Table' },
-          { key: 'highlights', icon: Highlighter, label: 'Highlights' },
-        ].map(tab => {
-          const active = (props.leftSidebarMainTab || 'files') === tab.key
-          return (
-            <button
-              key={tab.key}
-              title={tab.label}
-              onClick={() => {
-                if (active) props.onCloseSidebar?.();
-                else (props.onLeftSidebarMainTabChange as (k: string) => void)?.(tab.key);
-              }}
-              style={{
-                width: 34, height: 34,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                border: 'none', borderRadius: 7,
-                background: active ? (c.isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)') : 'transparent',
-                color: active ? c.text : c.textMuted,
-                cursor: 'pointer', transition: 'all 0.12s',
-              }}
-              onMouseEnter={e => {
-                if (!active) { e.currentTarget.style.color = c.text; e.currentTarget.style.background = c.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)' }
-              }}
-              onMouseLeave={e => {
-                if (!active) { e.currentTarget.style.color = c.textMuted; e.currentTarget.style.background = 'transparent' }
-              }}
-            >
-              <tab.icon size={16} />
-            </button>
-          )
-        })}
-      </div>
+            <FolderIcon size={15} style={{ color: c.accent, flexShrink: 0 }} />
+            <span style={{ fontSize: '0.86rem', fontWeight: 600, color: c.text, fontFamily: uiFont, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {activeProject?.title || 'Project'}
+            </span>
+            <ChevronDown size={13} style={{ color: c.textMuted, opacity: 0.7, flexShrink: 0 }} />
+          </div>
 
-      <div
-        onClick={() => setFolderMenuOpenId(null)}
-        style={{
-          flex: 1, flexShrink: 0, display: 'flex', flexDirection: 'column',
-          height: '100%', maxHeight: '100%',
-          borderRight: `1px solid ${c.borderFaint}`,
-          overflow: 'hidden', minWidth: 0,
-        }}
-      >
-        {/* Header */}
-        <div style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 6, flexShrink: 0, borderBottom: `1px solid ${c.borderFaint}` }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, minWidth: 0, overflow: 'hidden' }}>
-              <div 
-                style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', flex: 1, overflow: 'hidden' }}
-                onClick={() => setShowProjSearch(v => !v)}
-                title={t(lang, 'switchProject') || 'Switch Project'}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 2, flexShrink: 0 }}>
+            {onGoHome && (
+              <button
+                type="button"
+                onClick={onGoHome}
+                title={t(lang, 'returnToWelcome') || 'Return to Welcome Screen'}
+                style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  background: 'transparent', border: 'none', color: c.textMuted,
+                  cursor: 'pointer', padding: 5, borderRadius: 6, transition: 'all 0.15s'
+                }}
+                onMouseEnter={e => { e.currentTarget.style.color = c.text; e.currentTarget.style.background = c.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'; }}
+                onMouseLeave={e => { e.currentTarget.style.color = c.textMuted; e.currentTarget.style.background = 'transparent'; }}
               >
-                <FolderIcon size={16} style={{ color: c.accent, flexShrink: 0 }} />
-                <span style={{ fontSize: '0.92rem', fontWeight: 600, color: c.text, fontFamily: uiFont, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', lineHeight: '18px' }}>
-                  {activeProject?.title || 'English'}
-                </span>
-              </div>
-            </div>
-
+                <Home size={14} />
+              </button>
+            )}
             {onCloseSidebar && (
               <button
                 type="button"
@@ -650,16 +615,16 @@ function LeftPanel(props: Record<string, unknown>) {
                 style={{
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   background: 'transparent', border: 'none', color: c.textMuted,
-                  cursor: 'pointer', padding: 4, borderRadius: 6, transition: 'all 0.15s',
-                  flexShrink: 0,
+                  cursor: 'pointer', padding: 5, borderRadius: 6, transition: 'all 0.15s'
                 }}
-                onMouseEnter={e => { e.currentTarget.style.color = c.text; e.currentTarget.style.background = c.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)' }}
-                onMouseLeave={e => { e.currentTarget.style.color = c.textMuted; e.currentTarget.style.background = 'transparent' }}
+                onMouseEnter={e => { e.currentTarget.style.color = c.text; e.currentTarget.style.background = c.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'; }}
+                onMouseLeave={e => { e.currentTarget.style.color = c.textMuted; e.currentTarget.style.background = 'transparent'; }}
               >
-                <PanelLeftClose size={15} />
+                <PanelLeftClose size={14} />
               </button>
             )}
           </div>
+        </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
             {/* Home / Return button */}
@@ -828,77 +793,7 @@ function LeftPanel(props: Record<string, unknown>) {
 
         {/* Main scrollable body */}
         <div style={{ flex: 1, height: '100%', overflowY: 'auto', overflowX: 'hidden', minHeight: 0, display: 'flex', flexDirection: 'column' }}>
-          {(props.leftSidebarMainTab || 'files') === 'table' ? (
-            <TableInspectorPanel
-              editor={props.editor as Editor | null}
-              theme={{
-                bg: c.bg,
-                text: c.text,
-                textMuted: c.textMuted,
-                textFaint: c.textMuted,
-                accent: c.accent,
-                accentLight: (c.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'),
-                border: c.border,
-                borderFaint: c.borderFaint,
-                surface: c.surface,
-                isDark: c.isDark,
-              }}
-              lang={lang}
-              uiFont={uiFont}
-            />
-          ) : (props.leftSidebarMainTab || 'files') === 'footnotes' ? (
-            <FootnotesPanel
-              theme={{
-                bg: c.bg,
-                text: c.text,
-                textMuted: c.textMuted,
-                textFaint: c.textMuted,
-                accent: c.accent,
-                accentLight: (c.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'),
-                border: c.border,
-                borderFaint: c.borderFaint,
-                surface: c.surface,
-                isDark: c.isDark,
-              }}
-              uiFont={uiFont}
-              docFont={(props.docFont as string) || 'Georgia'}
-              lang={lang}
-              rawContent={(props.activePage as { content?: string } | undefined)?.content || ''}
-              onUpdateFootnoteContent={(props.onUpdateFootnoteContent as unknown as (id: string, content: string) => void) || (() => {})}
-              onInsertNewFootnote={(props.onInsertNewFootnote as unknown as () => void) || (() => {})}
-              onDeleteFootnote={(props.onDeleteFootnote as unknown as (id: string) => void) || (() => {})}
-              onScrollToEditorMarker={(props.onScrollToEditorMarker as unknown as (id: string) => void) || (() => {})}
-              activeHighlightedId={props.activeFootnoteHighlight as string | null | undefined}
-              onClearHighlight={(props.onClearFootnoteHighlight as unknown as () => void) || (() => {})}
-            />
-          ) : (props.leftSidebarMainTab || 'files') === 'highlights' ? (
-            <HighlightsPanel theme={props.theme as any} editor={props.editor as any} lang={props.lang as any} uiFont={props.uiFont as any} />
-          ) : (props.leftSidebarMainTab || 'files') === 'outline' ? (
-            <DocumentOutlinePanel theme={props.theme as any} uiFont={props.uiFont as any} lang={props.lang as any} />
-          ) : (props.leftSidebarMainTab || 'files') === 'citations' ? (
-            <CitationsPanel
-              theme={{
-                bg: c.bg,
-                text: c.text,
-                textMuted: c.textMuted,
-                textFaint: c.textMuted,
-                accent: c.accent,
-                accentLight: (c.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'),
-                border: c.border,
-                borderFaint: c.borderFaint,
-                surface: c.surface,
-                isDark: c.isDark,
-              }}
-              uiFont={uiFont}
-              lang={lang}
-              sources={(props.citationSources as unknown as CitationSource[]) || []}
-              onUpdateSources={(props.onUpdateCitationSources as unknown as (sources: CitationSource[]) => void) || (() => {})}
-              currentStyle={(props.citationStyle as unknown as CitationStyle) || 'apa'}
-              onChangeStyle={(props.onUpdateCitationStyle as unknown as (style: CitationStyle) => void) || (() => {})}
-              onInsertCitationMarker={(props.onInsertCitationMarker as unknown as (key: string) => void) || (() => {})}
-            />
-          ) : (
-            <div className="p-2 space-y-3">
+          <div className="p-2 space-y-3">
               {/* Pages Section */}
               <div style={{ display: 'flex', flexDirection: 'column' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 4px', marginBottom: 4 }}>
@@ -953,9 +848,38 @@ function LeftPanel(props: Record<string, unknown>) {
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 4px', marginBottom: 4 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     <StickyNote size={14} style={{ color: c.accent }} />
-                    <span style={{ fontSize: '0.74rem', fontWeight: 600, color: c.text, fontFamily: uiFont, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                      {t(lang, 'scratchpad')}
-                    </span>
+                    {renamingScratchpadTitle ? (
+                      <input
+                        autoFocus
+                        value={scratchpadTitleVal}
+                        onChange={e => setScratchpadTitleVal(e.target.value)}
+                        onBlur={() => {
+                          if (scratchpadTitleVal.trim()) onRenameScratchpadSection(scratchpadTitleVal.trim());
+                          setRenamingScratchpadTitle(false);
+                        }}
+                        onKeyDown={e => {
+                          if (e.key === 'Enter') {
+                            if (scratchpadTitleVal.trim()) onRenameScratchpadSection(scratchpadTitleVal.trim());
+                            setRenamingScratchpadTitle(false);
+                          }
+                          if (e.key === 'Escape') setRenamingScratchpadTitle(false);
+                        }}
+                        onClick={e => e.stopPropagation()}
+                        style={{
+                          fontSize: '0.74rem', fontWeight: 600, color: c.text, fontFamily: uiFont, textTransform: 'uppercase', letterSpacing: '0.06em',
+                          background: 'transparent', border: `1px solid ${c.accent}`, outline: 'none', padding: '0 4px', borderRadius: 4, width: '120px'
+                        }}
+                      />
+                    ) : (
+                      <div className="group/sctitle flex items-center gap-1 cursor-pointer" onClick={() => { setRenamingScratchpadTitle(true); setScratchpadTitleVal(activeProject?.scratchpadName || t(lang, 'scratchpad') || 'Scratchpad'); }}>
+                        <span style={{ fontSize: '0.74rem', fontWeight: 600, color: c.text, fontFamily: uiFont, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                          {activeProject?.scratchpadName || t(lang, 'scratchpad')}
+                        </span>
+                        <div className="opacity-0 group-hover/sctitle:opacity-100 transition-opacity">
+                          <Edit2 size={10} style={{ color: c.accent }} />
+                        </div>
+                      </div>
+                    )}
                     <span style={{ fontSize: '0.64rem', color: c.accent, opacity: 0.85 }}>
                       ({scratchpads.length})
                     </span>
@@ -987,53 +911,77 @@ function LeftPanel(props: Record<string, unknown>) {
                 </div>
               </div>
             </div>
-          )}
         </div>
 
         {/* Footer */}
         <div style={{ padding: '8px 12px', display: 'flex', flexDirection: 'column', gap: 6, flexShrink: 0, borderTop: `1px solid ${c.borderFaint}` }}>
-          {onOpenGithubCloudSave && (
-            <button 
-              onClick={onOpenGithubCloudSave}
-              style={{ 
-                width: '100%', padding: '5px 8px', borderRadius: 6, border: `1px solid ${c.borderFaint}`, 
-                background: 'transparent', color: c.text, fontFamily: uiFont, fontSize: '0.72rem', fontWeight: 500,
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, cursor: 'pointer', transition: 'all 0.12s'
-              }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = c.accent; e.currentTarget.style.background = c.surface }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = c.borderFaint; e.currentTarget.style.background = 'transparent' }}
-            >
-              <Cloud size={13} style={{ color: c.accent }} />
-              {t(lang, 'cloudSaveSync') || 'Cloud Sync'}
-            </button>
-          )}
+          <div style={{ display: 'flex', gap: 6 }}>
+            {onOpenGithubCloudSave && (
+              <button 
+                onClick={onOpenGithubCloudSave}
+                title={t(lang, 'cloudSaveSync') || 'Cloud Sync'}
+                style={{ 
+                  padding: '5px', borderRadius: 6, border: 'none', 
+                  background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  cursor: 'pointer', transition: 'all 0.12s'
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = c.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
+              >
+                <Github size={16} style={{ color: c.text }} />
+              </button>
+            )}
+            {onOpenThemeModal && (
+              <button
+                onClick={onOpenThemeModal}
+                title={t(lang, 'themePresets') || 'Themes'}
+                style={{
+                  padding: '5px', borderRadius: 6, border: 'none',
+                  background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  cursor: 'pointer', transition: 'all 0.12s'
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = c.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
+              >
+                <PaintRoller size={16} style={{ color: c.text }} />
+              </button>
+            )}
+          </div>
           
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <button
-                onClick={() => { setArchiveOpen(v => !v); setBinOpen(false); }}
+                id="left-panel-archive-btn"
+                onClick={handleOpenArchive}
                 style={{
-                  background: 'none', border: 'none', cursor: 'pointer', color: archiveOpen ? c.accent : c.textMuted,
-                  display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.68rem', fontWeight: 500
+                  background: 'none', border: 'none', cursor: 'pointer', color: c.textMuted,
+                  display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.68rem', fontWeight: 500,
+                  padding: '3px 6px', borderRadius: 5, transition: 'all 0.12s'
                 }}
                 title={t(lang, 'archive') || "Archive"}
+                onMouseEnter={e => { e.currentTarget.style.color = c.accent; e.currentTarget.style.background = c.isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)'; }}
+                onMouseLeave={e => { e.currentTarget.style.color = c.textMuted; e.currentTarget.style.background = 'transparent'; }}
               >
-                <Archive size={13} />
+                <Archive size={12} />
                 <span>{t(lang, 'archive') || 'Archive'}</span>
-                {archive.length > 0 && <span style={{ opacity: 0.7 }}>({archive.length})</span>}
+                {archive.length > 0 && <span style={{ opacity: 0.75, fontSize: '0.64rem' }}>({archive.length})</span>}
               </button>
 
               <button
-                onClick={() => { setBinOpen(v => !v); setArchiveOpen(false); }}
+                id="left-panel-trash-btn"
+                onClick={handleOpenTrash}
                 style={{
-                  background: 'none', border: 'none', cursor: 'pointer', color: binOpen ? c.accent : c.textMuted,
-                  display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.68rem', fontWeight: 500
+                  background: 'none', border: 'none', cursor: 'pointer', color: c.textMuted,
+                  display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.68rem', fontWeight: 500,
+                  padding: '3px 6px', borderRadius: 5, transition: 'all 0.12s'
                 }}
-                title="Bin"
+                title={t(lang, 'bin') || "Trash"}
+                onMouseEnter={e => { e.currentTarget.style.color = '#e05050'; e.currentTarget.style.background = 'rgba(224, 80, 80, 0.08)'; }}
+                onMouseLeave={e => { e.currentTarget.style.color = c.textMuted; e.currentTarget.style.background = 'transparent'; }}
               >
-                <Trash2 size={13} />
+                <Trash2 size={12} />
                 <span>{t(lang, 'bin') || 'Bin'}</span>
-                {bin.length > 0 && <span style={{ opacity: 0.7 }}>({bin.length})</span>}
+                {bin.length > 0 && <span style={{ opacity: 0.75, fontSize: '0.64rem' }}>({bin.length})</span>}
               </button>
             </div>
             
@@ -1044,68 +992,13 @@ function LeftPanel(props: Record<string, unknown>) {
             </div>
           </div>
         </div>
-
-        {/* Archive Overlay */}
-        {archiveOpen && (
-          <div style={{ position: 'absolute', bottom: 'calc(48px + env(safe-area-inset-bottom))', left: 12, width: 230, background: c.panel, border: `1px solid ${c.border}`, borderRadius: 8, padding: 10, boxShadow: '0 8px 24px rgba(0,0,0,0.14)', zIndex: 20 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, borderBottom: `1px solid ${c.borderFaint}`, paddingBottom: 6 }}>
-              <span style={{ fontSize: '0.72rem', fontWeight: 600, color: c.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t(lang, 'archive') || 'Archive'}</span>
-              <button onClick={() => setArchiveOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: c.textMuted, padding: 2 }}><X size={12} /></button>
-            </div>
-            {archive.length === 0 ? (
-              <div style={{ fontSize: '0.75rem', color: c.textMuted, textAlign: 'center', padding: '12px 0' }}>{t(lang, 'archiveEmpty') || 'Archive is empty'}</div>
-            ) : (
-              <div style={{ maxHeight: 200, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 4 }}>
-                {archive.map(p => (
-                  <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '3px 6px', background: c.surface, borderRadius: 5 }}>
-                    <span style={{ fontSize: '0.75rem', color: c.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1, paddingRight: 6 }}>{p.title}</span>
-                    <div style={{ display: 'flex', gap: 3 }}>
-                      <button onClick={() => onUnarchivePage(p.id)} style={{ padding: 3, background: (c.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'), color: c.accent, borderRadius: 4, border: 'none', cursor: 'pointer' }} title={t(lang, 'unarchiveDocument') || 'Unarchive'}><ArchiveRestore size={11} /></button>
-                      <button onClick={() => onDeletePage(p.id)} style={{ padding: 3, background: 'rgba(224, 80, 80, 0.1)', color: '#e05050', borderRadius: 4, border: 'none', cursor: 'pointer' }} title={t(lang, 'moveToTrash') || 'Move to Trash'}><Trash2 size={11} /></button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-        
-        {/* Bin Overlay */}
-        {binOpen && (
-          <div style={{ position: 'absolute', bottom: 'calc(48px + env(safe-area-inset-bottom))', left: 12, width: 230, background: c.panel, border: `1px solid ${c.border}`, borderRadius: 8, padding: 10, boxShadow: '0 8px 24px rgba(0,0,0,0.14)', zIndex: 20 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, borderBottom: `1px solid ${c.borderFaint}`, paddingBottom: 6 }}>
-              <span style={{ fontSize: '0.72rem', fontWeight: 600, color: c.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t(lang, 'bin')}</span>
-              {bin.length > 0 && (
-                <button onClick={onEmptyBin} style={{ fontSize: '0.66rem', color: '#e05050', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 500 }}>{t(lang, 'emptyBin') || 'Empty All'}</button>
-              )}
-            </div>
-            {bin.length === 0 ? (
-              <div style={{ fontSize: '0.75rem', color: c.textMuted, textAlign: 'center', padding: '12px 0' }}>{t(lang, 'noDeletedItems') || 'No deleted items'}</div>
-            ) : (
-              <div style={{ maxHeight: 200, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 4 }}>
-                {bin.map(p => (
-                  <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '3px 6px', background: c.surface, borderRadius: 5 }}>
-                    <span style={{ fontSize: '0.75rem', color: c.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1, paddingRight: 6 }}>{p.title}</span>
-                    <div style={{ display: 'flex', gap: 3 }}>
-                      <button onClick={() => onRestorePage(p.id)} style={{ padding: 3, background: (c.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)'), color: c.accent, borderRadius: 4, border: 'none', cursor: 'pointer' }} title={t(lang, 'restore') || 'Restore'}><RotateCcw size={11} /></button>
-                      <button onClick={() => onPermanentDelete(p.id)} style={{ padding: 3, background: 'rgba(224, 80, 80, 0.1)', color: '#e05050', borderRadius: 4, border: 'none', cursor: 'pointer' }} title={t(lang, 'deleteForever') || 'Delete Forever'}><Trash2 size={11} /></button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-      </div>
     </div>
   )
 }
 
 export default React.memo(LeftPanel, (prevProps, nextProps) => {
   if (prevProps.leftSidebarMainTab !== nextProps.leftSidebarMainTab) return false;
-  if (prevProps.citationStyle !== nextProps.citationStyle) return false;
   if (prevProps.activeFootnoteHighlight !== nextProps.activeFootnoteHighlight) return false;
-  if (prevProps.citationSources !== nextProps.citationSources) return false;
   if ((prevProps.activePage as { content?: string })?.content !== (nextProps.activePage as { content?: string })?.content) return false;
   if (prevProps.activeProjectId !== nextProps.activeProjectId) return false;
   if (prevProps.activePageId !== nextProps.activePageId) return false;

@@ -1,40 +1,23 @@
 import React, { useEffect, useRef } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
-import StarterKit from '@tiptap/starter-kit';
-import Link from '@tiptap/extension-link';
-import TextAlign from '@tiptap/extension-text-align';
-import FontFamily from '@tiptap/extension-font-family';
-import { TextStyle } from '@tiptap/extension-text-style';
-import { Color } from '@tiptap/extension-color';
-import Superscript from '@tiptap/extension-superscript';
-import Subscript from '@tiptap/extension-subscript';
-import { Table } from '@tiptap/extension-table';
-import { TableRow } from '@tiptap/extension-table-row';
-import { TableCell } from '@tiptap/extension-table-cell';
-import { TableHeader } from '@tiptap/extension-table-header';
-import { ResizableImage } from './tiptapExtensions';
+import { NodeSelection } from 'prosemirror-state';
 import './Editor.css';
-import { FontSize, LineHeight,  TextTransform, FontFeatures, LetterSpacing, WordSpacing, IndentExtension } from './tiptapExtensions';
-
-
-import { CreativeExtensions, editorialPluginKey, rhythmPluginKey, dialoguePluginKey } from './CreativeExtensions';
-import { CodexMention } from './CodexMentionExtension';
-import getSuggestionOptions from './mentionSuggestion';
+import {
+  getEditorExtensions,
+  globalCodexEntities,
+  setGlobalCodexEntities,
+  CodexEntity,
+} from './editorExtensions';
+import { editorialPluginKey, rhythmPluginKey, dialoguePluginKey } from './CreativeExtensions';
 import { FloatingToolbar } from './FloatingToolbar';
 import { setupMentionHover } from './HoverPreview';
-import { AnnotationHighlight } from './AnnotationHighlightExtension';
-
-import { SpellcheckExtension, spellcheckKey } from './SpellcheckExtension';
-import { SearchHighlightExtension, searchHighlightKey } from './SearchHighlightExtension';
-import { SmartFormatting } from './SmartFormattingExtension';
-import { CollapsibleHeadingsExtension, toggleHeadingFold, foldAllHeadingsInDoc, unfoldAllHeadingsInDoc } from './CollapsibleHeadingsExtension';
+import { toggleHeadingFold, foldAllHeadingsInDoc, unfoldAllHeadingsInDoc } from './CollapsibleHeadingsExtension';
 import { convertTableToList, convertListToTable, getActiveTableInfo } from './tableUtils';
 import { handleSmartEditorPaste, copySelectionAs } from './clipboardEngine';
 import type { ThemeColors, FormatState } from './types';
 import type { Dict } from './i18n';
 import { executeSearchReplace, executeSearchNav } from './searchReplaceFix';
-
-
+import { searchHighlightKey } from './SearchHighlightExtension';
 
 type Props = {
   theme: ThemeColors;
@@ -49,9 +32,9 @@ type Props = {
   onContentChange: (html: string) => void;
   isFocusMode?: boolean;
   lang?: string;
-  codexEntities?: any[];
-  editorialHighlight?: any;
-  creativeOptions?: { rhythmEnabled: boolean, dialogueEnabled: boolean, lang: string };
+  codexEntities?: CodexEntity[];
+  editorialHighlight?: string[];
+  creativeOptions?: { rhythmEnabled: boolean; dialogueEnabled: boolean; lang: string };
   onToggleFocusMode?: () => void;
   isPreviewMode?: boolean;
   onTogglePreviewMode?: () => void;
@@ -87,9 +70,6 @@ function Editor({
         const coords = view.coordsAtPos(state.selection.head);
         const scrollContainer = document.querySelector(".kgv-scroll");
         if (coords && scrollContainer) {
-          // Cache the container rect if possible, but reading it once per frame is usually ok if not heavily thrashed.
-          // To avoid layout thrashing, we only read what's necessary.
-          const containerRectTop = scrollContainer.offsetTop || 0; // Using offsetTop is cheaper than getBoundingClientRect
           const containerHeight = scrollContainer.clientHeight;
           
           // Fallback to bounding rect if offsetTop is not reliable for absolute positioning, 
@@ -137,32 +117,15 @@ function Editor({
       handleTypewriterScroll(editor);
 
       const inTable = editor.isActive('table');
-      window.dispatchEvent(new CustomEvent('kgv-table-active-change', { detail: { inTable } }));
-      
-      const spellState = spellcheckKey.getState(editor.state);
-      if (spellState?.enabled && spellState?.checker) {
-         const { from, to } = editor.state.selection;
-         const decos = spellState.decorations.find(from, to);
-         const errDeco = decos.find((d: { spec: { isSpellError?: boolean; word?: string; from?: number; to?: number } }) => d.spec.isSpellError);
-         if (errDeco) {
-            window.dispatchEvent(new CustomEvent('kgv-spellcheck-error', {
-              detail: {
-                 word: errDeco.spec.word,
-                 from: errDeco.spec.from,
-                 to: errDeco.spec.to,
-                 suggestions: spellState.checker.suggest(errDeco.spec.word).slice(0, 5)
-              }
-            }));
-         } else {
-            window.dispatchEvent(new CustomEvent('kgv-spellcheck-error', { detail: null }));
-         }
-      } else {
-         window.dispatchEvent(new CustomEvent('kgv-spellcheck-error', { detail: null }));
+      if (inTable) {
+        window.dispatchEvent(new CustomEvent('kgv-table-active-change', { detail: { inTable: true } }));
       }
     },
     onTransaction: ({ editor, transaction }) => {
       const inTable = editor.isActive('table');
-      window.dispatchEvent(new CustomEvent('kgv-table-active-change', { detail: { inTable } }));
+      if (inTable) {
+        window.dispatchEvent(new CustomEvent('kgv-table-active-change', { detail: { inTable: true } }));
+      }
       
       // Keep scroll coordinates locked when selections change from external formatting commands
       // Only apply this logic if the document hasn't changed (e.g., purely a selection change like Ctrl+A)
@@ -203,7 +166,14 @@ function Editor({
     },
 
     editorProps: {
-      
+      handleClick: (_view, _pos, event) => {
+        const target = event.target as HTMLElement | null;
+        const clickedInTable = !!target?.closest('table');
+        if (!clickedInTable) {
+          window.dispatchEvent(new CustomEvent('kgv-table-active-change', { detail: { inTable: false, userClickedOutside: true } }));
+        }
+        return false;
+      },
       
       handleTextInput: (view, from, to, text) => {
         const state = window.__formatState;
@@ -279,13 +249,15 @@ function Editor({
             const tr = view.state.tr.setSelection(NodeSelection.create(view.state.doc, nodePos));
             view.dispatch(tr);
             return true;
-          } catch (e) {
+          } catch {
             // fallback
             try {
               const tr = view.state.tr.setSelection(NodeSelection.create(view.state.doc, pos));
               view.dispatch(tr);
               return true;
-            } catch (err) {}
+            } catch {
+              // ignore
+            }
           }
         }
         
@@ -420,7 +392,7 @@ function Editor({
 
 
   useEffect(() => {
-    let tippyInstance: any = null;
+    let tippyInstance: { destroy: () => void } | null = null;
     if (editor && editor.view.dom.parentElement) {
       tippyInstance = setupMentionHover(editor.view.dom.parentElement, () => globalCodexEntities);
     }
@@ -430,7 +402,7 @@ function Editor({
   }, [editor]);
 
   useEffect(() => {
-    globalCodexEntities = codexEntities;
+    setGlobalCodexEntities(codexEntities || []);
   }, [codexEntities]);
 
   useEffect(() => {
@@ -596,22 +568,6 @@ function Editor({
         return true;
       });
     }
-    function handleSpellcheck(e: Event) {
-      if (!editor) return;
-      const detail = (e as CustomEvent).detail;
-      editor.commands.command(({ tr, dispatch }) => {
-        if (dispatch) dispatch(tr.setMeta(spellcheckKey, { enabled: detail.enabled, checker: detail.checker }));
-        return true;
-      });
-    }
-    
-    function handleSpellcheckReplace(e: Event) {
-      if (!editor) return;
-      const detail = (e as CustomEvent).detail;
-      editor.commands.insertContentAt({ from: detail.from, to: detail.to }, detail.word);
-      window.dispatchEvent(new CustomEvent('kgv-spellcheck-error', { detail: null }));
-    }
-
     function handleInsertLink(e: Event) {
       if (!editor) return;
       const { url, text } = (e as CustomEvent).detail || {};
@@ -703,8 +659,6 @@ function Editor({
 
     window.addEventListener('kgv-copy-as', handleCopyAs);
     window.addEventListener('kgv-insert-formatted', handleInsertFormatted);
-    window.addEventListener('kgv-spellcheck', handleSpellcheck);
-    window.addEventListener('kgv-spellcheck-replace', handleSpellcheckReplace);
     window.addEventListener('kgv-search-query', handleSearchQuery);
     window.addEventListener('kgv-insert-link', handleInsertLink);
     window.addEventListener('kgv-remove-link', handleRemoveLink);
@@ -721,8 +675,6 @@ function Editor({
       window.removeEventListener('kgv-search-replace', handleSearchReplace);
       window.removeEventListener('kgv-search-nav', handleSearchNav);
       window.removeEventListener('kgv-search-query', handleSearchQuery);
-      window.removeEventListener('kgv-spellcheck', handleSpellcheck);
-      window.removeEventListener('kgv-spellcheck-replace', handleSpellcheckReplace);
       window.removeEventListener('kgv-insert-link', handleInsertLink);
       window.removeEventListener('kgv-remove-link', handleRemoveLink);
       window.removeEventListener('kgv-insert-footnote', handleInsertFootnote);
@@ -818,150 +770,4 @@ function Editor({
 
 export default React.memo(Editor);
 
-export let globalCodexEntities: any[] = [];
-export const getEditorExtensions = () => [
-  CreativeExtensions,
-  CodexMention.configure({ suggestion: getSuggestionOptions() }),
-  StarterKit.configure({
-    link: false,
-    heading: { levels: [1, 2, 3, 4, 5, 6] },
-    horizontalRule: {},
-  }),
-  Table.extend({
-    addAttributes() {
-      return {
-        alignment: {
-          default: 'full',
-          parseHTML: (element) => element.getAttribute('data-align') || 'full',
-          renderHTML: (attributes) => ({
-            'data-align': attributes.alignment || 'full',
-          }),
-        },
-        styleType: {
-          default: 'grid',
-          parseHTML: (element) => element.getAttribute('data-table-style') || 'grid',
-          renderHTML: (attributes) => ({
-            'data-table-style': attributes.styleType || 'grid',
-          }),
-        },
-        cellPadding: {
-          default: 'normal',
-          parseHTML: (element) => element.getAttribute('data-padding') || 'normal',
-          renderHTML: (attributes) => ({
-            'data-padding': attributes.cellPadding || 'normal',
-          }),
-        },
-        caption: {
-          default: '',
-          parseHTML: (element) => element.getAttribute('data-caption') || '',
-          renderHTML: (attributes) => ({
-            'data-caption': attributes.caption || '',
-          }),
-        },
-        showCaption: {
-          default: false,
-          parseHTML: (element) => element.getAttribute('data-show-caption') === 'true',
-          renderHTML: (attributes) => ({
-            'data-show-caption': attributes.showCaption ? 'true' : 'false',
-          }),
-        },
-        sourceNote: {
-          default: '',
-          parseHTML: (element) => element.getAttribute('data-source-note') || '',
-          renderHTML: (attributes) => ({
-            'data-source-note': attributes.sourceNote || '',
-          }),
-        },
-        showSourceNote: {
-          default: false,
-          parseHTML: (element) => element.getAttribute('data-show-source-note') === 'true',
-          renderHTML: (attributes) => ({
-            'data-show-source-note': attributes.showSourceNote ? 'true' : 'false',
-          }),
-        },
-      };
-    },
-  }).configure({
-    resizable: true,
-    HTMLAttributes: {
-      class: 'kgv-rich-table border-collapse w-full my-4 border text-sm',
-    },
-  }),
-  TableRow.extend({
-    addAttributes() {
-      return {
-        ...this.parent?.(),
-        backgroundColor: {
-          default: null,
-          parseHTML: (element) => element.getAttribute('data-bg') || element.style.backgroundColor || null,
-          renderHTML: (attributes) => {
-            if (!attributes.backgroundColor) return {};
-            return {
-              'data-bg': attributes.backgroundColor,
-              style: `background-color: ${attributes.backgroundColor};`,
-            };
-          },
-        },
-      };
-    },
-  }),
-  TableCell.extend({
-    addAttributes() {
-      return {
-        ...this.parent?.(),
-        backgroundColor: {
-          default: null,
-          parseHTML: (element: HTMLElement) => element.getAttribute('data-bg') || element.style.backgroundColor || null,
-          renderHTML: (attributes: Record<string, unknown>) => {
-            if (!attributes.backgroundColor) return {};
-            return {
-              'data-bg': attributes.backgroundColor as string,
-              style: `background-color: ${attributes.backgroundColor};`,
-            };
-          },
-        },
-      };
-    },
-  }).configure({
-    HTMLAttributes: {
-      class: 'border p-2 min-w-[80px] relative align-top',
-    },
-  }),
-  TableHeader.extend({
-    addAttributes() {
-      return {
-        ...this.parent?.(),
-        backgroundColor: {
-          default: null,
-          parseHTML: (element: HTMLElement) => element.getAttribute('data-bg') || element.style.backgroundColor || null,
-          renderHTML: (attributes: Record<string, unknown>) => {
-            if (!attributes.backgroundColor) return {};
-            return {
-              'data-bg': attributes.backgroundColor as string,
-              style: `background-color: ${attributes.backgroundColor};`,
-            };
-          },
-        },
-      };
-    },
-  }).configure({
-    HTMLAttributes: {
-      class: 'border p-2 min-w-[80px] font-semibold bg-slate-500/10 align-top text-left',
-    },
-  }),
-  CollapsibleHeadingsExtension, AnnotationHighlight,
-  Link.configure({
-    openOnClick: false,
-    HTMLAttributes: {
-      class: 'kgv-smart-link',
-      rel: 'noopener noreferrer',
-    },
-    autolink: true,
-  }),
-  SmartFormatting,
-  SpellcheckExtension,
-  SearchHighlightExtension,
-  TextStyle, Color, FontFamily, FontSize, LineHeight, TextTransform, FontFeatures, LetterSpacing, WordSpacing, Superscript, Subscript, IndentExtension, ResizableImage,
-  TextAlign.configure({ types: ['heading', 'paragraph'] }),
-];
 

@@ -3,17 +3,20 @@ import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { PRESETS, THEME_CATEGORIES } from './theme'
 import { FormatState, CustomFont, PageFormat, Panel } from './types'
 import GoogleFontsPanel from './GoogleFontsPanel'
-import SpellcheckPanel from './SpellcheckPanel'
 import SearchPanel from './SearchPanel'
 import VersionHistoryPanel from './VersionHistoryPanel'
-import TableCreatePanel from './TableCreatePanel'
+import TableInspectorPanel from './TableInspectorPanel'
+import { DocumentOutlinePanel } from './DocumentOutlinePanel'
+import { ArchivePanel } from './ArchivePanel'
+import { TrashPanel } from './TrashPanel'
 import { Lang, t as i18nT, LANG_LABELS, LANG_FLAGS } from './i18n'
+import { Accordion } from './components/Accordion'
 import { CustomSelect } from './CustomSelect'
 import {
   Download, Upload, FileText, Printer, Copy, Check, FileCode, FileSpreadsheet,
-  PanelRightClose, Sliders, Table as TableIcon, Type, Clock, History, Search, CheckCheck, Settings,
+  PanelRightClose, Sliders, Table as TableIcon, Type, Clock, History, Search, Settings,
   AlignLeft, AlignCenter, AlignRight, AlignJustify, ChevronDown, RotateCcw, X, Plus, Minus,
-  Sparkles, Palette
+  Sparkles, Palette, List, Archive, Trash2
 } from 'lucide-react'
 
 interface TiptapEditorType {
@@ -38,73 +41,6 @@ const SERIF_FONTS = ['Lora', 'Playfair Display', 'Merriweather', 'EB Garamond', 
 const SANS_FONTS = ['Source Sans 3', 'Libre Franklin', 'DM Sans', 'Work Sans', 'Outfit', 'Helvetica', 'Verdana']
 const MONO_FONTS = ['JetBrains Mono', 'Space Mono', 'Courier Prime', 'Courier New']
 
-function SectionLabel({ label, uiFont, c }: { label: string, uiFont: string, c: Record<string, unknown> }) {
-  return (
-    <div style={{
-      fontFamily: uiFont, fontSize: '0.86rem', fontWeight: 700,
-      textTransform: 'uppercase', letterSpacing: '0.07em',
-      color: c.text as string,
-      paddingBottom: 8,
-      borderBottom: `1px solid ${c.borderFaint as string}`,
-      marginBottom: 14, marginTop: 14,
-      lineHeight: 1.3,
-    }}>
-      {label}
-    </div>
-  )
-}
-
-function Accordion({
-  title, uiFont, c, children, defaultOpen = false, count
-}: {
-  title: string, uiFont: string, c: Record<string, unknown>, children: React.ReactNode, defaultOpen?: boolean, count?: string | number
-}) {
-  const [open, setOpen] = useState(defaultOpen)
-  return (
-    <div style={{
-      marginBottom: 16,
-      background: 'transparent',
-    }}>
-      <button
-        type="button"
-        onClick={() => setOpen(v => !v)}
-        style={{
-          width: '100%', padding: '8px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          background: 'none', border: 'none', cursor: 'pointer',
-          fontFamily: uiFont, fontSize: '0.86rem', fontWeight: 700, color: c.text as string,
-          textTransform: 'uppercase', letterSpacing: '0.07em',
-          textAlign: 'left',
-          borderBottom: `1px solid ${c.borderFaint as string}`,
-          marginBottom: open ? 12 : 0,
-          transition: 'all 0.15s ease'
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 0 }}>
-          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{title}</span>
-          {count !== undefined && (
-            <span style={{ fontSize: '0.62rem', padding: '1px 6px', borderRadius: 10, background: c.accentLight as string, color: c.accent as string, fontWeight: 700 }}>
-              {count}
-            </span>
-          )}
-        </div>
-        <ChevronDown
-          size={14}
-          style={{
-            color: c.textMuted as string,
-            transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
-            transition: 'transform 0.2s ease',
-            flexShrink: 0,
-          }}
-        />
-      </button>
-      {open && (
-        <div style={{ padding: '2px 0 8px 0' }}>
-          {children}
-        </div>
-      )}
-    </div>
-  )
-}
 
 function ToggleSwitch({
   checked, onChange, label, description, uiFont, c
@@ -596,21 +532,21 @@ ${content.split('\n\n').map(para => {
   ) => (
     <NumInputItem
       val={val} min={min} max={max} step={step} unit={unit}
-      onChange={onChange} decimals={decimals} monoFont={monoFont} uiFont={uiFont} c={c}
-    />
+      onChange={onChange} decimals={decimals} monoFont={monoFont} uiFont={uiFont} c={c} />
   )
 
   const isOpen = panel !== 'none'
 
   const TABS: { key: Exclude<Panel, 'none' | 'preview' | 'importexport'>; icon: React.ComponentType<{ size?: number; style?: React.CSSProperties }>; label: string }[] = [
+    { key: 'outline', icon: List, label: t(lang, 'outline') || 'Outline' },
     { key: 'format', icon: Sliders, label: t(lang, 'format') || 'Format' },
     { key: 'table', icon: TableIcon, label: t(lang, 'insertTable') || 'Table' },
-    { key: 'export', icon: Download, label: t(lang, 'export') || 'Export' },
+    { key: 'export', icon: Download, label: t(lang, 'export') || 'Export & Snapshots' },
     { key: 'fonts', icon: Type, label: t(lang, 'fonts') || 'Fonts' },
+    { key: 'archive', icon: Archive, label: t(lang, 'archive') || 'Archive' },
+    { key: 'trash', icon: Trash2, label: t(lang, 'bin') || 'Trash' },
     { key: 'timer', icon: Clock, label: t(lang, 'timer') || 'Timer' },
-    { key: 'history', icon: History, label: t(lang, 'versionHistory') || 'History' },
     { key: 'search', icon: Search, label: t(lang, 'findAndReplace') || 'Search' },
-    { key: 'spellcheck', icon: CheckCheck, label: t(lang, 'spellCheck') || 'Spell Check' },
     { key: 'settings', icon: Settings, label: t(lang, 'settings') || 'Settings' },
   ]
 
@@ -674,15 +610,16 @@ ${content.split('\n\n').map(para => {
               flexShrink: 0,
             }}>
               <span style={{ fontFamily: uiFont, fontSize: '0.88rem', fontWeight: 700, color: c.text, letterSpacing: '0.08em', textTransform: 'uppercase', flex: 1, paddingRight: 8, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {panel === 'format' ? (t(lang, 'format') || 'Format') :
+                {panel === 'outline' ? (t(lang, 'outline') || 'Outline') :
+                 panel === 'format' ? (t(lang, 'format') || 'Format') :
                  panel === 'table' ? (t(lang, 'insertTable') || 'Insert Table') :
-                 panel === 'export' ? (t(lang, 'export') || 'Export') :
+                 panel === 'export' ? 'Import / Export & Snapshots' :
                  panel === 'fonts' ? (t(lang, 'fonts') || 'Fonts') :
+                 panel === 'archive' ? (t(lang, 'archive') || 'Archive') :
+                 panel === 'trash' ? (t(lang, 'bin') || 'Trash') :
                  panel === 'timer' ? (t(lang, 'timer') || 'Timer') :
-                 panel === 'history' ? (t(lang, 'versionHistory') || 'History') :
                  panel === 'review' ? ('Review Center') :
                  panel === 'search' ? (t(lang, 'findAndReplace') || 'Find and replace') :
-                 panel === 'spellcheck' ? (t(lang, 'spellCheck') || 'Spellcheck') :
                  (t(lang, 'settings') || 'Settings')}
               </span>
               <button
@@ -701,9 +638,52 @@ ${content.split('\n\n').map(para => {
               </button>
             </div>
 
-            {/* TABLE CREATION PANEL */}
+            {/* OUTLINE PANEL */}
+            {panel === 'outline' && (
+              <div className="flex flex-col h-full overflow-y-auto w-full">
+                <DocumentOutlinePanel
+                  theme={c as any}
+                  uiFont={uiFont}
+                  lang={lang}
+                />
+              </div>
+            )}
+
+            {/* ARCHIVE PANEL */}
+            {panel === 'archive' && (
+              <div className="flex flex-col h-full overflow-y-auto w-full">
+                <ArchivePanel
+                  archive={(props.archive as any) || []}
+                  c={c as any}
+                  theme={props.theme as any}
+                  uiFont={uiFont}
+                  lang={lang}
+                  onUnarchivePage={(props.onUnarchivePage as any) || (() => {})}
+                  onDeletePage={(props.onDeletePage as any) || (() => {})}
+                  onSelectPage={props.onSelectPage as any}
+                />
+              </div>
+            )}
+
+            {/* TRASH PANEL */}
+            {panel === 'trash' && (
+              <div className="flex flex-col h-full overflow-y-auto w-full">
+                <TrashPanel
+                  bin={(props.bin as any) || []}
+                  c={c as any}
+                  theme={props.theme as any}
+                  uiFont={uiFont}
+                  lang={lang}
+                  onRestorePage={(props.onRestorePage as any) || (() => {})}
+                  onPermanentDeletePage={(props.onPermanentDeletePage as any || props.onPermanentDelete as any) || (() => {})}
+                  onEmptyBin={(props.onEmptyBin as any) || (() => {})}
+                />
+              </div>
+            )}
+
+            {/* TABLE INSPECTOR PANEL */}
             {panel === 'table' && (
-              <TableCreatePanel
+              <TableInspectorPanel
                 editor={props.editor as any}
                 theme={c as any}
                 lang={lang}
@@ -714,7 +694,7 @@ ${content.split('\n\n').map(para => {
             {/* FORMAT PANEL */}
             {panel === 'format' && (
               <div>
-                <Accordion title={t(lang, 'typography') || 'Typography'} uiFont={uiFont} c={c} defaultOpen>
+                <Accordion title={t(lang, 'typography') || 'Typography'} uiFont={uiFont} c={c}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                     <div>
                       {label(t(lang, 'fontSize') || 'Font size')}
@@ -751,7 +731,7 @@ ${content.split('\n\n').map(para => {
                   </div>
                 </Accordion>
 
-                <Accordion title={t(lang, 'paragraph') || 'Paragraph'} uiFont={uiFont} c={c} defaultOpen>
+                <Accordion title={t(lang, 'paragraph') || 'Paragraph'} uiFont={uiFont} c={c}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                     <div>
                       {label(t(lang, 'alignment') || 'Alignment')}
@@ -800,8 +780,7 @@ ${content.split('\n\n').map(para => {
                       onChange={() => onFormatChange({ firstLineIndent: !formatState.firstLineIndent })}
                       label={t(lang, 'firstLineIndent') || 'First line indent'}
                       uiFont={uiFont}
-                      c={c}
-                    />
+                      c={c} />
                   </div>
                 </Accordion>
 
@@ -1007,8 +986,7 @@ ${content.split('\n\n').map(para => {
                       label={t(lang, 'showPageNumbers') || 'Show page numbers'}
                       description={t(lang, 'showPageNumbersDesc') || 'Display dynamic page counter on print & preview'}
                       uiFont={uiFont}
-                      c={c}
-                    />
+                      c={c} />
 
                     {formatState.pageNumbering?.enabled && (
                       <>
@@ -1052,8 +1030,7 @@ ${content.split('\n\n').map(para => {
                           }}
                           label={t(lang, 'skipTitlePage') || 'Skip title page'}
                           uiFont={uiFont}
-                          c={c}
-                        />
+                          c={c} />
                       </>
                     )}
                   </div>
@@ -1066,29 +1043,25 @@ ${content.split('\n\n').map(para => {
                       onChange={() => onFormatChange({ smartQuotes: !formatState.smartQuotes })}
                       label={t(lang, 'smartQuotes') || 'Smart Quotes (“ ”)'}
                       uiFont={uiFont}
-                      c={c}
-                    />
+                      c={c} />
                     <ToggleSwitch
                       checked={Boolean(formatState.smartEllipses)}
                       onChange={() => onFormatChange({ smartEllipses: !formatState.smartEllipses })}
                       label={t(lang, 'smartEllipses') || 'Smart Ellipses (…)'}
                       uiFont={uiFont}
-                      c={c}
-                    />
+                      c={c} />
                     <ToggleSwitch
                       checked={Boolean(formatState.markdownShortcuts)}
                       onChange={() => onFormatChange({ markdownShortcuts: !formatState.markdownShortcuts })}
                       label={t(lang, 'markdownShortcuts') || 'Markdown Shortcuts'}
                       uiFont={uiFont}
-                      c={c}
-                    />
+                      c={c} />
                     <ToggleSwitch
                       checked={Boolean(formatState.doubleSpacePeriod)}
                       onChange={() => onFormatChange({ doubleSpacePeriod: !formatState.doubleSpacePeriod })}
                       label={t(lang, 'doubleSpacePeriod') || 'Double-Space Period'}
                       uiFont={uiFont}
-                      c={c}
-                    />
+                      c={c} />
                   </div>
                 </Accordion>
               </div>
@@ -1115,8 +1088,7 @@ ${content.split('\n\n').map(para => {
                   </div>
                 </div>
 
-                <div>
-                  <SectionLabel label={t(lang, 'universalImport') || 'Import'} uiFont={uiFont} c={c} />
+                <Accordion title={t(lang, 'universalImport') || 'Import'} uiFont={uiFont} c={c}>
                   <button
                     onClick={() => importFileInputRef.current?.click()}
                     style={{
@@ -1133,10 +1105,9 @@ ${content.split('\n\n').map(para => {
                     <Upload size={14} style={{ color: c.accent }} />
                     <span>{t(lang, 'importFile') || 'Import File'}</span>
                   </button>
-                </div>
+                </Accordion>
 
-                <div>
-                  <SectionLabel label={t(lang, 'universalExport') || 'Export'} uiFont={uiFont} c={c} />
+                <Accordion title={t(lang, 'universalExport') || 'Export'} uiFont={uiFont} c={c}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     <button onClick={handleCopy}
                       style={{
@@ -1175,8 +1146,20 @@ ${content.split('\n\n').map(para => {
                         <span>{btnLabel}</span>
                       </button>
                     ))}
+                    </div>
+                  </Accordion>
+
+                <Accordion title={t(lang, 'snapshots') || 'Snapshots'} uiFont={uiFont} c={c}>
+                  <div style={{ height: '300px', display: 'flex', flexDirection: 'column' }}>
+                    <VersionHistoryPanel
+                      activePage={props.activePage as any}
+                      theme={props.theme as any || c as any}
+                      lang={lang}
+                      uiFont={uiFont}
+                      onRestore={props.onRestoreVersion as any}
+                    />
                   </div>
-                </div>
+                </Accordion>
               </div>
             )}
 
@@ -1360,8 +1343,7 @@ ${content.split('\n\n').map(para => {
             {/* FONTS PANEL */}
             {panel === 'fonts' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                <div>
-                  <SectionLabel label={t(lang, 'fontRoles') || 'Font roles'} uiFont={uiFont} c={c} />
+                <Accordion title={t(lang, 'fontRoles') || 'Font roles'} uiFont={uiFont} c={c}>
                   {([
                     { role: 'body' as const, label: t(lang, 'body') || 'Body', value: bodyFont },
                     { role: 'heading' as const, label: t(lang, 'heading') || 'Heading', value: headingFont },
@@ -1390,46 +1372,28 @@ ${content.split('\n\n').map(para => {
                       />
                     </div>
                   ))}
-                </div>
+                </Accordion>
 
-                <div>
-                  <SectionLabel label={t(lang, 'googleFontsEngine') || 'Google Fonts'} uiFont={uiFont} c={c} />
-                  <button
-                    onClick={() => setShowGoogleFonts(v => !v)}
-                    style={{
-                      width: '100%', padding: '8px 10px', borderRadius: 7,
-                      border: `1px solid ${showGoogleFonts ? c.accent : c.borderFaint}`,
-                      background: showGoogleFonts ? c.accentLight : 'transparent',
-                      color: showGoogleFonts ? c.accent : c.text, fontFamily: uiFont, fontSize: '0.78rem', fontWeight: 500,
-                      cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                      transition: 'all 0.15s'
-                    }}
-                  >
-                    <span>{t(lang, 'browseGoogleFonts') || 'Browse Google Fonts'}</span>
-                    <span style={{ fontSize: '0.7rem' }}>{showGoogleFonts ? '▲' : '▼'}</span>
-                  </button>
-                  {showGoogleFonts && (
-                    <div style={{ marginTop: 8, border: `1px solid ${c.borderFaint}`, borderRadius: 7, overflow: 'hidden', padding: 8, background: c.surface }}>
-                      <GoogleFontsPanel apiKey={props.apiKey as string} onSaveApiKey={props.onSaveApiKey as any}
-                        c={c}
-                        lang={lang}
-                        uiFont={uiFont}
-                        bodyFont={bodyFont}
-                        headingFont={headingFont}
-                        uiFontRole={uiFont2}
-                        onApplyToSelection={(name) => {
-                          window.dispatchEvent(new CustomEvent('kgv-apply-font-selection', { detail: name }))
-                        }}
-                        onApplyToDoc={(name) => onFontAssign('body', name)}
-                        onApplyToUi={(name) => onFontAssign('ui', name)}
-                        onAssignRole={onFontAssign}
+                <Accordion title={t(lang, 'googleFontsEngine') || 'Google Fonts'} uiFont={uiFont} c={c}>
+                  <div style={{ marginTop: 4 }}>
+                    <GoogleFontsPanel apiKey={props.apiKey as string} onSaveApiKey={props.onSaveApiKey as any}
+                      c={c}
+                      lang={lang}
+                      uiFont={uiFont}
+                      bodyFont={bodyFont}
+                      headingFont={headingFont}
+                      uiFontRole={uiFont2}
+                      onApplyToSelection={(name) => {
+                        window.dispatchEvent(new CustomEvent('kgv-apply-font-selection', { detail: name }))
+                      }}
+                      onApplyToDoc={(name) => onFontAssign('body', name)}
+                      onApplyToUi={(name) => onFontAssign('ui', name)}
+                      onAssignRole={onFontAssign}
                       />
-                    </div>
-                  )}
-                </div>
+                  </div>
+                </Accordion>
 
-                <div>
-                  <SectionLabel label={t(lang, 'customFonts') || 'Custom Fonts'} uiFont={uiFont} c={c} />
+                <Accordion title={t(lang, 'customFonts') || 'Custom Fonts'} uiFont={uiFont} c={c}>
                   <div
                     onDragOver={e => { e.preventDefault(); setDragOver(true) }}
                     onDragLeave={() => setDragOver(false)}
@@ -1487,21 +1451,10 @@ ${content.split('\n\n').map(para => {
                       </div>
                     );
                   })}
-                </div>
+                </Accordion>
               </div>
             )}
 
-            {/* HISTORY PANEL */}
-            {panel === 'history' && (
-              <VersionHistoryPanel
-                activePage={props.activePage as any}
-                theme={props.theme as any || c as any}
-                lang={lang}
-                uiFont={uiFont}
-                onRestore={(props.onRestore as any) || (() => {})}
-              />
-            )}
-            
             {/* SEARCH PANEL */}
             {panel === 'search' && (
               <SearchPanel
@@ -1511,221 +1464,39 @@ ${content.split('\n\n').map(para => {
               />
             )}
             
-            {/* SPELLCHECK PANEL */}
-            {panel === 'spellcheck' && (
-              <SpellcheckPanel
-                c={c as any}
-                uiFont={uiFont}
-                headingFont={bodyFont}
-                lang={lang}
-              />
-            )}
-            
             {/* SETTINGS PANEL */}
             {panel === 'settings' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                <div>
-                  <SectionLabel label={t(lang, 'language') || 'Language'} uiFont={uiFont} c={c} />
-                  <CustomSelect
-                    value={lang}
-                    onChange={val => onLangChange(val as Lang)}
-                    options={Object.entries(LANG_LABELS).map(([k, v]) => ({ value: k, label: `${LANG_FLAGS[k as Lang] || ''} ${v}` }))}
-                    theme={c as any}
-                    disableSearch={true}
-                    fontFamily={uiFont}
-                    buttonStyle={{ fontFamily: uiFont, fontSize: '0.78rem', padding: '5px 8px', borderRadius: 6, border: `1px solid ${c.borderFaint}`, background: 'transparent' }}
-                  />
-                </div>
-
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8, marginTop: 4 }}>
-                    <SectionLabel label={t(lang, 'themePresets') || 'Theme Library'} uiFont={uiFont} c={c} />
-                    {props.onOpenThemeModal && (
+                                <Accordion title={t(lang, 'language') || 'Language'} uiFont={uiFont} c={c}>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                    {Object.entries(LANG_LABELS).map(([k, v]) => (
                       <button
+                        key={k}
                         type="button"
-                        onClick={props.onOpenThemeModal as () => void}
+                        onClick={() => onLangChange(k as Lang)}
                         style={{
-                          display: 'flex', alignItems: 'center', gap: 4,
-                          padding: '3px 8px', borderRadius: 6,
-                          background: c.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
-                          border: `1px solid ${c.borderFaint}`,
-                          color: c.accent, cursor: 'pointer',
-                          fontFamily: uiFont, fontSize: '0.68rem', fontWeight: 600,
-                          transition: 'all 0.15s ease'
-                        }}
-                        onMouseEnter={e => {
-                          e.currentTarget.style.background = c.accentLight;
-                          e.currentTarget.style.borderColor = c.accent;
-                        }}
-                        onMouseLeave={e => {
-                          e.currentTarget.style.background = c.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)';
-                          e.currentTarget.style.borderColor = c.borderFaint as string;
+                          padding: '6px 10px',
+                          borderRadius: 6,
+                          border: `1px solid ${lang === k ? c.accent : c.borderFaint}`,
+                          background: lang === k ? c.accentLight : 'transparent',
+                          color: lang === k ? c.accent : c.text,
+                          fontFamily: uiFont,
+                          fontSize: '0.75rem',
+                          fontWeight: lang === k ? 600 : 400,
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 6
                         }}
                       >
-                        <Sparkles size={11} />
-                        <span>Studio</span>
+                        <span>{LANG_FLAGS[k as Lang] || ''}</span>
+                        <span>{v}</span>
                       </button>
-                    )}
+                    ))}
                   </div>
+                </Accordion>
 
-                  {/* Search Bar for Themes */}
-                  <div style={{
-                    position: 'relative', display: 'flex', alignItems: 'center',
-                    marginBottom: 8, borderRadius: 8,
-                    background: c.isDark ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.025)',
-                    border: `1px solid ${c.borderFaint}`,
-                    padding: '0 8px',
-                  }}>
-                    <Search size={13} style={{ color: c.textMuted, marginRight: 6, flexShrink: 0 }} />
-                    <input
-                      type="text"
-                      placeholder={t(lang, 'searchTheme') || 'Filter themes...'}
-                      value={themeSearchQuery}
-                      onChange={e => setThemeSearchQuery(e.target.value)}
-                      style={{
-                        width: '100%', padding: '6px 0',
-                        background: 'transparent', border: 'none', outline: 'none',
-                        fontFamily: uiFont, fontSize: '0.74rem', color: c.text,
-                      }}
-                    />
-                    {themeSearchQuery && (
-                      <button
-                        type="button"
-                        onClick={() => setThemeSearchQuery('')}
-                        style={{
-                          background: 'none', border: 'none', cursor: 'pointer',
-                          padding: 2, display: 'flex', alignItems: 'center', color: c.textMuted
-                        }}
-                      >
-                        <X size={12} />
-                      </button>
-                    )}
-                  </div>
-                  
-                  {/* Category Filter Chips */}
-                  <div style={{
-                    display: 'flex', gap: 5, overflowX: 'auto', paddingBottom: 6, marginBottom: 10,
-                    scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch'
-                  }}>
-                    <button
-                      onClick={() => setThemeCategoryFilter('all')}
-                      style={{
-                        padding: '4px 9px', borderRadius: 14, fontSize: '0.68rem', whiteSpace: 'nowrap',
-                        background: themeCategoryFilter === 'all' ? c.accent : (c.isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)'),
-                        color: themeCategoryFilter === 'all' ? '#ffffff' : c.textMuted,
-                        border: `1px solid ${themeCategoryFilter === 'all' ? c.accent : c.borderFaint}`,
-                        cursor: 'pointer', fontFamily: uiFont, fontWeight: themeCategoryFilter === 'all' ? 600 : 400,
-                        transition: 'all 0.15s ease', flexShrink: 0
-                      }}
-                    >
-                      All ({PRESETS.length})
-                    </button>
-                    {THEME_CATEGORIES.map(cat => {
-                      const isActive = themeCategoryFilter === cat.id;
-                      return (
-                        <button
-                          key={cat.id}
-                          onClick={() => setThemeCategoryFilter(cat.id)}
-                          style={{
-                            padding: '4px 9px', borderRadius: 14, fontSize: '0.68rem', whiteSpace: 'nowrap',
-                            background: isActive ? c.accent : (c.isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)'),
-                            color: isActive ? '#ffffff' : c.textMuted,
-                            border: `1px solid ${isActive ? c.accent : c.borderFaint}`,
-                            cursor: 'pointer', fontFamily: uiFont, fontWeight: isActive ? 600 : 400,
-                            transition: 'all 0.15s ease', flexShrink: 0
-                          }}
-                        >
-                          {cat.label}
-                        </button>
-                      );
-                    })}
-                  </div>
-
-                  {/* Themes Grid */}
-                  <div style={{
-                    display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8,
-                    maxHeight: 380, overflowY: 'auto', paddingRight: 2, paddingBottom: 4
-                  }}>
-                    {PRESETS.filter(p => {
-                      if (themeCategoryFilter !== 'all') {
-                        const cat = THEME_CATEGORIES.find(c => c.id === themeCategoryFilter);
-                        if (cat && !cat.presetNames.includes(p.name)) return false;
-                      }
-                      if (themeSearchQuery.trim()) {
-                        const q = themeSearchQuery.toLowerCase();
-                        return p.name.toLowerCase().includes(q);
-                      }
-                      return true;
-                    }).map(preset => {
-                      const isSelected = activePresetName === preset.name;
-                      return (
-                        <button
-                          key={preset.name}
-                          type="button"
-                          onClick={() => onPresetSelect(isSelected ? null : preset.name)}
-                          style={{
-                            padding: '9px 10px', borderRadius: 10, textAlign: 'left',
-                            border: `1.5px solid ${isSelected ? c.accent : (c.isDark ? 'rgba(255,255,255,0.09)' : 'rgba(0,0,0,0.08)')}`,
-                            background: preset.bg,
-                            boxShadow: isSelected ? `0 0 0 1px ${c.accent}, 0 2px 8px rgba(0,0,0,0.12)` : '0 1px 3px rgba(0,0,0,0.04)',
-                            cursor: 'pointer', transition: 'all 0.18s cubic-bezier(0.16, 1, 0.3, 1)',
-                            display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 6,
-                            minHeight: 70, position: 'relative', overflow: 'hidden'
-                          }}
-                          onMouseEnter={e => {
-                            if (!isSelected) {
-                              e.currentTarget.style.borderColor = c.accentMid;
-                              e.currentTarget.style.transform = 'translateY(-1px)';
-                            }
-                          }}
-                          onMouseLeave={e => {
-                            if (!isSelected) {
-                              e.currentTarget.style.borderColor = c.isDark ? 'rgba(255,255,255,0.09)' : 'rgba(0,0,0,0.08)';
-                              e.currentTarget.style.transform = 'none';
-                            }
-                          }}
-                        >
-                          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 4, width: '100%' }}>
-                            <span style={{
-                              fontFamily: uiFont, fontSize: '0.72rem', fontWeight: isSelected ? 700 : 500,
-                              color: preset.text, overflow: 'hidden', textOverflow: 'ellipsis',
-                              whiteSpace: 'nowrap', flex: 1, lineHeight: 1.25
-                            }}>
-                              {preset.name}
-                            </span>
-                            {isSelected && (
-                              <div style={{
-                                width: 14, height: 14, borderRadius: '50%', background: c.accent,
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                color: '#ffffff', flexShrink: 0, marginTop: 1
-                              }}>
-                                <Check size={9} strokeWidth={3} />
-                              </div>
-                            )}
-                          </div>
-
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', marginTop: 2 }}>
-                            <span style={{
-                              fontSize: '0.72rem', fontWeight: 600, color: preset.text,
-                              opacity: 0.85, fontFamily: 'serif', letterSpacing: '0.02em'
-                            }}>
-                              Aa
-                            </span>
-                            <div style={{
-                              display: 'flex', alignItems: 'center', gap: 3, flexShrink: 0,
-                              padding: '2px 4px', borderRadius: 12,
-                              background: preset.isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)',
-                              border: `1px solid ${preset.borderFaint || preset.border || 'transparent'}`
-                            }}>
-                              <div style={{ width: 7, height: 7, borderRadius: '50%', background: preset.accent }} title="Accent" />
-                              <div style={{ width: 7, height: 7, borderRadius: '50%', background: preset.text }} title="Text" />
-                            </div>
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
+                
               </div>
             )}
           </div>

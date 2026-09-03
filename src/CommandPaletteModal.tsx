@@ -105,12 +105,17 @@ export default function CommandPaletteModal({
     if (!cleanQuery) {
       return commands;
     }
-    return commands.filter(cmd =>
-      cmd.label.toLowerCase().includes(cleanQuery) ||
-      cmd.description.toLowerCase().includes(cleanQuery) ||
-      cmd.category.toLowerCase().includes(cleanQuery) ||
-      cmd.id.toLowerCase().includes(cleanQuery)
-    );
+    const normalizedQuery = cleanQuery.replace(/[-_]/g, ' ');
+    return commands.filter(cmd => {
+      const normalizedId = cmd.id.replace(/[-_]/g, ' ');
+      return (
+        cmd.label.toLowerCase().includes(cleanQuery) ||
+        cmd.description.toLowerCase().includes(cleanQuery) ||
+        cmd.category.toLowerCase().includes(cleanQuery) ||
+        cmd.id.toLowerCase().includes(cleanQuery) ||
+        normalizedId.includes(normalizedQuery)
+      );
+    });
   }, [commands, cleanQuery]);
 
   // Group commands by category for display
@@ -266,12 +271,12 @@ export default function CommandPaletteModal({
         >
           <span className="text-[10px] uppercase font-mono tracking-wider opacity-40 shrink-0 pr-1">{getT('filter')}</span>
           {[
-            { label: getT('table'), cmd: '> insert table' },
-            { label: getT('foldAll'), cmd: '> fold all' },
-            { label: getT('focusMode'), cmd: '> toggle focus' },
-            { label: getT('splitDiff'), cmd: '> split diff' },
+            { label: getT('table'), cmd: 'table' },
+            { label: getT('foldAll'), cmd: 'fold' },
+            { label: getT('focusMode'), cmd: 'focus' },
+            { label: getT('splitDiff'), cmd: 'split' },
           ].map((quick, i) => {
-            const isActive = query === quick.cmd;
+            const isActive = cleanQuery === quick.cmd;
             return (
               <button
                 key={i}

@@ -26,7 +26,6 @@ import ReferenceComparePanel from './ReferenceComparePanel';
 import { ZenReader } from "./ZenReader";
 import LinkHoverPreview from './LinkHoverPreview';
 import WordCountDropdown from './WordCountDropdown';
-import type { CitationSource, CitationStyle } from './citationsEngine';
 import type { Document, Folder, ThemeColors, ThemeMode, CustomTheme, CustomFont, Lang, Project, Page, FormatState, PageFormat, Panel } from './types';
 import { PAPER_SIZES_PX } from './types';
 import { getAllProjectsFromDB, saveProjectToDB, deleteProjectFromDB, getAppSettings, saveAppSettings, db, getAllFoldersFromDB } from './db';
@@ -239,15 +238,8 @@ export default function App() {
   const [zoomInput, setZoomInput] = useState<string>('100');
   const [containerWidth, setContainerWidth] = useState(window.innerWidth);
 
-  const [citationSources, setCitationSources] = useState<CitationSource[]>(() => {
-    try {
-      const raw = localStorage.getItem('kgv-citation-sources');
-      return raw ? JSON.parse(raw) : [];
-    } catch { return []; }
-  });
-  const [citationStyle, setCitationStyle] = useState<CitationStyle>('apa');
-  const [leftSidebarMainTab, setLeftSidebarMainTab] = useState<'files' | 'footnotes' | 'citations' | 'table' | 'highlights' | 'outline'>('files');
-  const previousLeftSidebarTabRef = useRef<'files' | 'footnotes' | 'citations'>('files');
+  const [leftSidebarMainTab, setLeftSidebarMainTab] = useState<'files' | 'footnotes' | 'table' | 'highlights'>('files');
+  const previousRightPanelTabRef = useRef<Panel>('settings');
 
   // Command Palette states
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
@@ -279,8 +271,8 @@ export default function App() {
       }
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'o') {
         e.preventDefault();
-        setSidebarOpen(true);
-        setLeftSidebarMainTab('outline');
+        setRightPanelTab('outline');
+        setRightOpen(true);
       }
     };
     const handleOpenTable = () => {
@@ -291,42 +283,45 @@ export default function App() {
     const handleTableActiveChange = (e: Event) => {
       const { inTable } = (e as CustomEvent).detail || {};
       if (inTable) {
-        setLeftSidebarMainTab((currentTab) => {
+        setRightPanelTab((currentTab) => {
           if (currentTab !== 'table') {
-            previousLeftSidebarTabRef.current = currentTab as 'files' | 'footnotes' | 'citations';
+            previousRightPanelTabRef.current = currentTab;
           }
           return 'table';
         });
+        setRightOpen(true);
       } else {
-        setLeftSidebarMainTab((currentTab) => {
+        setRightPanelTab((currentTab) => {
           if (currentTab === 'table') {
-            return previousLeftSidebarTabRef.current || 'files';
+            return previousRightPanelTabRef.current || 'format';
           }
           return currentTab;
         });
       }
     };
 
+    const handleOpenRightPanelEvent = (e: Event) => {
+      const { tab } = (e as CustomEvent).detail || {};
+      if (tab) {
+        setRightPanelTab(tab as Panel);
+        setRightOpen(true);
+      }
+    };
+
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('kgv-open-table-picker', handleOpenTable);
     window.addEventListener('kgv-table-active-change', handleTableActiveChange);
+    window.addEventListener('kgv-open-right-panel', handleOpenRightPanelEvent);
 
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('kgv-open-table-picker', handleOpenTable);
       window.removeEventListener('kgv-table-active-change', handleTableActiveChange);
+      window.removeEventListener('kgv-open-right-panel', handleOpenRightPanelEvent);
     };
   }, []);
 
-  useEffect(() => {
-    try {
-      localStorage.setItem('kgv-citation-sources', JSON.stringify(citationSources));
-    } catch (err) {
-      console.error('Failed to save citations', err);
-    }
-  }, [citationSources]);
-
-  // Footnote and citation open event listeners -> switches Left sidebar tabs and opens sidebar
+  // Footnote event listeners -> switches Left sidebar tabs and opens sidebar
   useEffect(() => {
     const handleFootnoteClicked = (e: Event) => {
       const { id } = (e as CustomEvent).detail || {};
@@ -336,29 +331,17 @@ export default function App() {
         setSidebarOpen(true);
       }
     };
-    const handleOpenCitations = () => {
-      setLeftSidebarMainTab('citations');
-      setSidebarOpen(true);
-    };
     const handleOpenFootnotes = () => {
       setLeftSidebarMainTab('footnotes');
       setSidebarOpen(true);
     };
     window.addEventListener('kgv-footnote-clicked', handleFootnoteClicked);
-    window.addEventListener('kgv-open-citations', handleOpenCitations);
     window.addEventListener('kgv-open-footnotes', handleOpenFootnotes);
     return () => {
       window.removeEventListener('kgv-footnote-clicked', handleFootnoteClicked);
-      window.removeEventListener('kgv-open-citations', handleOpenCitations);
       window.removeEventListener('kgv-open-footnotes', handleOpenFootnotes);
     };
   }, []);
-
-  const handleInsertCitationMarker = (key: string) => {
-    if (!activePage) return;
-    const updated = (safeActiveContent) + ` [@${key}] `;
-    updatePageContent(activePage.id, updated);
-  };
 
   // Global drag & drop prevention to stop browser from navigating/refreshing when files are dropped outside handled zones
   useEffect(() => {
@@ -807,8 +790,8 @@ export default function App() {
       addFootnoteDesc: { en: 'Insert footnote marker at current position', vi: 'Tạo đánh số chú thích và quản lý nội dung chân trang', fr: 'Insérer un marqueur de note de bas de page', de: 'Fußnotenmarkierung an der aktuellen Position einfügen', it: 'Inserisci marcatore di nota a piè di pagina', es: 'Insertar marcador de nota al pie', ko: '현재 위치에 각주 마커 삽입', zh: '在当前位置插入脚注标记', ja: '現在の位置に脚注マーカーを挿入する' },
       addCitation: { en: 'Add Citation', vi: 'Trích dẫn tài liệu (Add Citation)', fr: 'Ajouter une citation', de: 'Zitat hinzufügen', it: 'Aggiungi Citazione', es: 'Agregar cita', ko: '인용 추가', zh: '添加引用', ja: '引用を追加' },
       addCitationDesc: { en: 'Insert citation reference in text', vi: 'Thêm nguồn tham khảo chuẩn APA, MLA, Chicago', fr: 'Insérer une référence de citation', de: 'Zitierverweis im Text einfügen', it: 'Inserisci riferimento di citazione nel testo', es: 'Insertar referencia de cita', ko: '텍스트에 인용 참조 삽입', zh: '在文本中插入引用参考', ja: 'テキストに引用参照を挿入する' },
-      exportOdt: { en: 'Export PDF', vi: 'Xuất tài liệu PDF (Export PDF)', fr: 'Exporter en PDF', de: 'PDF exportieren', it: 'Esporta PDF', es: 'Exportar PDF', ko: 'PDF 내보내기', zh: '导出PDF', ja: 'PDFをエクスポート' },
-      exportOdtDesc: { en: 'Download formatted PDF document', vi: 'Xuất file PDF chất lượng cao có canh lề chuẩn trang', fr: 'Télécharger le document PDF formaté', de: 'Formatiertes PDF-Dokument herunterladen', it: 'Scarica il documento PDF formattato', es: 'Descargar documento PDF formateado', ko: '형식이 지정된 PDF 문서 다운로드', zh: '下载格式化的PDF文档', ja: 'フォーマットされたPDFドキュメントをダウンロードする' },
+      exportOdt: { en: 'Export ODT', vi: 'Xuất tài liệu ODT (.odt)', fr: 'Exporter en ODT', de: 'ODT exportieren', it: 'Esporta ODT', es: 'Exportar ODT', ko: 'ODT 내보내기', zh: '导出ODT', ja: 'ODTをエクスポート' },
+      exportOdtDesc: { en: 'Download OpenDocument Text (.odt) file', vi: 'Xuất văn bản định dạng OpenDocument Text (.odt)', fr: 'Télécharger le document OpenDocument Text (.odt)', de: 'OpenDocument Text-Datei (.odt) herunterladen', it: 'Scarica documento OpenDocument Text (.odt)', es: 'Descargar documento OpenDocument Text (.odt)', ko: 'OpenDocument Text (.odt) 파일 다운로드', zh: '下载 OpenDocument Text (.odt) 文件', ja: 'OpenDocument Text (.odt) ファイルをダウンロード' },
       exportMd: { en: 'Export Markdown', vi: 'Xuất file Markdown (.md)', fr: 'Exporter en Markdown', de: 'Markdown exportieren', it: 'Esporta Markdown', es: 'Exportar Markdown', ko: '마크다운 내보내기', zh: '导出Markdown', ja: 'Markdownをエクスポート' },
       exportMdDesc: { en: 'Download .md raw text file', vi: 'Xuất nội dung sang định dạng Markdown chuẩn', fr: 'Télécharger le fichier texte brut .md', de: 'Unbearbeitete .md-Textdatei herunterladen', it: 'Scarica file di testo grezzo .md', es: 'Descargar archivo .md', ko: '.md 원시 텍스트 파일 다운로드', zh: '下载 .md 纯文本文件', ja: '.md テキストファイルをダウンロードする' },
       backupJson: { en: 'Backup JSON', vi: 'Sao lưu dữ liệu JSON (Backup JSON)', fr: 'Sauvegarder JSON', de: 'JSON sichern', it: 'Backup JSON', es: 'Copia de sicurezza JSON', ko: 'JSON 백업', zh: '备份JSON', ja: 'JSONをバックアップ' },
@@ -820,28 +803,8 @@ export default function App() {
     const getT = (key: keyof typeof cmdT) => (cmdT[key] as Record<string, string>)[lang] || cmdT[key].en;
 
     return [
-    {
-      id: 'toggle-rhythm',
-      label: 'Toggle Rhythm View',
-      category: 'View & Layout',
-      icon: <Activity size={16} />,
-      description: 'Analyze sentence length and cadence visually.',
-      perform: () => {
-        setCreativeOptions(prev => ({ ...prev, rhythmEnabled: !prev.rhythmEnabled }));
-        setCmdOpen(false);
-      }
-    },
-    {
-      id: 'isolate-dialogues',
-      label: 'Isolate Dialogues',
-      category: 'View & Layout',
-      icon: <Type size={16} />,
-      description: 'Fade out non-dialogue text for editing.',
-      perform: () => {
-        setCreativeOptions(prev => ({ ...prev, dialogueEnabled: !prev.dialogueEnabled }));
-        setCmdOpen(false);
-      }
-    },
+    
+    
 
     {
       id: 'insert-table',
@@ -964,14 +927,36 @@ export default function App() {
       perform: () => handleInsertNewFootnote(),
     },
     {
-      id: 'insert-citation',
-      label: getT('addCitation'),
+      id: 'open-outline',
+      label: t.outline || 'Outline',
       category: 'Actions & Tools',
-      icon: <Sparkles size={16} />,
-      description: getT('addCitationDesc'),
+      icon: <FileText size={16} />,
+      description: lang === 'vi' ? 'Xem cấu trúc dàn ý tài liệu (Headings)' : 'Open document outline',
       perform: () => {
-        setLeftSidebarMainTab('citations');
-        setSidebarOpen(true);
+        setRightPanelTab('outline');
+        setRightOpen(true);
+      },
+    },
+    {
+      id: 'open-archive',
+      label: t.archive || 'Archive',
+      category: 'Actions & Tools',
+      icon: <FileText size={16} />,
+      description: lang === 'vi' ? 'Xem các trang đã lưu trữ' : 'View archived documents',
+      perform: () => {
+        setRightPanelTab('archive');
+        setRightOpen(true);
+      },
+    },
+    {
+      id: 'open-trash',
+      label: t.bin || 'Trash',
+      category: 'Actions & Tools',
+      icon: <FileText size={16} />,
+      description: lang === 'vi' ? 'Xem và khôi phục tài liệu từ thùng rác' : 'View trash and restore documents',
+      perform: () => {
+        setRightPanelTab('trash');
+        setRightOpen(true);
       },
     },
     {
@@ -1835,6 +1820,16 @@ export default function App() {
     });
   }, [activeProjectId, scheduleSaveProject]);
 
+  const renameScratchpadSection = useCallback((newName: string) => {
+    if (!activeProjectId) return;
+    setProjects(prev => prev.map(proj => {
+      if (proj.id !== activeProjectId) return proj;
+      const updatedProj: Project = { ...proj, scratchpadName: newName, lastModified: new Date().toISOString() };
+      scheduleSaveProject(updatedProj);
+      return updatedProj;
+    }));
+  }, [activeProjectId, scheduleSaveProject]);
+
   const movePageToFolder = useCallback((pageId: string, folderId: string | undefined) => {
     setProjects((prev) => {
       return prev.map((proj) => {
@@ -2412,11 +2407,6 @@ export default function App() {
           activePage={activePage}
           leftSidebarMainTab={leftSidebarMainTab}
           onLeftSidebarMainTabChange={setLeftSidebarMainTab}
-          citationSources={citationSources}
-          onUpdateCitationSources={setCitationSources}
-          citationStyle={citationStyle}
-          onUpdateCitationStyle={setCitationStyle}
-          onInsertCitationMarker={handleInsertCitationMarker}
           onUpdateFootnoteContent={handleUpdateFootnoteContent}
           onInsertNewFootnote={handleInsertNewFootnote}
           onDeleteFootnote={handleDeleteFootnote}
@@ -2428,6 +2418,7 @@ export default function App() {
           onGoHome={() => handleExitWorkspace()}
           onGoToRoot={handleGoToRootWelcome}
           onGoToFolder={(folderId?: string | null) => handleExitWorkspace(folderId)}
+          onOpenThemeModal={() => setIsThemeModalOpen(true)}
           theme={theme}
           themeMode={themeMode}
           onSelectTheme={handleSelectTheme}
@@ -2452,10 +2443,15 @@ export default function App() {
           onRenameFolder={renameFolder}
           onDeleteFolder={deleteFolder}
           onMovePageToFolder={movePageToFolder}
+          onRenameScratchpadSection={renameScratchpadSection}
           onRestorePage={restorePage}
           onPermanentDelete={permanentDeletePage}
           onEmptyBin={emptyAllTrash}
           onCloseSidebar={() => setSidebarOpen(false)}
+          onOpenRightPanel={(tab: Panel) => {
+            setRightPanelTab(tab);
+            setRightOpen(true);
+          }}
           onOpenGithubCloudSave={handleOpenGithubCloudSave}
           onImportFile={handleImportFile}
           onReloadProjects={async () => {
@@ -2915,6 +2911,15 @@ export default function App() {
           folders={activeProject?.folders || []}
           docs={legacyDocsExport}
           onClose={() => setRightOpen(false)}
+          bin={activeProject?.bin || []}
+          archive={activeProject?.archive || []}
+          onRestorePage={restorePage}
+          onPermanentDeletePage={permanentDeletePage}
+          onEmptyBin={emptyAllTrash}
+          onArchivePage={archivePage}
+          onUnarchivePage={unarchivePage}
+          onDeletePage={deletePage}
+          onSelectPage={(id: string) => { setActivePageId(id); if (window.innerWidth < 768) setRightOpen(false); }}
           onUpdateFootnoteContent={handleUpdateFootnoteContent}
           onInsertNewFootnote={handleInsertNewFootnote}
           onDeleteFootnote={handleDeleteFootnote}

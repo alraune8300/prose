@@ -29,7 +29,7 @@ export function getActiveTableInfo(editor: Editor | null): TableInfo | null {
     const { selection } = state;
 
     let tablePos: number | null = null;
-    let tableNode: ProseMirrorNode | null = null;
+    let tableNode: any = null;
 
     state.doc.nodesBetween(0, state.doc.content.size, (node, pos) => {
       if (node.type.name === 'table') {
@@ -128,7 +128,7 @@ export function setTableAttribute(editor: Editor, attr: string, value: unknown) 
     const { state, view } = editor;
     const { selection } = state;
     let tablePos: number | null = null;
-    let tableNode: ProseMirrorNode | null = null;
+    let tableNode: any = null;
 
     state.doc.nodesBetween(0, state.doc.content.size, (node, pos) => {
       if (node.type.name === 'table') {
@@ -175,7 +175,7 @@ export function setTableCellColor(editor: Editor, color: string) {
 
     if (cellPos !== null && cellNode) {
       const tr = state.tr.setNodeMarkup(cellPos, undefined, {
-        ...cellNode.attrs,
+        ...((cellNode as any).attrs),
         backgroundColor: color || null,
         style: color ? `background-color: ${color};` : null,
       });
@@ -209,9 +209,9 @@ export function setTableRowColor(editor: Editor, color: string) {
     if (rowPos !== null && rowNode) {
       const tr = state.tr;
       let cur = rowPos + 1;
-      (rowNode as any).forEach((cellNode) => {
+      (rowNode as any).forEach((cellNode: ProseMirrorNode) => {
         tr.setNodeMarkup(cur, undefined, {
-          ...cellNode.attrs,
+          ...((cellNode as any).attrs),
           backgroundColor: color || null,
           style: color ? `background-color: ${color};` : null,
         });
@@ -233,7 +233,7 @@ export function setTableColumnColor(editor: Editor, color: string) {
     const { state, view } = editor;
     const { selection } = state;
     let tablePos: number | null = null;
-    let tableNode: ProseMirrorNode | null = null;
+    let tableNode: any = null;
 
     state.doc.nodesBetween(0, state.doc.content.size, (node, pos) => {
       if (node.type.name === 'table') {
@@ -254,11 +254,11 @@ export function setTableColumnColor(editor: Editor, color: string) {
 
     (tableNode as any).forEach((rowNode) => {
       let colIdx = 0;
-      (rowNode as any).forEach((cellNode) => {
+      (rowNode as any).forEach((cellNode: ProseMirrorNode) => {
         colIdx++;
         if (colIdx === targetCol) {
           tr.setNodeMarkup(cur, undefined, {
-            ...cellNode.attrs,
+            ...((cellNode as any).attrs),
             backgroundColor: color || null,
             style: color ? `background-color: ${color};` : null,
           });
@@ -280,7 +280,7 @@ export function clearTableContents(editor: Editor) {
     const { state, view } = editor;
     const { selection } = state;
     let tablePos: number | null = null;
-    let tableNode: ProseMirrorNode | null = null;
+    let tableNode: any = null;
 
     state.doc.nodesBetween(0, state.doc.content.size, (node, pos) => {
       if (node.type.name === 'table') {
@@ -321,7 +321,7 @@ export function distributeColumnsEvenly(editor: Editor) {
     const { state, view } = editor;
     const { selection } = state;
     let tablePos: number | null = null;
-    let tableNode: ProseMirrorNode | null = null;
+    let tableNode: any = null;
 
     state.doc.nodesBetween(0, state.doc.content.size, (node, pos) => {
       if (node.type.name === 'table') {
@@ -342,7 +342,7 @@ export function distributeColumnsEvenly(editor: Editor) {
       (rowNode as any).forEach((cellNode: ProseMirrorNode) => {
         if (cellNode.attrs?.colwidth) {
           tr.setNodeMarkup(currentPos, undefined, {
-            ...cellNode.attrs,
+            ...((cellNode as any).attrs),
             colwidth: null,
           });
         }
@@ -463,7 +463,7 @@ export function insertParsedTable(editor: Editor, matrix: string[][]): boolean {
         // Fill table cells starting at current row & col
         const { state, view } = editor;
         let tablePos: number | null = null;
-        let tableNode: ProseMirrorNode | null = null;
+        let tableNode: any = null;
 
         state.doc.nodesBetween(0, state.doc.content.size, (node, pos) => {
           if (node.type.name === 'table') {
@@ -494,7 +494,7 @@ export function insertParsedTable(editor: Editor, matrix: string[][]): boolean {
                 const p = schema.nodes.paragraph.create(null, textNode || undefined);
                 newCells.push(cellNode.type.create(cellNode.attrs, p));
               } else {
-                newCells.push(cellNode);
+                newCells.push((cellNode));
               }
               cIdx++;
             });
@@ -550,7 +550,7 @@ export function convertTableToList(editor: Editor): boolean {
     const { schema, selection } = state;
 
     let tablePos: number | null = null;
-    let tableNode: ProseMirrorNode | null = null;
+    let tableNode: any = null;
 
     state.doc.nodesBetween(0, state.doc.content.size, (node, pos) => {
       if (node.type.name === 'table') {
@@ -698,7 +698,7 @@ export function moveRow(editor: Editor, fromRowIdx: number, toRowIdx: number): b
     const { selection } = state;
 
     let tablePos: number | null = null;
-    let tableNode: ProseMirrorNode | null = null;
+    let tableNode: any = null;
 
     state.doc.nodesBetween(0, state.doc.content.size, (node, pos) => {
       if (node.type.name === 'table') {
@@ -743,7 +743,7 @@ export function moveColumn(editor: Editor, fromColIdx: number, toColIdx: number)
     const { selection } = state;
 
     let tablePos: number | null = null;
-    let tableNode: ProseMirrorNode | null = null;
+    let tableNode: any = null;
 
     state.doc.nodesBetween(0, state.doc.content.size, (node, pos) => {
       if (node.type.name === 'table') {
