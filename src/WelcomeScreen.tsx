@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { FileText, FolderOpen, FolderInput, Plus, Download, Upload, Grid, List, Trash2, Edit2, Check, X, RotateCcw, Home, AlertCircle, Search, ArrowUpDown, FileJson, Clock, Palette, PaintRoller, Github, ArrowLeft, ChevronRight, Archive, ArchiveRestore } from 'lucide-react';
+import { FileText, FolderOpen, FolderInput, Plus, Download, Upload, Grid, List, Trash2, Edit2, Check, X, RotateCcw, Home, AlertCircle, Search, ArrowUpDown, FileJson, Clock, PaintRoller, Github, ChevronRight, Archive, ArchiveRestore } from 'lucide-react';
 
 import { Project, ThemeColors, Folder } from './types';
 import { db, getAllProjectsFromDB, saveProjectToDB, deleteProjectFromDB, getAllFoldersFromDB, saveFolderToDB } from './db';
@@ -1001,53 +1001,32 @@ function WelcomeScreen({ theme, onSelectTheme, onOpenThemeModal, uiFont, lang = 
         {/* Breadcrumbs */}
         {tab === 'active' && currentFolderId !== null && (
           <div className="w-full max-w-5xl mb-4 flex items-center justify-between gap-3 text-sm animate-fade-in-up" style={{ color: theme.textMuted }}>
-            <div className="flex items-center gap-2 flex-wrap">
-              {/* Back to Parent Folder / Home Button */}
-              <button
-                onClick={() => {
-                  const currentFolder = folders.find(f => f.id === currentFolderId);
-                  const parentId = currentFolder?.parentId || null;
-                  handleSelectFolder(parentId);
+            <div className="flex items-center gap-1.5 text-xs sm:text-sm">
+              <button 
+                onClick={() => handleSelectFolder(null)} 
+                className={`hover:underline px-2 py-1 rounded-lg transition-colors cursor-pointer ${dragOverFolderId === 'root' ? 'bg-black/10 dark:bg-white/10' : ''}`}
+                onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); setDragOverFolderId('root'); }}
+                onDragLeave={(e) => { e.preventDefault(); e.stopPropagation(); setDragOverFolderId(null); }}
+                onDrop={(e) => {
+                  e.preventDefault(); e.stopPropagation(); setDragOverFolderId(null);
+                  if (dragProjectId) handleMoveProject(null, dragProjectId);
                 }}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-medium transition-all hover:opacity-80 active:scale-95 cursor-pointer shadow-xs"
-                style={{
-                  backgroundColor: theme.surface,
-                  borderColor: theme.borderFaint,
-                  color: theme.text,
-                }}
-                title={lang === 'vi' ? 'Quay lại cấp trước' : 'Go back to parent folder'}
+                style={{ color: theme.textMuted }}
               >
-                <ArrowLeft size={13} />
-                <span>{lang === 'vi' ? 'Quay lại' : 'Back'}</span>
+                {t(lang, 'home')}
               </button>
-
-              <div className="flex items-center gap-1.5 text-xs sm:text-sm pl-1">
-                <button 
-                  onClick={() => handleSelectFolder(null)} 
-                  className={`hover:underline px-2 py-1 rounded-lg transition-colors cursor-pointer ${dragOverFolderId === 'root' ? 'bg-black/10 dark:bg-white/10' : ''}`}
-                  onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); setDragOverFolderId('root'); }}
-                  onDragLeave={(e) => { e.preventDefault(); e.stopPropagation(); setDragOverFolderId(null); }}
-                  onDrop={(e) => {
-                    e.preventDefault(); e.stopPropagation(); setDragOverFolderId(null);
-                    if (dragProjectId) handleMoveProject(null, dragProjectId);
-                  }}
-                  style={{ color: theme.textMuted }}
-                >
-                  {t(lang, 'home')}
-                </button>
-                {breadcrumbs.map((b, i) => (
-                  <React.Fragment key={b.id}>
-                    <ChevronRight size={13} className="opacity-40" />
-                    <button 
-                      onClick={() => handleSelectFolder(b.id)}
-                      className={`hover:underline px-1.5 py-0.5 rounded-lg transition-colors cursor-pointer ${i === breadcrumbs.length - 1 ? 'font-semibold' : ''}`}
-                      style={{ color: i === breadcrumbs.length - 1 ? theme.text : theme.textMuted }}
-                    >
-                      {b.name}
-                    </button>
-                  </React.Fragment>
-                ))}
-              </div>
+              {breadcrumbs.map((b, i) => (
+                <React.Fragment key={b.id}>
+                  <ChevronRight size={13} className="opacity-40" />
+                  <button 
+                    onClick={() => handleSelectFolder(b.id)} 
+                    className={`hover:underline px-1.5 py-0.5 rounded-lg transition-colors cursor-pointer ${i === breadcrumbs.length - 1 ? 'font-semibold' : ''}`}
+                    style={{ color: i === breadcrumbs.length - 1 ? theme.text : theme.textMuted }}
+                  >
+                    {b.name}
+                  </button>
+                </React.Fragment>
+              ))}
             </div>
           </div>
         )}
