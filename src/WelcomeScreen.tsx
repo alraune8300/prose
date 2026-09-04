@@ -595,7 +595,7 @@ function WelcomeScreen({ theme, onSelectTheme, onOpenThemeModal, uiFont, lang = 
         <div className="absolute inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)' }}>
           <div className="p-6 rounded-2xl shadow-xl flex flex-col gap-5 animate-fade-in-up" style={{ backgroundColor: theme.surface, border: `1px solid ${theme.border}` }}>
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-full text-red-500" style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)' }}>
+              <div className="p-2 rounded-full" style={{ backgroundColor: theme.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)', color: theme.textMuted }}>
                 <AlertCircle size={20} strokeWidth={2} />
               </div>
               <div>
@@ -736,7 +736,7 @@ function WelcomeScreen({ theme, onSelectTheme, onOpenThemeModal, uiFont, lang = 
                 <span className="font-medium text-xs md:text-sm">{t(lang, 'trash')}</span>
               </div>
               {(trashedProjects.length + trashedFolders.length) > 0 && (
-                <span className="text-[10px] px-1.5 py-0.5 rounded-full font-semibold" style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', color: '#ef4444' }}>
+                <span className="text-[10px] px-1.5 py-0.5 rounded-full font-semibold" style={{ backgroundColor: theme.isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)', color: theme.textMuted }}>
                   {trashedProjects.length + trashedFolders.length}
                 </span>
               )}
@@ -1157,7 +1157,7 @@ function WelcomeScreen({ theme, onSelectTheme, onOpenThemeModal, uiFont, lang = 
                                 <button onClick={(e) => handleArchiveFolder(folder, e)} className="p-1.5 rounded-md hover:bg-neutral-500/10 transition-colors cursor-pointer" style={{ color: theme.accent }} title={t(lang, 'archiveFolder')}>
                                   <Archive size={14} />
                                 </button>
-                                <button onClick={(e) => handleSoftDeleteFolder(folder, e)} className="p-1.5 rounded-md text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer" title={t(lang, 'moveToTrash')}>
+                                <button onClick={(e) => handleSoftDeleteFolder(folder, e)} className="p-1.5 rounded-md hover:bg-neutral-500/10 transition-colors cursor-pointer" style={{ color: theme.textMuted }} title={t(lang, 'moveToTrash')}>
                                   <Trash2 size={14} />
                                 </button>
                               </>
@@ -1166,7 +1166,7 @@ function WelcomeScreen({ theme, onSelectTheme, onOpenThemeModal, uiFont, lang = 
                                 <button onClick={(e) => handleUnarchiveFolder(folder, e)} className="p-1.5 rounded-md hover:bg-neutral-500/10 transition-colors cursor-pointer" style={{ color: theme.accent }} title={t(lang, 'unarchiveFolder')}>
                                   <ArchiveRestore size={14} />
                                 </button>
-                                <button onClick={(e) => handleSoftDeleteFolder(folder, e)} className="p-1.5 rounded-md text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer" title={t(lang, 'moveToTrash')}>
+                                <button onClick={(e) => handleSoftDeleteFolder(folder, e)} className="p-1.5 rounded-md hover:bg-neutral-500/10 transition-colors cursor-pointer" style={{ color: theme.textMuted }} title={t(lang, 'moveToTrash')}>
                                   <Trash2 size={14} />
                                 </button>
                               </>
@@ -1175,7 +1175,7 @@ function WelcomeScreen({ theme, onSelectTheme, onOpenThemeModal, uiFont, lang = 
                                 <button onClick={(e) => handleRestoreFolder(folder, e)} className="p-1.5 rounded-md hover:bg-neutral-500/10 transition-colors cursor-pointer" style={{ color: theme.accent }} title={t(lang, 'restore')}>
                                   <RotateCcw size={14} />
                                 </button>
-                                <button onClick={(e) => promptHardDelete('folder', folder.id, folder.name, e)} className="p-1.5 rounded-md text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer" title={t(lang, 'deleteForever')}>
+                                <button onClick={(e) => promptHardDelete('folder', folder.id, folder.name, e)} className="p-1.5 rounded-md hover:bg-neutral-500/10 transition-colors cursor-pointer" style={{ color: theme.textMuted }} title={t(lang, 'deleteForever')}>
                                   <Trash2 size={14} />
                                 </button>
                               </>
@@ -1253,7 +1253,7 @@ function WelcomeScreen({ theme, onSelectTheme, onOpenThemeModal, uiFont, lang = 
                         <button onClick={(e) => handleArchiveFolder(folder, e)} className="p-1.5 rounded-md hover:bg-neutral-500/10 transition-colors cursor-pointer" style={{ color: theme.accent }} title={t(lang, 'archiveFolder')}>
                           <Archive size={13} />
                         </button>
-                        <button onClick={(e) => handleSoftDeleteFolder(folder, e)} className="p-1.5 rounded-md text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer" title={t(lang, 'moveToTrash')}>
+                        <button onClick={(e) => handleSoftDeleteFolder(folder, e)} className="p-1.5 rounded-md hover:bg-neutral-500/10 transition-colors cursor-pointer" style={{ color: theme.textMuted }} title={t(lang, 'moveToTrash')}>
                           <Trash2 size={13} />
                         </button>
                       </>
@@ -1262,7 +1262,7 @@ function WelcomeScreen({ theme, onSelectTheme, onOpenThemeModal, uiFont, lang = 
                         <button onClick={(e) => handleUnarchiveFolder(folder, e)} className="p-1.5 rounded-md hover:bg-neutral-500/10 transition-colors cursor-pointer" style={{ color: theme.accent }} title={t(lang, 'unarchiveFolder')}>
                           <ArchiveRestore size={13} />
                         </button>
-                        <button onClick={(e) => handleSoftDeleteFolder(folder, e)} className="p-1.5 rounded-md text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer" title={t(lang, 'moveToTrash')}>
+                        <button onClick={(e) => handleSoftDeleteFolder(folder, e)} className="p-1.5 rounded-md hover:bg-neutral-500/10 transition-colors cursor-pointer" style={{ color: theme.textMuted }} title={t(lang, 'moveToTrash')}>
                           <Trash2 size={13} />
                         </button>
                       </>
@@ -1271,7 +1271,7 @@ function WelcomeScreen({ theme, onSelectTheme, onOpenThemeModal, uiFont, lang = 
                         <button onClick={(e) => handleRestoreFolder(folder, e)} className="p-1.5 rounded-md hover:bg-neutral-500/10 transition-colors cursor-pointer" style={{ color: theme.accent }} title={t(lang, 'restore')}>
                           <RotateCcw size={13} />
                         </button>
-                        <button onClick={(e) => promptHardDelete('folder', folder.id, folder.name, e)} className="p-1.5 rounded-md text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer" title={t(lang, 'deleteForever')}>
+                        <button onClick={(e) => promptHardDelete('folder', folder.id, folder.name, e)} className="p-1.5 rounded-md hover:bg-neutral-500/10 transition-colors cursor-pointer" style={{ color: theme.textMuted }} title={t(lang, 'deleteForever')}>
                           <Trash2 size={13} />
                         </button>
                       </>
@@ -1352,7 +1352,7 @@ function WelcomeScreen({ theme, onSelectTheme, onOpenThemeModal, uiFont, lang = 
                         <button onClick={(e) => handleArchiveProject(project, e)} className="p-1.5 rounded-md hover:bg-neutral-500/10 transition-colors cursor-pointer" style={{ color: theme.accent }} title={t(lang, 'archiveProject')}>
                           <Archive size={13} />
                         </button>
-                        <button onClick={(e) => handleSoftDeleteProject(project, e)} className="p-1.5 rounded-md text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer" title={t(lang, 'moveToTrash')}>
+                        <button onClick={(e) => handleSoftDeleteProject(project, e)} className="p-1.5 rounded-md hover:bg-neutral-500/10 transition-colors cursor-pointer" style={{ color: theme.textMuted }} title={t(lang, 'moveToTrash')}>
                           <Trash2 size={13} />
                         </button>
                       </>
@@ -1361,7 +1361,7 @@ function WelcomeScreen({ theme, onSelectTheme, onOpenThemeModal, uiFont, lang = 
                         <button onClick={(e) => handleUnarchiveProject(project, e)} className="p-1.5 rounded-md hover:bg-neutral-500/10 transition-colors cursor-pointer" style={{ color: theme.accent }} title={t(lang, 'unarchiveProject')}>
                           <ArchiveRestore size={13} />
                         </button>
-                        <button onClick={(e) => handleSoftDeleteProject(project, e)} className="p-1.5 rounded-md text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer" title={t(lang, 'moveToTrash')}>
+                        <button onClick={(e) => handleSoftDeleteProject(project, e)} className="p-1.5 rounded-md hover:bg-neutral-500/10 transition-colors cursor-pointer" style={{ color: theme.textMuted }} title={t(lang, 'moveToTrash')}>
                           <Trash2 size={13} />
                         </button>
                       </>
@@ -1370,7 +1370,7 @@ function WelcomeScreen({ theme, onSelectTheme, onOpenThemeModal, uiFont, lang = 
                         <button onClick={(e) => handleRestoreProject(project, e)} className="p-1.5 rounded-md hover:bg-neutral-500/10 transition-colors cursor-pointer" style={{ color: theme.accent }} title={t(lang, 'restore')}>
                           <RotateCcw size={13} />
                         </button>
-                        <button onClick={(e) => promptHardDelete('project', project.id, project.title, e)} className="p-1.5 rounded-md text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer" title={t(lang, 'deleteForever')}>
+                        <button onClick={(e) => promptHardDelete('project', project.id, project.title, e)} className="p-1.5 rounded-md hover:bg-neutral-500/10 transition-colors cursor-pointer" style={{ color: theme.textMuted }} title={t(lang, 'deleteForever')}>
                           <Trash2 size={13} />
                         </button>
                       </>

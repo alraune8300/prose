@@ -394,8 +394,8 @@ export default function GoogleFontsPanel(props: GoogleFontsPanelProps & { hideRo
       {/* 2. API KEY MANAGEMENT CARD (Clean, responsive, full-width with easy-to-click buttons) */}
       <div
         style={{
-          border: `1px solid ${activeKey ? (c.isDark ? 'rgba(37,99,235,0.3)' : '#bfdbfe') : c.border}`,
-          background: activeKey ? (c.isDark ? 'rgba(37,99,235,0.08)' : '#eff6ff') : (c.isDark ? 'rgba(255,255,255,0.03)' : '#fafafa'),
+          border: `1px solid ${activeKey ? c.accent : c.border}`,
+          background: activeKey ? (c.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)') : (c.isDark ? 'rgba(255,255,255,0.03)' : '#fafafa'),
           borderRadius: 8,
           padding: '10px 12px',
           boxSizing: 'border-box',
@@ -403,12 +403,12 @@ export default function GoogleFontsPanel(props: GoogleFontsPanelProps & { hideRo
       >
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
-            <Key size={15} color={activeKey ? (c.isDark ? '#93c5fd' : '#2563eb') : c.textMuted} style={{ flexShrink: 0 }} />
+            <Key size={15} color={activeKey ? c.accent : c.textMuted} style={{ flexShrink: 0 }} />
             <div style={{ minWidth: 0 }}>
               <div style={{ fontSize: '0.78rem', fontWeight: 700, color: c.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 Google Fonts API
               </div>
-              <div style={{ fontSize: '0.68rem', color: activeKey ? (c.isDark ? '#93c5fd' : '#2563eb') : c.textMuted }}>
+              <div style={{ fontSize: '0.68rem', color: activeKey ? c.accent : c.textMuted }}>
                 {activeKey ? (isFetching ? t(lang, 'loadingLibrary') : t(lang, 'connectedFontsCount').replace('{count}', String(totalLoadedCount))) : t(lang, 'basicMode')}
               </div>
             </div>
@@ -494,13 +494,13 @@ export default function GoogleFontsPanel(props: GoogleFontsPanelProps & { hideRo
                   flex: 1,
                   padding: '8px 12px',
                   borderRadius: 6,
-                  border: 'none',
-                  background: !localApiKey.trim() ? (c.isDark ? '#374151' : '#d1d5db') : c.accent,
-                  color: !localApiKey.trim() ? (c.isDark ? '#9ca3af' : '#6b7280') : '#ffffff',
+                  border: `1px solid ${c.border}`,
+                  background: !localApiKey.trim() ? (c.isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)') : (c.isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)'),
+                  color: !localApiKey.trim() ? c.textMuted : c.text,
                   cursor: !localApiKey.trim() ? 'not-allowed' : 'pointer',
                   fontFamily: uiFont,
                   fontSize: '0.78rem',
-                  fontWeight: 700,
+                  fontWeight: 600,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',

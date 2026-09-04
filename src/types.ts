@@ -170,6 +170,7 @@ export interface FormatState {
   doubleSpacePeriod?: boolean
   toggleHeadings?: boolean
   dashesMode?: 'disabled' | 'em' | 'en-em'
+  typewriterScroll?: boolean
   pageNumbering?: PageNumberingConfig
 }
 

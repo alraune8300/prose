@@ -352,6 +352,7 @@ interface Strings {
   smartQuotes: string
   smartDashes: string
   smartFractions: string
+  typewriterScroll?: string
   characters?: string
   readingTime?: string
   blockViewDesc?: string
@@ -1130,6 +1131,7 @@ pageOf: 'of',
     applyFontToSelection: 'Apply to selected text',
     noMatchingFonts: 'No fonts found matching',
     smartFormatting: 'Smart Formatting',
+    typewriterScroll: 'Typewriter Scroll',
     smartQuotes: 'Smart Quotes (“ ” ‘ ’)',
     smartEllipses: 'Smart Ellipses (... to …)',
     markdownShortcuts: 'Markdown Shortcuts',
@@ -1907,6 +1909,7 @@ pageOf: 'trong',
     applyFontToSelection: 'Áp dụng cho văn bản đang chọn',
     noMatchingFonts: 'Không tìm thấy phông chữ nào phù hợp với',
     smartFormatting: 'Định dạng thông minh',
+    typewriterScroll: 'Cuộn máy đánh chữ (Typewriter Scroll)',
     smartQuotes: 'Dấu ngoặc kép thông minh (“ ” ‘ ’)',
     smartEllipses: 'Dấu ba chấm thông minh (... thành …)',
     markdownShortcuts: 'Phím tắt Markdown',

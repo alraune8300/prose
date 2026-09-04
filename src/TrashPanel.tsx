@@ -88,7 +88,7 @@ export function TrashPanel({
       >
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <Trash2 size={15} style={{ color: '#e05050' }} />
+            <Trash2 size={15} style={{ color: c.textMuted }} />
             <span style={{ fontSize: '0.8rem', fontWeight: 600, color: c.text, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               {i18n.trash}
             </span>
@@ -96,8 +96,8 @@ export function TrashPanel({
               style={{
                 fontSize: '0.68rem',
                 fontWeight: 600,
-                color: '#e05050',
-                background: 'rgba(224, 80, 80, 0.1)',
+                color: c.textMuted,
+                background: c.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
                 padding: '1px 6px',
                 borderRadius: 10,
               }}
@@ -115,9 +115,9 @@ export function TrashPanel({
                     onClick={handleEmptyAll}
                     style={{
                       fontSize: '0.68rem',
-                      color: '#ffffff',
-                      background: '#e05050',
-                      border: 'none',
+                      color: c.text,
+                      background: c.isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)',
+                      border: `1px solid ${c.border}`,
                       borderRadius: 4,
                       padding: '2px 7px',
                       cursor: 'pointer',
@@ -146,7 +146,7 @@ export function TrashPanel({
                   onClick={() => setConfirmEmptyAll(true)}
                   style={{
                     fontSize: '0.7rem',
-                    color: '#e05050',
+                    color: c.textMuted,
                     background: 'none',
                     border: 'none',
                     cursor: 'pointer',
@@ -395,10 +395,10 @@ export function TrashPanel({
                             display: 'flex',
                             alignItems: 'center',
                             padding: '3px 5px',
-                            background: 'rgba(224, 80, 80, 0.08)',
-                            color: '#e05050',
+                            background: c.isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)',
+                            color: c.textMuted,
                             borderRadius: 5,
-                            border: 'none',
+                            border: `1px solid ${c.border}`,
                             cursor: 'pointer',
                             transition: 'all 0.12s',
                           }}

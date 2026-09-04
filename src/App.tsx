@@ -536,6 +536,7 @@ export default function App() {
       doubleSpacePeriod: false,
       toggleHeadings: false,
       dashesMode: 'en-em',
+      typewriterScroll: false,
       firstLineIndent: false,
       pageNumbering: {
         enabled: false,
@@ -655,7 +656,14 @@ export default function App() {
   const [editorInstance, setEditorInstance] = useState<TiptapEditorType | null>(null);
 
   const handleFormatChange = useCallback((updates: Partial<FormatState>) => {
-    setFormatState(prev => ({ ...prev, ...updates }));
+    setFormatState(prev => {
+      const next = { ...prev, ...updates };
+      if (updates.typewriterScroll !== undefined) {
+        setTypewriterMode(updates.typewriterScroll);
+        saveAppSettings({ typewriterMode: updates.typewriterScroll, formatState: next });
+      }
+      return next;
+    });
     if (updates.fontSize) setFontSize(updates.fontSize);
     if (updates.fontFam) {
       setDocFont(updates.fontFam);
@@ -724,6 +732,12 @@ export default function App() {
     setTypewriterMode(prev => {
       const next = !prev;
       saveAppSettings({ typewriterMode: next });
+      setFormatState(f => {
+        const nextFormat = { ...f, typewriterScroll: next };
+        LS.setJSON('kgv-format-state', nextFormat);
+        saveAppSettings({ formatState: nextFormat });
+        return nextFormat;
+      });
       return next;
     });
   }, []);

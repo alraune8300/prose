@@ -1039,6 +1039,12 @@ ${content.split('\n\n').map(para => {
                 <Accordion title={t(lang, 'smartFormatting') || 'Smart Formatting'} uiFont={uiFont} c={c}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                     <ToggleSwitch
+                      checked={Boolean(formatState.typewriterScroll)}
+                      onChange={() => onFormatChange({ typewriterScroll: !formatState.typewriterScroll })}
+                      label={t(lang, 'typewriterScroll') || 'Typewriter Scroll'}
+                      uiFont={uiFont}
+                      c={c} />
+                    <ToggleSwitch
                       checked={Boolean(formatState.smartQuotes)}
                       onChange={() => onFormatChange({ smartQuotes: !formatState.smartQuotes })}
                       label={t(lang, 'smartQuotes') || 'Smart Quotes (“ ”)'}
