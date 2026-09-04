@@ -56,6 +56,7 @@ function LeftPanel(props: Record<string, unknown>) {
   }
 
   const uiFont = (props.uiFont || 'Inter') as string
+  const uiFontFamily = `'${uiFont}', var(--kgv-ui-font), sans-serif`
   const lang: Lang = (props.lang || 'vi') as Lang
 
   const t = (l: Lang, key: string) => {
@@ -260,14 +261,14 @@ function LeftPanel(props: Record<string, unknown>) {
               onClick={e => e.stopPropagation()}
               style={{
                 flex: 1, padding: '2px 4px',
-                fontFamily: uiFont, fontSize: '0.8rem',
+                fontFamily: uiFontFamily, fontSize: '0.8rem',
                 background: 'transparent', border: 'none',
                 outline: `1.5px solid ${c.accent}`, borderRadius: 4, color: c.text,
               }}
             />
           ) : (
             <span style={{
-              fontFamily: uiFont, fontSize: '0.8rem',
+              fontFamily: uiFontFamily, fontSize: '0.8rem',
               fontWeight: isActive ? 600 : 400,
               color: isActive ? c.accent : c.text, lineHeight: 1.35,
               whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1,
@@ -312,7 +313,7 @@ function LeftPanel(props: Record<string, unknown>) {
         </div>
         
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <span style={{ fontSize: '0.64rem', color: isActive ? c.accent : c.textMuted, opacity: isActive ? 0.9 : 0.7, fontFamily: uiFont }}>
+          <span style={{ fontSize: '0.64rem', color: isActive ? c.accent : c.textMuted, opacity: isActive ? 0.9 : 0.7, fontFamily: uiFontFamily }}>
             {timeSince(new Date(page.updatedAt || page.lastModified || Date.now()), lang)}
           </span>
         </div>
@@ -373,7 +374,7 @@ function LeftPanel(props: Record<string, unknown>) {
               }}
               style={{
                 width: '100%', padding: '2px 6px',
-                fontFamily: uiFont, fontSize: '0.75rem',
+                fontFamily: uiFontFamily, fontSize: '0.75rem',
                 background: 'transparent', border: 'none',
                 outline: `1px solid ${c.accent}`, borderRadius: 4, color: c.text,
               }}
@@ -390,7 +391,7 @@ function LeftPanel(props: Record<string, unknown>) {
                 }}
               />
               <span style={{
-                fontFamily: uiFont, fontSize: '0.74rem', fontWeight: 600,
+                fontFamily: uiFontFamily, fontSize: '0.74rem', fontWeight: 600,
                 color: c.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
               }}>
                 {folder.name}
@@ -417,7 +418,7 @@ function LeftPanel(props: Record<string, unknown>) {
                   <div style={{ position: 'absolute', right: 0, top: '100%', zIndex: 50, background: c.panel, border: `1px solid ${c.borderFaint}`, borderRadius: 6, padding: '4px', display: 'flex', flexDirection: 'column', gap: 2, boxShadow: '0 4px 12px rgba(0,0,0,0.12)', minWidth: 120 }}>
                     <button
                       onClick={e => { e.stopPropagation(); onNewPage(activeTab === 'drafts', folder.id); setCollapsedFolders(prev => { const next = new Set(prev); next.delete(folder.id); return next; }); setFolderMenuOpenId(null); }}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '5px 8px', color: c.text, display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.72rem', fontFamily: uiFont, width: '100%', textAlign: 'left', borderRadius: 4 }}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '5px 8px', color: c.text, display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.72rem', fontFamily: uiFontFamily, width: '100%', textAlign: 'left', borderRadius: 4 }}
                       onMouseEnter={e => (e.currentTarget.style.backgroundColor = itemAccentHoverBg)}
                       onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
                     >
@@ -426,7 +427,7 @@ function LeftPanel(props: Record<string, unknown>) {
                     <div style={{ height: 1, background: c.borderFaint, margin: '2px 0' }} />
                     <button
                       onClick={e => { e.stopPropagation(); setRenamingFolderId(folder.id); setFolderRenameVal(folder.name); setFolderMenuOpenId(null); }}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '5px 8px', color: c.text, display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.72rem', fontFamily: uiFont, width: '100%', textAlign: 'left', borderRadius: 4 }}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '5px 8px', color: c.text, display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.72rem', fontFamily: uiFontFamily, width: '100%', textAlign: 'left', borderRadius: 4 }}
                       onMouseEnter={e => (e.currentTarget.style.backgroundColor = itemAccentHoverBg)}
                       onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
                     >
@@ -434,7 +435,7 @@ function LeftPanel(props: Record<string, unknown>) {
                     </button>
                     <button
                       onClick={e => { e.stopPropagation(); onDeleteFolder(folder.id); setFolderMenuOpenId(null); }}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '5px 8px', color: '#e05050', display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.72rem', fontFamily: uiFont, width: '100%', textAlign: 'left', borderRadius: 4 }}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '5px 8px', color: '#e05050', display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.72rem', fontFamily: uiFontFamily, width: '100%', textAlign: 'left', borderRadius: 4 }}
                       onMouseEnter={e => (e.currentTarget.style.backgroundColor = c.isDark ? 'rgba(224,80,80,0.15)' : 'rgba(224,80,80,0.08)')}
                       onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
                     >
@@ -463,7 +464,7 @@ function LeftPanel(props: Record<string, unknown>) {
                 }}
                 style={{
                   marginLeft: 6 + (depth + 1) * 14 + 6, padding: '4px 8px',
-                  fontFamily: uiFont, fontSize: '0.66rem', color: c.textMuted, fontStyle: 'italic',
+                  fontFamily: uiFontFamily, fontSize: '0.68rem', color: c.textMuted,
                 }}
               >
                 {t(lang, 'dropFilesHere')}
@@ -500,8 +501,8 @@ function LeftPanel(props: Record<string, unknown>) {
               setDragOverFolderId(null)
             }}
             style={{
-              padding: '8px 10px', fontFamily: uiFont, fontSize: '0.7rem',
-              color: c.textMuted, fontStyle: 'italic',
+              padding: '8px 10px', fontFamily: uiFontFamily, fontSize: '0.72rem',
+              color: c.textMuted,
               background: dragOverFolderId === 'root' ? (c.accentLight) : 'transparent',
               borderRadius: 6, margin: '2px 6px', transition: 'background 0.1s',
             }}
@@ -559,7 +560,7 @@ function LeftPanel(props: Record<string, unknown>) {
         background: c.panel,
         borderRight: `1px solid ${c.borderFaint}`,
         overflow: 'hidden',
-        fontFamily: uiFont,
+        fontFamily: uiFontFamily,
       }}
     >
       {/* Header */}
@@ -584,7 +585,7 @@ function LeftPanel(props: Record<string, unknown>) {
             onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
           >
             <FolderIcon size={15} style={{ color: c.accent, flexShrink: 0 }} />
-            <span style={{ fontSize: '0.86rem', fontWeight: 600, color: c.text, fontFamily: uiFont, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            <span style={{ fontSize: '0.86rem', fontWeight: 600, color: c.text, fontFamily: uiFontFamily, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               {activeProject?.title || 'Project'}
             </span>
             <ChevronDown size={13} style={{ color: c.textMuted, opacity: 0.7, flexShrink: 0 }} />
@@ -644,7 +645,7 @@ function LeftPanel(props: Record<string, unknown>) {
                 border: `1px solid ${c.borderFaint}`,
                 cursor: 'pointer',
                 transition: 'all 0.12s',
-                fontFamily: uiFont,
+                fontFamily: uiFontFamily,
               }}
               onMouseEnter={e => { e.currentTarget.style.color = c.text; e.currentTarget.style.borderColor = c.border; }}
               onMouseLeave={e => { e.currentTarget.style.color = c.textMuted; e.currentTarget.style.borderColor = c.borderFaint; }}
@@ -675,7 +676,7 @@ function LeftPanel(props: Record<string, unknown>) {
                       cursor: 'pointer',
                       maxWidth: 120,
                       transition: 'all 0.12s',
-                      fontFamily: uiFont,
+                      fontFamily: uiFontFamily,
                     }}
                     onMouseEnter={e => { e.currentTarget.style.background = c.accentLight; e.currentTarget.style.borderColor = c.accent; }}
                     onMouseLeave={e => { e.currentTarget.style.background = c.isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)'; e.currentTarget.style.borderColor = c.borderFaint; }}
@@ -707,7 +708,7 @@ function LeftPanel(props: Record<string, unknown>) {
                     cursor: 'pointer',
                     maxWidth: 120,
                     transition: 'all 0.12s',
-                    fontFamily: uiFont,
+                    fontFamily: uiFontFamily,
                   }}
                   onMouseEnter={e => { e.currentTarget.style.background = c.accentLight; e.currentTarget.style.borderColor = c.accent; }}
                   onMouseLeave={e => { e.currentTarget.style.background = c.isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)'; e.currentTarget.style.borderColor = c.borderFaint; }}
@@ -737,7 +738,7 @@ function LeftPanel(props: Record<string, unknown>) {
                     if (e.key === 'Escape') setRenamingProjId(null)
                   }}
                   style={{
-                    width: '100%', padding: '3px 6px', fontFamily: uiFont, fontSize: '0.8rem',
+                    width: '100%', padding: '3px 6px', fontFamily: uiFontFamily, fontSize: '0.8rem',
                     background: 'transparent', border: `1px solid ${c.accent}`, borderRadius: 5, color: c.text,
                   }}
                 />
@@ -771,7 +772,7 @@ function LeftPanel(props: Record<string, unknown>) {
                 value={projSearchQuery}
                 onChange={e => setProjSearchQuery(e.target.value)}
                 style={{
-                  width: '100%', padding: '5px 8px', fontFamily: uiFont, fontSize: '0.78rem',
+                  width: '100%', padding: '5px 8px', fontFamily: uiFontFamily, fontSize: '0.78rem',
                   background: c.bg, border: `1px solid ${c.borderFaint}`, borderRadius: 5,
                   color: c.text, outline: 'none'
                 }}
@@ -799,7 +800,7 @@ function LeftPanel(props: Record<string, unknown>) {
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 4px', marginBottom: 4 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     <FileText size={14} color={c.accent} />
-                    <span style={{ fontSize: '0.74rem', fontWeight: 600, color: c.text, fontFamily: uiFont, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                    <span style={{ fontSize: '0.74rem', fontWeight: 600, color: c.text, fontFamily: uiFontFamily, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                       {t(lang, 'pages')}
                     </span>
                     <span style={{ fontSize: '0.64rem', color: c.accent, opacity: 0.85 }}>
@@ -822,7 +823,7 @@ function LeftPanel(props: Record<string, unknown>) {
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 4px', marginBottom: 4 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={c.accent} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="6" y1="3" x2="6" y2="15"></line><circle cx="18" cy="6" r="3"></circle><circle cx="6" cy="18" r="3"></circle><path d="M18 9a9 9 0 0 1-9 9"></path></svg>
-                    <span style={{ fontSize: '0.74rem', fontWeight: 600, color: c.text, fontFamily: uiFont, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                    <span style={{ fontSize: '0.74rem', fontWeight: 600, color: c.text, fontFamily: uiFontFamily, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                       {t(lang, 'drafts')}
                     </span>
                     <span style={{ fontSize: '0.64rem', color: c.accent, opacity: 0.85 }}>
@@ -866,13 +867,13 @@ function LeftPanel(props: Record<string, unknown>) {
                         }}
                         onClick={e => e.stopPropagation()}
                         style={{
-                          fontSize: '0.74rem', fontWeight: 600, color: c.text, fontFamily: uiFont, textTransform: 'uppercase', letterSpacing: '0.06em',
+                          fontSize: '0.74rem', fontWeight: 600, color: c.text, fontFamily: uiFontFamily, textTransform: 'uppercase', letterSpacing: '0.06em',
                           background: 'transparent', border: `1px solid ${c.accent}`, outline: 'none', padding: '0 4px', borderRadius: 4, width: '120px'
                         }}
                       />
                     ) : (
                       <div className="group/sctitle flex items-center gap-1 cursor-pointer" onClick={() => { setRenamingScratchpadTitle(true); setScratchpadTitleVal(activeProject?.scratchpadName || t(lang, 'scratchpad') || 'Scratchpad'); }}>
-                        <span style={{ fontSize: '0.74rem', fontWeight: 600, color: c.text, fontFamily: uiFont, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                        <span style={{ fontSize: '0.74rem', fontWeight: 600, color: c.text, fontFamily: uiFontFamily, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                           {activeProject?.scratchpadName || t(lang, 'scratchpad')}
                         </span>
                         <div className="opacity-0 group-hover/sctitle:opacity-100 transition-opacity">
@@ -896,8 +897,8 @@ function LeftPanel(props: Record<string, unknown>) {
                 <div style={{ display: 'flex', flexDirection: 'column' }}>
                   {scratchpads.length === 0 ? (
                     <div style={{
-                      padding: '6px 10px', fontFamily: uiFont, fontSize: '0.7rem',
-                      color: c.textMuted, fontStyle: 'italic', borderRadius: 6, margin: '2px 6px'
+                      padding: '6px 10px', fontFamily: uiFontFamily, fontSize: '0.72rem',
+                      color: c.textMuted, borderRadius: 6, margin: '2px 6px'
                     }}>
                       {t(lang, 'scratchpadEmpty') || 'No scratchpad notes'}
                     </div>
@@ -951,7 +952,7 @@ function LeftPanel(props: Record<string, unknown>) {
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
             {/* Sync Status */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-              <span style={{ fontSize: '0.64rem', color: c.textMuted, fontFamily: uiFont }}>{syncLabel}</span>
+              <span style={{ fontSize: '0.64rem', color: c.textMuted, fontFamily: uiFontFamily }}>{syncLabel}</span>
               <div style={{ width: 6, height: 6, borderRadius: '50%', background: syncDotColor, transition: 'all 0.3s' }} />
             </div>
           </div>
@@ -967,6 +968,8 @@ export default React.memo(LeftPanel, (prevProps, nextProps) => {
   if (prevProps.activeProjectId !== nextProps.activeProjectId) return false;
   if (prevProps.activePageId !== nextProps.activePageId) return false;
   if (prevProps.sidebarOpen !== nextProps.sidebarOpen) return false;
+  if (prevProps.uiFont !== nextProps.uiFont) return false;
+  if (prevProps.theme !== nextProps.theme) return false;
   if (prevProps.themeMode !== nextProps.themeMode) return false;
   if (prevProps.lang !== nextProps.lang) return false;
   if (prevProps.syncStatus !== nextProps.syncStatus) return false;
