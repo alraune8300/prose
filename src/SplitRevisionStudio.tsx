@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { 
   X, RotateCcw, CheckCircle2, 
   Clock, Sparkles, Lock, Unlock, Pilcrow, CornerDownLeft,
-  Code, FileText, GitCompare
+  Code, FileText, GitCompare, ChevronDown, Layers, FileCode
 } from 'lucide-react';
 import * as Diff from 'diff';
 import { getPageVersionsFromDB } from './db';
@@ -68,8 +68,8 @@ export default function SplitRevisionStudio({
     }).replace(/&nbsp;/g, ' ');
   }, []);
 
-  const truncateTitle = (title: string, maxWords = 5) => {
-    if (!title) return 'Untitled';
+  const truncateTitle = (title: string, maxWords = 2) => {
+    if (!title) return 'Draft';
     const words = title.trim().split(/\s+/);
     if (words.length <= maxWords) return title;
     return words.slice(0, maxWords).join(' ') + '...';
@@ -416,11 +416,17 @@ export default function SplitRevisionStudio({
             theme={theme}
             disableSearch={true}
             options={[
-              { value: 'snapshot', label: lang === 'vi' ? 'Snapshot' : 'Snapshot' },
-              { value: 'draft-vs-draft', label: lang === 'vi' ? 'Nháp vs Nháp' : 'Draft vs Draft' },
-              { value: 'draft-vs-main', label: lang === 'vi' ? 'Nháp vs Bản chính' : 'Draft vs Main' },
+              { value: 'snapshot', label: 'Snapshot' },
+              { value: 'draft-vs-draft', label: 'Draft vs Draft' },
+              { value: 'draft-vs-main', label: 'Draft vs Main' },
             ]}
-            buttonClassName="text-[11px] font-medium px-2.5 h-8 rounded-lg border outline-none cursor-pointer flex items-center justify-between gap-2 transition-colors min-w-[130px]"
+            renderButtonContent={(opt) => (
+              <div className="relative flex items-center justify-center w-full px-4">
+                <span className="truncate text-center">{opt?.label || compareSource}</span>
+                <ChevronDown size={12} className="opacity-50 flex-shrink-0 absolute right-2" />
+              </div>
+            )}
+            buttonClassName="text-[11px] font-medium px-2.5 h-8 rounded-lg border outline-none cursor-pointer flex items-center justify-center transition-colors w-[155px] flex-shrink-0 relative"
             buttonStyle={{ borderColor: theme.border, backgroundColor: theme.surface, color: theme.text }}
           />
 
@@ -432,7 +438,13 @@ export default function SplitRevisionStudio({
               theme={theme}
               disableSearch={true}
               options={getLeftTargetOptions()}
-              buttonClassName="text-[11px] font-medium px-2.5 h-8 rounded-lg border outline-none cursor-pointer flex items-center justify-between gap-2 transition-colors min-w-[120px]"
+              renderButtonContent={(opt) => (
+                <div className="relative flex items-center justify-center w-full px-4">
+                  <span className="truncate text-center">{opt?.label || 'Select'}</span>
+                  <ChevronDown size={12} className="opacity-50 flex-shrink-0 absolute right-2" />
+                </div>
+              )}
+              buttonClassName="text-[11px] font-medium px-2.5 h-8 rounded-lg border outline-none cursor-pointer flex items-center justify-center transition-colors w-[155px] flex-shrink-0 relative"
               buttonStyle={{ borderColor: theme.border, backgroundColor: theme.surface, color: theme.text }}
             />
           )}
@@ -444,7 +456,13 @@ export default function SplitRevisionStudio({
             theme={theme}
             disableSearch={true}
             options={getRightTargetOptions()}
-            buttonClassName="text-[11px] font-medium px-2.5 h-8 rounded-lg border outline-none cursor-pointer flex items-center justify-between gap-2 transition-colors min-w-[120px]"
+            renderButtonContent={(opt) => (
+              <div className="relative flex items-center justify-center w-full px-4">
+                <span className="truncate text-center">{opt?.label || 'Select'}</span>
+                <ChevronDown size={12} className="opacity-50 flex-shrink-0 absolute right-2" />
+              </div>
+            )}
+            buttonClassName="text-[11px] font-medium px-2.5 h-8 rounded-lg border outline-none cursor-pointer flex items-center justify-center transition-colors w-[155px] flex-shrink-0 relative"
             buttonStyle={{ borderColor: theme.border, backgroundColor: theme.surface, color: theme.text }}
           />
 
@@ -522,7 +540,13 @@ export default function SplitRevisionStudio({
           <div className="flex items-center justify-between px-5 py-2 border-b" style={{ borderColor: theme.border, backgroundColor: theme.background }}>
             <h3 className="text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5" style={{ color: theme.textMuted }}>
               <Clock size={13} />
-              <span>{compareSource === 'snapshot' ? (t(lang, 'snapshotBaseline') || 'Snapshot Baseline') : (compareSource === 'draft-vs-draft' ? (lang === 'vi' ? 'Bản nháp so sánh (Bên trái)' : 'Left Draft') : (lang === 'vi' ? 'Bản chính gốc (Bên trái)' : 'Main File'))}</span>
+              <span>
+                {compareSource === 'snapshot' 
+                  ? (t(lang, 'snapshotBaseline') || 'Snapshot Baseline') 
+                  : compareSource === 'draft-vs-draft' 
+                    ? truncateTitle(activeProject?.drafts?.find(d => d.id === selectedLeftTargetId)?.title || 'Draft', 2) 
+                    : truncateTitle(activeProject?.pages?.find(p => p.id === selectedLeftTargetId)?.title || 'Main File', 2)}
+              </span>
             </h3>
             <span className="text-[9px] px-1.5 py-0.5 rounded font-mono uppercase tracking-widest" style={{ color: theme.textMuted, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }}>
               {compareSource === 'snapshot' ? 'Baseline' : (lang === 'vi' ? 'Sửa trực tiếp' : 'Editable')}
@@ -594,7 +618,13 @@ export default function SplitRevisionStudio({
           <div className="flex items-center justify-between px-5 py-2 border-b" style={{ borderColor: theme.border, backgroundColor: theme.background }}>
             <h3 className="text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5" style={{ color: theme.textMuted }}>
               <Sparkles size={13} />
-              <span>{compareSource === 'snapshot' ? (t(lang, 'liveActiveEditor') || 'Live Active Editor') : (lang === 'vi' ? 'Bản nháp đang chọn (Bên phải)' : 'Right Draft')}</span>
+              <span>
+                {compareSource === 'snapshot' 
+                  ? (t(lang, 'liveActiveEditor') || 'Live Active Editor') 
+                  : compareSource === 'draft-vs-draft' 
+                    ? truncateTitle(activeProject?.drafts?.find(d => d.id === selectedTargetId)?.title || 'Draft', 2) 
+                    : truncateTitle(activeProject?.drafts?.find(d => d.id === selectedTargetId)?.title || 'Draft', 2)}
+              </span>
             </h3>
             <span className="text-[9px] px-1.5 py-0.5 rounded font-mono uppercase tracking-widest" style={{ color: theme.textMuted, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }}>
               {lang === 'vi' ? 'Sửa trực tiếp' : 'Editable'}
@@ -607,19 +637,25 @@ export default function SplitRevisionStudio({
               onScroll={handleScrollRight}
               className="flex-1 overflow-y-auto p-6 relative flex flex-col"
             >
-              <textarea
-                value={liveText}
-                onChange={(e) => setLiveText(e.target.value)}
-                placeholder={diffMode === 'markdown' ? (lang === 'vi' ? 'Nhập mã Markdown tại đây...' : 'Type Markdown syntax here...') : (t(lang, 'startTypingPlaceholder') || 'Start typing or editing your document here...')}
-                className="w-full h-full bg-transparent resize-none outline-none leading-relaxed relative z-10 selection:bg-emerald-500/30 flex-1"
-                style={{ 
-                  fontFamily: diffMode === 'markdown' ? 'JetBrains Mono, monospace' : `'${docFont}', Georgia, serif`, 
-                  color: theme.text,
-                  caretColor: theme.accent,
-                  fontSize: diffMode === 'markdown' ? '14px' : '16px',
-                }}
-                autoFocus
-              />
+              {compareSource === 'draft-vs-draft' && (activeProject?.drafts || []).filter(d => d.id !== selectedLeftTargetId).length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full text-center opacity-50 p-8">
+                  <p className="text-sm">{lang === 'vi' ? 'Không có bản nháp nào khác để so sánh' : 'No other drafts available for comparison'}</p>
+                </div>
+              ) : (
+                <textarea
+                  value={liveText}
+                  onChange={(e) => setLiveText(e.target.value)}
+                  placeholder={diffMode === 'markdown' ? (lang === 'vi' ? 'Nhập mã Markdown tại đây...' : 'Type Markdown syntax here...') : (t(lang, 'startTypingPlaceholder') || 'Start typing or editing your document here...')}
+                  className="w-full h-full bg-transparent resize-none outline-none leading-relaxed relative z-10 selection:bg-emerald-500/30 flex-1"
+                  style={{ 
+                    fontFamily: diffMode === 'markdown' ? 'JetBrains Mono, monospace' : `'${docFont}', Georgia, serif`, 
+                    color: theme.text,
+                    caretColor: theme.accent,
+                    fontSize: diffMode === 'markdown' ? '14px' : '16px',
+                  }}
+                  autoFocus
+                />
+              )}
             </div>
 
             {/* Bottom Status bar */}
