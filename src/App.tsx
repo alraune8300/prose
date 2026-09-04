@@ -2925,6 +2925,7 @@ export default function App() {
         isOpen={isSplitRevisionOpen}
         onClose={() => setIsSplitRevisionOpen(false)}
         activePage={activePage}
+        activeProject={activeProject}
         theme={theme}
         lang={lang}
         uiFont={uiFont}

@@ -103,10 +103,10 @@ export function CustomSelect({
             backgroundColor: theme.surface || (theme.isDark ? '#1f2937' : '#ffffff'), 
             border: `1px solid ${theme.border || (theme.isDark ? '#374151' : '#e5e7eb')}`,
             minWidth: Math.max(200, coords.width),
-            maxWidth: Math.max(260, coords.width),
+            maxWidth: Math.min(320, window.innerWidth - 20),
             maxHeight: '320px',
             ...(coords.windowHeight - coords.bottom < 340 ? { top: coords.top - 8, transform: 'translateY(-100%)' } : { top: coords.bottom + 4 }),
-            left: coords.left,
+            left: Math.min(coords.left, Math.max(10, window.innerWidth - Math.max(200, coords.width) - 10)),
             ...dropdownStyle 
           }}
         >

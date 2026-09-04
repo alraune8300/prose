@@ -594,7 +594,7 @@ function Editor({
   }, [editor, isPreviewMode]);
 
   useEffect(() => {
-    if (editor && !editor.isDestroyed && content !== lastEmittedContentRef.current && editor.getHTML() !== content) {
+    if (editor && !editor.isDestroyed && !editor.isFocused && content !== lastEmittedContentRef.current && editor.getHTML() !== content) {
       if (updateTimeoutRef.current) clearTimeout(updateTimeoutRef.current);
       const newContent = content || '';
       editor?.commands?.setContent(newContent, { emitUpdate: false });

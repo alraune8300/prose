@@ -3,13 +3,12 @@ import React, { useState, useEffect } from 'react'
 import {  Page, Folder, SyncStatus, Project } from './types'
 import { Lang, t as i18nT } from './i18n'
 import {
-  Home, Highlighter, Folder as FolderIcon, FolderOpen, Edit2, FileText, Trash2,
-  ChevronDown, RotateCcw, X, MoreHorizontal, Upload, Plus, PanelLeftClose, Bookmark,
-  BookOpen, Table as TableIcon, List,  Cloud, PaintRoller, Github,  Archive, ArchiveRestore, Pin, StickyNote
+  Home, Folder as FolderIcon, FolderOpen, Edit2, FileText, Trash2,
+  ChevronDown, X, MoreHorizontal, Upload, Plus, PanelLeftClose,
+  PaintRoller, Github,  Archive, Pin, StickyNote
  } from 'lucide-react'
 import { importJsonBackupFile } from './fileHandlers';
 import { saveProjectToDB, saveFolderToDB } from './db';
-import type { Editor } from '@tiptap/react'
 
 function timeSince(date: Date, lang: Lang): string {
   const seconds = Math.floor((Date.now() - date.getTime()) / 1000)
@@ -961,44 +960,4 @@ function LeftPanel(props: Record<string, unknown>) {
   )
 }
 
-export default React.memo(LeftPanel, (prevProps, nextProps) => {
-  if (prevProps.leftSidebarMainTab !== nextProps.leftSidebarMainTab) return false;
-  if (prevProps.activeFootnoteHighlight !== nextProps.activeFootnoteHighlight) return false;
-  if ((prevProps.activePage as { content?: string })?.content !== (nextProps.activePage as { content?: string })?.content) return false;
-  if (prevProps.activeProjectId !== nextProps.activeProjectId) return false;
-  if (prevProps.activePageId !== nextProps.activePageId) return false;
-  if (prevProps.sidebarOpen !== nextProps.sidebarOpen) return false;
-  if (prevProps.uiFont !== nextProps.uiFont) return false;
-  if (prevProps.theme !== nextProps.theme) return false;
-  if (prevProps.themeMode !== nextProps.themeMode) return false;
-  if (prevProps.lang !== nextProps.lang) return false;
-  if (prevProps.syncStatus !== nextProps.syncStatus) return false;
-
-  const checkProjects = (p1: typeof prevProps.projects, p2: typeof nextProps.projects) => {
-    if (p1.length !== p2.length) return false;
-    for (let i = 0; i < p1.length; i++) {
-      const proj1 = p1[i];
-      const proj2 = p2[i];
-      if (proj1.id !== proj2.id || proj1.title !== proj2.title) return false;
-      if (proj1.pages?.length !== proj2.pages?.length) return false;
-      if (proj1.drafts?.length !== proj2.drafts?.length) return false;
-      if (proj1.folders?.length !== proj2.folders?.length) return false;
-
-      const checkArr = (arr1: Partial<Page>[], arr2: Partial<Page>[]) => {
-        if (!arr1 || !arr2) return arr1 === arr2;
-        for (let j = 0; j < arr1.length; j++) {
-          if (arr1[j].id !== arr2[j].id) return false;
-          if (arr1[j].title !== arr2[j].title) return false;
-          if (arr1[j].folderId !== arr2[j].folderId) return false;
-        }
-        return true;
-      };
-      if (!checkArr(proj1.pages, proj2.pages)) return false;
-      if (!checkArr(proj1.drafts, proj2.drafts)) return false;
-      if (!checkArr(proj1.folders, proj2.folders)) return false;
-    }
-    return true;
-  };
-
-  return checkProjects(prevProps.projects, nextProps.projects);
-});
+export default LeftPanel
