@@ -212,6 +212,109 @@ function Editor({
           }
         }
 
+        // Smart Arrows conversion
+        if (state.smartArrows !== false) {
+          const $from = view.state.selection.$from;
+          const inCodeBlock = $from?.parent?.type?.name === 'codeBlock';
+          const inInlineCode = view.state.schema.marks.code ? view.state.doc.rangeHasMark(Math.max(0, from - 1), Math.max(from, to), view.state.schema.marks.code) : false;
+
+          if (!inCodeBlock && !inInlineCode) {
+            // Direct strings (from IME, mobile keyboard autocorrect, or multi-char inputs)
+            if (text === '->' || text === '- >' || text === '-->') {
+              const tr = view.state.tr; tr.insertText('→', from, to); view.dispatch(tr);
+              return true;
+            }
+            if (text === '<-' || text === '< -' || text === '<--') {
+              const tr = view.state.tr; tr.insertText('←', from, to); view.dispatch(tr);
+              return true;
+            }
+            if (text === '<->') {
+              const tr = view.state.tr; tr.insertText('↔', from, to); view.dispatch(tr);
+              return true;
+            }
+            if (text === '=>' || text === '= >' || text === '==>') {
+              const tr = view.state.tr; tr.insertText('⇒', from, to); view.dispatch(tr);
+              return true;
+            }
+            if (text === '<=>') {
+              const tr = view.state.tr; tr.insertText('⇔', from, to); view.dispatch(tr);
+              return true;
+            }
+
+            // Typing '>'
+            if (text === '>') {
+              const before = view.state.doc.textBetween(Math.max(0, from - 3), from);
+              if (before.endsWith('←') || before.endsWith('<–') || before.endsWith('<—')) {
+                const len = before.endsWith('←') ? 1 : 2;
+                const tr = view.state.tr; tr.insertText('↔', from - len, to); view.dispatch(tr);
+                return true;
+              }
+              if (before.endsWith('⇐') || before.endsWith('<=')) {
+                const len = before.endsWith('⇐') ? 1 : 2;
+                const tr = view.state.tr; tr.insertText('⇔', from - len, to); view.dispatch(tr);
+                return true;
+              }
+              if (before.endsWith('==')) {
+                const tr = view.state.tr; tr.insertText('⇒', from - 2, to); view.dispatch(tr);
+                return true;
+              }
+              if (before.endsWith('= ') || before.endsWith('=')) {
+                const len = before.endsWith('= ') ? 2 : 1;
+                const tr = view.state.tr; tr.insertText('⇒', from - len, to); view.dispatch(tr);
+                return true;
+              }
+              if (before.endsWith('--')) {
+                const tr = view.state.tr; tr.insertText('→', from - 2, to); view.dispatch(tr);
+                return true;
+              }
+              if (before.endsWith('—') || before.endsWith('–')) {
+                const tr = view.state.tr; tr.insertText('→', from - 1, to); view.dispatch(tr);
+                return true;
+              }
+              if (before.endsWith('- ') || before.endsWith('-')) {
+                const len = before.endsWith('- ') ? 2 : 1;
+                const tr = view.state.tr; tr.insertText('→', from - len, to); view.dispatch(tr);
+                return true;
+              }
+            }
+
+            // Typing '-'
+            if (text === '-') {
+              const before = view.state.doc.textBetween(Math.max(0, from - 2), from);
+              if (before.endsWith('< ') || before.endsWith('<')) {
+                const len = before.endsWith('< ') ? 2 : 1;
+                const tr = view.state.tr; tr.insertText('←', from - len, to); view.dispatch(tr);
+                return true;
+              }
+            }
+
+            // Typing space after arrow text
+            if (text === ' ') {
+              const before = view.state.doc.textBetween(Math.max(0, from - 3), from);
+              if (before.endsWith('->')) {
+                const tr = view.state.tr; tr.insertText('→ ', from - 2, to); view.dispatch(tr);
+                return true;
+              }
+              if (before.endsWith('<-')) {
+                const tr = view.state.tr; tr.insertText('← ', from - 2, to); view.dispatch(tr);
+                return true;
+              }
+              if (before.endsWith('<->')) {
+                const tr = view.state.tr; tr.insertText('↔ ', from - 3, to); view.dispatch(tr);
+                return true;
+              }
+              if (before.endsWith('=>')) {
+                const tr = view.state.tr; tr.insertText('⇒ ', from - 2, to); view.dispatch(tr);
+                return true;
+              }
+              if (before.endsWith('<=>')) {
+                const tr = view.state.tr; tr.insertText('⇔ ', from - 3, to); view.dispatch(tr);
+                return true;
+              }
+            }
+          }
+        }
+
         // Intercept other markdown shortcuts
         if (state.markdownShortcuts === false) {
           if (text === ' ') {

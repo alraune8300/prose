@@ -165,6 +165,7 @@ export interface FormatState {
   firstLineIndent: boolean
   smartQuotes?: boolean
   smartEllipses?: boolean
+  smartArrows?: boolean
   markdownShortcuts?: boolean
   doubleSpacePeriod?: boolean
   toggleHeadings?: boolean

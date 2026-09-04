@@ -1051,6 +1051,12 @@ ${content.split('\n\n').map(para => {
                       uiFont={uiFont}
                       c={c} />
                     <ToggleSwitch
+                      checked={Boolean(formatState.smartArrows ?? true)}
+                      onChange={() => onFormatChange({ smartArrows: !(formatState.smartArrows ?? true) })}
+                      label={t(lang, 'smartArrows') || 'Smart Arrows (-> →)'}
+                      uiFont={uiFont}
+                      c={c} />
+                    <ToggleSwitch
                       checked={Boolean(formatState.markdownShortcuts)}
                       onChange={() => onFormatChange({ markdownShortcuts: !formatState.markdownShortcuts })}
                       label={t(lang, 'markdownShortcuts') || 'Markdown Shortcuts'}

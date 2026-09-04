@@ -531,6 +531,7 @@ export default function App() {
       wordSpacing: 0,
       smartQuotes: true,
       smartEllipses: true,
+      smartArrows: true,
       markdownShortcuts: true,
       doubleSpacePeriod: false,
       toggleHeadings: false,

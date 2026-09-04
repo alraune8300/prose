@@ -74,6 +74,61 @@ export const SmartFormatting = Extension.create({
             chain().insertContentAt({ from: range.from, to: range.to }, '—').run();
           }
         }
+      }),
+
+      // Smart Arrows
+      // Right arrow: ->, -->, –>, —>, - >
+      new InputRule({
+        find: /(?:-->|–>|—>|->|-\s>)$/,
+        handler: ({ chain, range }) => {
+          if (window.__formatState?.smartArrows === false) return null;
+          chain().insertContentAt({ from: range.from, to: range.to }, '→').run();
+        },
+      }),
+
+      // Left arrow: <-, <--, <–, <—, < -
+      new InputRule({
+        find: /(?:<--|<–|<—|<-|<\s-)$/,
+        handler: ({ chain, range }) => {
+          if (window.__formatState?.smartArrows === false) return null;
+          chain().insertContentAt({ from: range.from, to: range.to }, '←').run();
+        },
+      }),
+
+      // Bidirectional arrow: <->, ←>, <–>, <—>
+      new InputRule({
+        find: /(?:<->|←>|<–>|<—>)$/,
+        handler: ({ chain, range }) => {
+          if (window.__formatState?.smartArrows === false) return null;
+          chain().insertContentAt({ from: range.from, to: range.to }, '↔').run();
+        },
+      }),
+
+      // Double right arrow: =>, ==>, = >
+      new InputRule({
+        find: /(?:==>|=>|=\s>)$/,
+        handler: ({ chain, range }) => {
+          if (window.__formatState?.smartArrows === false) return null;
+          chain().insertContentAt({ from: range.from, to: range.to }, '⇒').run();
+        },
+      }),
+
+      // Double left arrow: <==, <==
+      new InputRule({
+        find: /<==$/,
+        handler: ({ chain, range }) => {
+          if (window.__formatState?.smartArrows === false) return null;
+          chain().insertContentAt({ from: range.from, to: range.to }, '⇐').run();
+        },
+      }),
+
+      // Double bidirectional arrow: <=>, ⇐>
+      new InputRule({
+        find: /(?:<=>|⇐>)$/,
+        handler: ({ chain, range }) => {
+          if (window.__formatState?.smartArrows === false) return null;
+          chain().insertContentAt({ from: range.from, to: range.to }, '⇔').run();
+        },
       })
     ];
   }
