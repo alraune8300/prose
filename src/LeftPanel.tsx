@@ -137,6 +137,7 @@ function LeftPanel(props: Record<string, unknown>) {
   const [renamingScratchpadTitle, setRenamingScratchpadTitle] = useState(false)
   const [scratchpadTitleVal, setScratchpadTitleVal] = useState('')
   const [folderMenuOpenId, setFolderMenuOpenId] = useState<string | null>(null)
+  const [pageMenuOpenId, setPageMenuOpenId] = useState<string | null>(null)
   
   const [dragPageId, setDragPageId] = useState<string | null>(null)
   const [dragOverFolderId, setDragOverFolderId] = useState<string | null | 'root'>(null)
@@ -226,24 +227,25 @@ function LeftPanel(props: Record<string, unknown>) {
         onDragStart={() => setDragPageId(page.id)}
         onDragEnd={() => { setDragPageId(null); setDragOverFolderId(null) }}
         style={{
-          margin: '2px 6px',
+          margin: '8px 8px',
           marginLeft: 6 + indent * 14,
-          borderRadius: 7,
-          border: `1px solid ${isActive ? c.accent : 'transparent'}`,
-          background: isActive ? itemAccentActiveBg : 'transparent',
-          padding: '7px 10px',
+          borderRadius: 10,
+          border: `1px solid ${isActive ? c.accent : c.borderFaint}`,
+          background: isActive ? itemAccentActiveBg : c.surface,
+          padding: '10px 12px',
           cursor: 'pointer',
-          transition: 'all 0.12s ease',
+          transition: 'all 0.15s ease',
           opacity: dragPageId === page.id ? 0.4 : 1,
-          display: 'flex', flexDirection: 'column', gap: 2,
+          display: 'flex', flexDirection: 'column', gap: 6,
+          boxShadow: '0 1px 3px rgba(0,0,0,0.02)',
         }}
-        onClick={() => { setFolderMenuOpenId(null); onSelectPage(page.id) }}
-        onDoubleClick={() => { setFolderMenuOpenId(null); setRenamingId(page.id); setRenameVal(page.title) }}
+        onClick={() => { setFolderMenuOpenId(null); setPageMenuOpenId(null); onSelectPage(page.id) }}
+        onDoubleClick={() => { setFolderMenuOpenId(null); setPageMenuOpenId(null); setRenamingId(page.id); setRenameVal(page.title) }}
         onMouseEnter={e => {
-          if (!isActive) e.currentTarget.style.background = itemAccentHoverBg
+          if (!isActive) e.currentTarget.style.borderColor = c.border
         }}
         onMouseLeave={e => {
-          if (!isActive) e.currentTarget.style.background = 'transparent'
+          if (!isActive) e.currentTarget.style.borderColor = c.borderFaint
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 6 }}>
@@ -259,60 +261,74 @@ function LeftPanel(props: Record<string, unknown>) {
               }}
               onClick={e => e.stopPropagation()}
               style={{
-                flex: 1, padding: '2px 4px',
-                fontFamily: uiFontFamily, fontSize: '0.8rem',
+                flex: 1, padding: '3px 6px',
+                fontFamily: uiFontFamily, fontSize: '0.85rem',
                 background: 'transparent', border: 'none',
                 outline: `1.5px solid ${c.accent}`, borderRadius: 4, color: c.text,
               }}
             />
           ) : (
             <span style={{
-              fontFamily: uiFontFamily, fontSize: '0.8rem',
-              fontWeight: isActive ? 600 : 400,
-              color: isActive ? c.accent : c.text, lineHeight: 1.35,
+              fontFamily: uiFontFamily, fontSize: '0.88rem',
+              fontWeight: isActive ? 600 : 500,
+              color: isActive ? c.accent : c.text, lineHeight: 1.4,
               whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1,
-              display: 'flex', alignItems: 'center', gap: 5
+              display: 'flex', alignItems: 'center', gap: 6
             }}>
               {page.isPinned && (
-                <Pin size={11} style={{ color: c.accent, fill: c.accent, flexShrink: 0 }} />
+                <Pin size={12} style={{ color: c.accent, fill: c.accent, flexShrink: 0 }} />
               )}
-              <span className="truncate">{page.title}</span>
+              <span className="truncate">{page.title || 'Untitled'}</span>
             </span>
           )}
           
-          <div className="flex items-center gap-1" style={{ flexShrink: 0 }}>
-            <button
-              onClick={e => { e.stopPropagation(); setFolderMenuOpenId(null); setRenamingId(page.id); setRenameVal(page.title); }}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, color: c.textMuted, display: 'flex', alignItems: 'center' }}
-              onMouseEnter={e => (e.currentTarget.style.color = c.accent)}
-              onMouseLeave={e => (e.currentTarget.style.color = c.textMuted)}
-              title={t(lang, 'rename') || "Rename"}
-            >
-              <Edit2 size={12} />
-            </button>
-            <button
-              onClick={e => { e.stopPropagation(); onArchivePage(page.id) }}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, color: c.textMuted, display: 'flex', alignItems: 'center' }}
-              onMouseEnter={e => (e.currentTarget.style.color = c.accent)}
-              onMouseLeave={e => (e.currentTarget.style.color = c.textMuted)}
-              title={t(lang, 'archiveDocument') || "Archive"}
-            >
-              <Archive size={12} />
-            </button>
-            <button
-              onClick={e => { e.stopPropagation(); onDeletePage(page.id) }}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, color: c.textMuted, display: 'flex', alignItems: 'center' }}
-              onMouseEnter={e => (e.currentTarget.style.color = '#e05050')}
-              onMouseLeave={e => (e.currentTarget.style.color = c.textMuted)}
-              title={t(lang, 'delete') || "Delete"}
-            >
-              <Trash2 size={12} />
-            </button>
+          <div className="flex items-center" onClick={e => e.stopPropagation()}>
+            <div style={{ position: 'relative' }}>
+              <button
+                onClick={e => { e.stopPropagation(); setFolderMenuOpenId(null); setPageMenuOpenId(pageMenuOpenId === page.id ? null : page.id); }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 3, color: c.textMuted, display: 'flex', alignItems: 'center', borderRadius: 4 }}
+                onMouseEnter={e => (e.currentTarget.style.color = c.text)}
+                onMouseLeave={e => (e.currentTarget.style.color = c.textMuted)}
+                title="Options"
+              >
+                <MoreHorizontal size={14} />
+              </button>
+              
+              {pageMenuOpenId === page.id && (
+                <div style={{ position: 'absolute', right: 0, top: '100%', zIndex: 50, background: c.panel, border: `1px solid ${c.borderFaint}`, borderRadius: 8, padding: '4px', display: 'flex', flexDirection: 'column', gap: 2, boxShadow: '0 4px 16px rgba(0,0,0,0.15)', minWidth: 130 }}>
+                  <button
+                    onClick={e => { e.stopPropagation(); setRenamingId(page.id); setRenameVal(page.title); setPageMenuOpenId(null); }}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '6px 10px', color: c.text, display: 'flex', alignItems: 'center', gap: 7, fontSize: '0.75rem', fontFamily: uiFontFamily, width: '100%', textAlign: 'left', borderRadius: 5 }}
+                    onMouseEnter={e => (e.currentTarget.style.backgroundColor = itemAccentHoverBg)}
+                    onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
+                  >
+                    <Edit2 size={13} style={{ color: c.accent }} /> {t(lang, 'rename') || 'Rename'}
+                  </button>
+                  <button
+                    onClick={e => { e.stopPropagation(); onArchivePage(page.id); setPageMenuOpenId(null); }}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '6px 10px', color: c.text, display: 'flex', alignItems: 'center', gap: 7, fontSize: '0.75rem', fontFamily: uiFontFamily, width: '100%', textAlign: 'left', borderRadius: 5 }}
+                    onMouseEnter={e => (e.currentTarget.style.backgroundColor = itemAccentHoverBg)}
+                    onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
+                  >
+                    <Archive size={13} style={{ color: c.accent }} /> {t(lang, 'archiveDocument') || 'Archive'}
+                  </button>
+                  <div style={{ height: 1, background: c.borderFaint, margin: '2px 0' }} />
+                  <button
+                    onClick={e => { e.stopPropagation(); onDeletePage(page.id); setPageMenuOpenId(null); }}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '6px 10px', color: c.text, display: 'flex', alignItems: 'center', gap: 7, fontSize: '0.75rem', fontFamily: uiFontFamily, width: '100%', textAlign: 'left', borderRadius: 5 }}
+                    onMouseEnter={e => (e.currentTarget.style.backgroundColor = itemAccentHoverBg)}
+                    onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
+                  >
+                    <Trash2 size={13} style={{ color: c.textMuted }} /> {t(lang, 'delete') || 'Delete'}
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
         
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <span style={{ fontSize: '0.64rem', color: isActive ? c.accent : c.textMuted, opacity: isActive ? 0.9 : 0.7, fontFamily: uiFontFamily }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.68rem', color: c.textMuted }}>
+          <span style={{ fontFamily: uiFontFamily, opacity: 0.8 }}>
             {timeSince(new Date(page.updatedAt || page.lastModified || Date.now()), lang)}
           </span>
         </div>
@@ -549,7 +565,7 @@ function LeftPanel(props: Record<string, unknown>) {
   return (
     <div
       id="left-panel-root"
-      onClick={() => setFolderMenuOpenId(null)}
+      onClick={() => { setFolderMenuOpenId(null); setPageMenuOpenId(null); }}
       style={{
         width: '100%',
         height: '100%',
