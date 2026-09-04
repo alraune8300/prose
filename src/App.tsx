@@ -75,6 +75,21 @@ function loadLang(): Lang {
   return 'vi';
 }
 function loadFontSize(): number { const v = LS.get('kgv-font-size'); return v ? parseInt(v, 10) : 18; }
+function loadPageFormat(): PageFormat {
+  const saved = LS.getJSON<PageFormat>('kgv-page-format');
+  if (saved && saved.paperSize) {
+    return {
+      paperSize: saved.paperSize,
+      orientation: saved.orientation || 'portrait',
+      mode: saved.paperSize === 'pageless' ? 'pageless' : (saved.mode || 'pages'),
+    };
+  }
+  return {
+    paperSize: 'A4',
+    orientation: 'portrait',
+    mode: 'pages',
+  };
+}
 function loadCustomFont(): CustomFont | null { return LS.getJSON<CustomFont>('kgv-custom-font'); }
 function loadCustomFonts(): CustomFont[] {
   const list = LS.getJSON<CustomFont[]>('kgv-custom-fonts');
@@ -543,11 +558,21 @@ export default function App() {
     document.documentElement.style.setProperty('--kgv-ui-font', `'${uiFont}', sans-serif`);
   }, [docFont, headingFont, monoFont, uiFont]);
 
-  const [pageFormat, setPageFormat] = useState<PageFormat>({
-    paperSize: 'A4',
-    orientation: 'portrait',
-    mode: 'pages',
-  });
+  const [pageFormat, setPageFormat] = useState<PageFormat>(() => loadPageFormat());
+
+  useEffect(() => {
+    LS.setJSON('kgv-page-format', pageFormat);
+    saveAppSettings({ pageFormat });
+  }, [pageFormat]);
+
+  useEffect(() => {
+    if (!activePage) return;
+    if (activePage.pageFormat) {
+      setPageFormat(activePage.pageFormat);
+    } else if (activeProject?.pageFormat) {
+      setPageFormat(activeProject.pageFormat);
+    }
+  }, [activePageId]);
 
 
 
@@ -765,6 +790,7 @@ export default function App() {
           if (settings.isFocusMode) setIsFocusMode(settings.isFocusMode);
           if (settings.isPreviewMode) setIsPreviewMode(settings.isPreviewMode);
           if (settings.readerStyle) setReaderStyle(settings.readerStyle);
+          if (settings.pageFormat) setPageFormat(settings.pageFormat);
         }
 
         // Initialize projects
@@ -778,9 +804,17 @@ export default function App() {
           const matchedPage = allPages.find(p => p.id === savedActivePageId) || allPages[0];
           if (matchedPage) {
             setActivePageId(matchedPage.id);
+            if (matchedPage.pageFormat) {
+              setPageFormat(matchedPage.pageFormat);
+            } else if (matchedProj.pageFormat) {
+              setPageFormat(matchedProj.pageFormat);
+            } else if (settings?.pageFormat) {
+              setPageFormat(settings.pageFormat);
+            }
           }
         } else {
           // Create initial default project if DB is empty
+          const initPageFormat = loadPageFormat();
           const defaultPage: Page = {
             id: 'page-' + Date.now(),
             title: 'Untitled Document',
@@ -788,6 +822,7 @@ export default function App() {
             isDraft: false,
             createdAt: new Date().toISOString(),
             lastModified: new Date().toISOString(),
+            pageFormat: initPageFormat,
           };
           const defaultProj: Project = {
             id: 'proj-' + Date.now(),
@@ -798,12 +833,14 @@ export default function App() {
             bin: [],
             createdAt: new Date().toISOString(),
             lastModified: new Date().toISOString(),
+            pageFormat: initPageFormat,
           };
           await saveProjectToDB(defaultProj);
           if (mounted) {
             setProjects([defaultProj]);
             setActiveProjectId(defaultProj.id);
             setActivePageId(defaultPage.id);
+            setPageFormat(initPageFormat);
           }
         }
 
@@ -973,6 +1010,36 @@ export default function App() {
     updateActivePage({ content: html });
   }, [updateActivePage]);
 
+  const handlePageFormatChange = useCallback((newFormat: PageFormat) => {
+    setPageFormat(newFormat);
+    LS.setJSON('kgv-page-format', newFormat);
+    saveAppSettings({ pageFormat: newFormat });
+
+    if (activePageId) {
+      updateActivePage({ pageFormat: newFormat });
+    }
+
+    if (activeProjectId) {
+      setProjects((prev) =>
+        prev.map((proj) => {
+          if (proj.id !== activeProjectId) return proj;
+          const now = new Date().toISOString();
+          const updateP = (p: Page) => (p.id === activePageId ? { ...p, pageFormat: newFormat, lastModified: now } : p);
+          const updatedProj: Project = {
+            ...proj,
+            pageFormat: newFormat,
+            pages: (proj.pages || []).map(updateP),
+            drafts: (proj.drafts || []).map(updateP),
+            scratchpad: (proj.scratchpad || []).map(updateP),
+            lastModified: now,
+          };
+          scheduleSaveProject(updatedProj);
+          return updatedProj;
+        })
+      );
+    }
+  }, [activePageId, activeProjectId, updateActivePage, scheduleSaveProject]);
+
   // Project Switcher handler
   const handleSelectProject = useCallback((projectId: string) => {
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
@@ -1002,9 +1069,14 @@ export default function App() {
 
     const targetProj = projects.find((p) => p.id === projectId);
     if (targetProj) {
-      const firstPage = targetProj.pages?.[0] || targetProj.drafts?.[0];
+      const firstPage = targetProj.pages?.[0] || targetProj.drafts?.[0] || targetProj.scratchpad?.[0];
       if (firstPage) {
         setActivePageId(firstPage.id);
+        if (firstPage.pageFormat) {
+          setPageFormat(firstPage.pageFormat);
+        } else if (targetProj.pageFormat) {
+          setPageFormat(targetProj.pageFormat);
+        }
       } else {
         setActivePageId('');
       }
@@ -1022,6 +1094,7 @@ export default function App() {
       isDraft: false,
       createdAt: new Date().toISOString(),
       lastModified: new Date().toISOString(),
+      pageFormat: pageFormat,
     };
 
     const newProject: Project = {
@@ -1033,6 +1106,7 @@ export default function App() {
       bin: [],
       createdAt: new Date().toISOString(),
       lastModified: new Date().toISOString(),
+      pageFormat: pageFormat,
     };
 
     await saveProjectToDB(newProject);
@@ -1157,6 +1231,7 @@ export default function App() {
       originalPageId,
       createdAt: new Date().toISOString(),
       lastModified: new Date().toISOString(),
+      pageFormat: activePage?.pageFormat || activeProject?.pageFormat || pageFormat,
     };
 
     setProjects((prev) => {
@@ -1684,6 +1759,7 @@ export default function App() {
         isDraft: false,
         createdAt: new Date().toISOString(),
         lastModified: new Date().toISOString(),
+        pageFormat: pageFormat,
       };
       const newProject: Project = {
         id: newProjId,
@@ -1694,6 +1770,7 @@ export default function App() {
         bin: [],
         createdAt: new Date().toISOString(),
         lastModified: new Date().toISOString(),
+        pageFormat: pageFormat,
       };
       await saveProjectToDB(newProject);
       setProjects((prev) => [newProject, ...prev]);
@@ -1704,7 +1781,7 @@ export default function App() {
       console.error('Import error:', err);
       alert('Failed to import file.');
     }
-  }, []);
+  }, [pageFormat]);
 
   const handlePrint = useCallback(() => {
     const existing = document.getElementById('kgv-print-style');
@@ -1950,7 +2027,17 @@ export default function App() {
               setWelcomeFolderId(target.folderId);
             }
             handleSelectProject(projectId);
-            if (pageId) setActivePageId(pageId);
+            const allPages = [...(target?.pages || []), ...(target?.drafts || []), ...(target?.scratchpad || [])];
+            const chosenPageId = pageId || allPages[0]?.id;
+            if (chosenPageId) {
+              setActivePageId(chosenPageId);
+            }
+            const targetPage = allPages.find(p => p.id === chosenPageId);
+            if (targetPage?.pageFormat) {
+              setPageFormat(targetPage.pageFormat);
+            } else if (target?.pageFormat) {
+              setPageFormat(target.pageFormat);
+            }
             setSidebarOpen(false);
             setRightOpen(false);
             setIsWorkspaceActive(true);
@@ -2509,7 +2596,7 @@ export default function App() {
           formatState={formatState}
           onFormatChange={handleFormatChange}
           pageFormat={pageFormat}
-          onPageFormatChange={setPageFormat}
+          onPageFormatChange={handlePageFormatChange}
           theme={theme}
           themeMode={themeMode}
           customTheme={customTheme}

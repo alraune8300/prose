@@ -37,6 +37,7 @@ export interface Page {
   archivedAt?: string | null
   isPinned?: boolean
   pinnedAt?: string | null
+  pageFormat?: PageFormat
 }
 
 export interface Project {
@@ -59,6 +60,7 @@ export interface Project {
   archivedAt?: string | null
   isPinned?: boolean
   pinnedAt?: string | null
+  pageFormat?: PageFormat
 }
 
 export interface CustomFont {
