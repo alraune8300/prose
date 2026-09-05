@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Highlighter, Type, Bold, Italic, Strikethrough, GripVertical, Heading1, Heading2, Heading3, Heading4 } from 'lucide-react';
+import { Highlighter, Type, Bold, Italic, Strikethrough, GripVertical, Heading1, Heading2, Heading3, Heading4, Eraser } from 'lucide-react';
 import { BubbleMenu } from '@tiptap/react/menus';
 import type { Editor } from '@tiptap/react';
 import type { ThemeColors } from './types';
@@ -88,7 +88,8 @@ export function FloatingToolbar({ editor, theme }: { editor: Editor | null, them
     <BubbleMenu 
       editor={editor} 
       tippyOptions={{ duration: 100, placement: 'top', animation: 'fade' }}
-      className="z-50 flex items-center gap-1 p-1 rounded-xl shadow-lg border bg-white dark:bg-zinc-800"
+      className="z-50 flex items-center gap-1 p-1 rounded-xl shadow-lg border bg-white dark:bg-zinc-800 select-none"
+      onContextMenu={(e) => e.preventDefault()}
       style={{ 
         backgroundColor: theme.isDark ? 'rgba(30, 30, 30, 0.9)' : 'rgba(255, 255, 255, 0.95)', 
         borderColor: theme.border,
@@ -213,12 +214,24 @@ export function FloatingToolbar({ editor, theme }: { editor: Editor | null, them
         </button>
         {showHighlight && (
           <div 
-            className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 p-2 rounded-xl shadow-xl border flex gap-1.5" 
+            className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 p-2 rounded-xl shadow-xl border flex items-center gap-1.5" 
             style={{ 
               backgroundColor: theme.isDark ? 'rgba(30, 30, 30, 0.95)' : 'rgba(255, 255, 255, 0.95)', 
               borderColor: theme.border 
             }}
           >
+            <button
+              onClick={() => {
+                editor.chain().focus().unsetHighlight().run();
+                setShowHighlight(false);
+              }}
+              className="w-6 h-6 rounded-full border border-black/10 dark:border-white/10 hover:scale-110 transition-transform flex items-center justify-center"
+              style={{ backgroundColor: theme.isDark ? '#374151' : '#e5e7eb', color: theme.isDark ? '#e5e7eb' : '#374151' }}
+              title="Remove Highlight"
+            >
+              <Eraser size={13} />
+            </button>
+            <div className="w-[1px] h-4 bg-black/10 dark:bg-white/10 mx-0.5" />
             {HIGHLIGHT_COLORS.map(c => (
               <button
                 key={c.id}
