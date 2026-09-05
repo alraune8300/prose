@@ -21,7 +21,6 @@ import Toolbar from './Toolbar';
 import WelcomeScreen from './WelcomeScreen';
 import ThemeStudioModal from './ThemeStudioModal';
 import GithubCloudSaveModal from './GithubCloudSaveModal';
-import ReferenceComparePanel from './ReferenceComparePanel';
 import { ZenReader } from "./ZenReader";
 import LinkHoverPreview from './LinkHoverPreview';
 import WordCountDropdown from './WordCountDropdown';
@@ -239,8 +238,7 @@ export default function App() {
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [readerStyle, setReaderStyle] = useState<"classic" | "zen">("zen");
   const [typewriterMode, setTypewriterMode] = useState(false);
-  const [isSplitView, setIsSplitView] = useState(false);
-  const [isSplitRevisionOpen, setIsSplitRevisionOpen] = useState(false);
+    const [isSplitRevisionOpen, setIsSplitRevisionOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'normal' | 'block' | 'flashcard'>('normal');
   const [activeFootnoteHighlight, setActiveFootnoteHighlight] = useState<string | null>(null);
   const [blockViewOpen, setBlockViewOpen] = useState(false);
@@ -2291,7 +2289,7 @@ export default function App() {
             )}
 
 
-            <div className={`absolute top-4 z-50 flex items-center gap-2 pr-2 transition-all duration-300 ${isSplitView ? "right-16 md:right-[544px] lg:right-[604px] xl:right-[644px]" : "right-16"}`}>
+            <div className={`absolute top-4 z-50 flex items-center gap-2 pr-2 transition-all duration-300 right-16`}>
               <WordCountDropdown
                 wordCount={wordCount}
                 charCount={charCount}
@@ -2368,24 +2366,7 @@ export default function App() {
               >
                 <Brain size={16} />
               </button>
-              <button
-                onClick={() => {
-                  setIsSplitView(prev => !prev);
-                  if (!isSplitView) {
-                    setIsFocusMode(false);
-                    setIsPreviewMode(false);
-                  }
-                }}
-                className="p-1.5 rounded transition-all hover:opacity-80 active:scale-95 flex items-center justify-center"
-                style={{
-                  backgroundColor: isSplitView ? theme.accentLight : 'transparent',
-                  color: isSplitView ? theme.accent : theme.text,
-                  border: isSplitView ? `1px solid ${theme.accent}` : '1px solid transparent',
-                }}
-                title={t.toggleSplitView || 'Toggle Split Screen: Reference & Compare'}
-              >
-                <Columns size={16} />
-              </button>
+              
               <button
                 onClick={() => setIsSplitRevisionOpen(true)}
                 className="p-1.5 rounded transition-all hover:opacity-80 active:scale-95 flex items-center justify-center"
@@ -2400,7 +2381,7 @@ export default function App() {
               onClick={() => {
                 setRightOpen(prev => !prev);
               }}
-              className={`absolute top-4 z-50 p-2 rounded-lg transition-all hover:opacity-80 active:scale-95 shadow-sm duration-300 ${isSplitView ? "right-4 md:right-[496px] lg:right-[556px] xl:right-[596px]" : "right-4"}`}
+              className={`absolute top-4 z-50 p-2 rounded-lg transition-all hover:opacity-80 active:scale-95 shadow-sm duration-300 right-4`}
               style={{
                 backgroundColor: rightOpen ? theme.accentLight : theme.surface,
                 color: rightOpen ? theme.accent : theme.text,
@@ -2469,51 +2450,6 @@ export default function App() {
             activePage={activePage || null}
             onClose={() => setViewMode('normal')}
           />
-        ) : isSplitView ? (
-          <div className="flex-1 flex flex-col md:flex-row w-full h-[calc(100%-60px)] overflow-hidden">
-            {/* Left Column: Main Editor */}
-            <div className="flex-1 h-full overflow-y-auto kgv-scroll flex flex-col items-center p-4 md:p-6 border-r" style={{ borderColor: theme.borderFaint }}>
-              <div className="w-full max-w-3xl">
-                <Editor
-                  lang={lang}
-          creativeOptions={creativeOptions}
-          codexEntities={codexEntities}
-          editorialHighlight={editorialHighlight}
-          key={activePage?.id || 'empty'}
-                  theme={theme}
-                  docFont={docFont}
-                  headingFont={headingFont}
-                  monoFont={monoFont}
-                  fontSize={fontSize}
-                  formatState={formatState}
-                  onEditorReady={setEditorInstance}
-                  t={t}
-                  content={safeActiveContent}
-                  onContentChange={handleContentChange}
-                  isFocusMode={false}
-                  onToggleFocusMode={handleToggleFocusMode}
-                  isPreviewMode={false}
-                  onTogglePreviewMode={handleTogglePreviewMode}
-                  typewriterMode={typewriterMode}
-                />
-              </div>
-            </div>
-
-            {/* Right Column: Reference & Document Compare Panel */}
-            <div className="w-full md:w-[480px] lg:w-[540px] xl:w-[580px] h-full shrink-0 flex flex-col shadow-lg">
-              <ReferenceComparePanel
-                theme={theme}
-                uiFont={uiFont}
-                docFont={docFont}
-                monoFont={monoFont}
-                lang={lang}
-                activePage={activePage || null}
-                activeProject={projects.find(p => p.id === activeProjectId) || null}
-                onInsertQuoteToEditor={handleInsertQuoteToEditor}
-                onClose={() => setIsSplitView(false)}
-              />
-            </div>
-          </div>
         ) : (
           <div className="flex-1 flex w-full h-[calc(100%-60px)] overflow-hidden">
             {/* Floating Paper Sheet Container & Dynamic Page Format Wrapper with momentum scroll & GPU locking */}

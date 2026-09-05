@@ -206,7 +206,7 @@ export const SplitRevisionStudio: React.FC<SplitRevisionStudioProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col backdrop-blur-md bg-black/40 animate-in fade-in duration-200" style={{ fontFamily: `'${uiFont}', sans-serif` }}>
+    <div className="fixed inset-0 z-50 flex flex-col animate-in fade-in duration-200" style={{ fontFamily: `'${uiFont}', sans-serif`, backgroundColor: theme.bg }}>
       
       {/* Floating Action Buttons */}
       <div className="absolute top-4 right-6 flex items-center gap-2 z-50">
