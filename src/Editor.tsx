@@ -31,6 +31,7 @@ type Props = {
   content: string;
   onContentChange: (html: string) => void;
   isFocusMode?: boolean;
+  isSplitMode?: boolean;
   lang?: string;
   codexEntities?: CodexEntity[];
   editorialHighlight?: string[];
@@ -44,6 +45,7 @@ type Props = {
 function Editor({
   lang, theme, docFont, headingFont, monoFont, fontSize, formatState, onEditorReady, t, content, onContentChange,
   isFocusMode = false,
+  isSplitMode = false,
   isPreviewMode = false,
   typewriterMode = false,
   codexEntities = [],
@@ -166,15 +168,6 @@ function Editor({
     },
 
     editorProps: {
-      handleClick: (_view, _pos, event) => {
-        const target = event.target as HTMLElement | null;
-        const clickedInTable = !!target?.closest('table');
-        if (!clickedInTable) {
-          window.dispatchEvent(new CustomEvent('kgv-table-active-change', { detail: { inTable: false, userClickedOutside: true } }));
-        }
-        return false;
-      },
-      
       handleTextInput: (view, from, to, text) => {
         const state = window.__formatState;
         if (!state) return false;
@@ -346,6 +339,10 @@ function Editor({
       },
       handleClick: (view, pos, event) => {
         const target = event.target as HTMLElement;
+        const clickedInTable = !!target?.closest('table');
+        if (!clickedInTable) {
+          window.dispatchEvent(new CustomEvent('kgv-table-active-change', { detail: { inTable: false, userClickedOutside: true } }));
+        }
         if (target && target.tagName === 'HR') {
           try {
             const nodePos = view.posAtDOM(target, 0);
@@ -568,7 +565,7 @@ function Editor({
       }
     };
 
-    window.addEventListener('kgv-toggle-heading-fold', handleToggleFold);
+    if (editor.view && editor.view.dom) editor.view.dom.addEventListener('kgv-toggle-heading-fold', handleToggleFold as EventListener);
     window.addEventListener('kgv-fold-all-headings', handleFoldAll);
     window.addEventListener('kgv-unfold-all-headings', handleUnfoldAll);
     window.addEventListener('kgv-insert-table-grid', handleInsertTableGrid);
@@ -577,7 +574,7 @@ function Editor({
     window.addEventListener('kgv-convert-list-to-table', handleConvertListToTable);
 
     return () => {
-      window.removeEventListener('kgv-toggle-heading-fold', handleToggleFold);
+      if (editor.view && editor.view.dom) editor.view.dom.removeEventListener('kgv-toggle-heading-fold', handleToggleFold as EventListener);
       window.removeEventListener('kgv-fold-all-headings', handleFoldAll);
       window.removeEventListener('kgv-unfold-all-headings', handleUnfoldAll);
       window.removeEventListener('kgv-insert-table-grid', handleInsertTableGrid);
@@ -791,7 +788,7 @@ function Editor({
   
   if (!editor) return null;
 
-  const isPaginated = !isPreviewMode && !isFocusMode;
+  const isPaginated = !isPreviewMode && !isFocusMode && !isSplitMode;
   const currentBodyFont = formatState?.fontFam || docFont || 'Merriweather';
   const currentHeadingFont = formatState?.headingFontFam || headingFont || 'Playfair Display';
   const currentMonoFont = formatState?.monoFontFam || monoFont || 'JetBrains Mono';

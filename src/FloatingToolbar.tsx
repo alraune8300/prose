@@ -87,7 +87,7 @@ export function FloatingToolbar({ editor, theme }: { editor: Editor | null, them
   return (
     <BubbleMenu 
       editor={editor} 
-      tippyOptions={{ duration: 100, placement: 'top', animation: 'fade' }}
+      tippyOptions={{ duration: 100, placement: 'top', animation: 'fade', zIndex: 99999 }}
       className="z-50 flex items-center gap-1 p-1 rounded-xl shadow-lg border bg-white dark:bg-zinc-800 select-none"
       onContextMenu={(e) => e.preventDefault()}
       style={{ 

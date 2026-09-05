@@ -99,9 +99,7 @@ export const CollapsibleHeadingsExtension = Extension.create({
               chevronWidget.addEventListener('mousedown', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                window.dispatchEvent(new CustomEvent('kgv-toggle-heading-fold', {
-                  detail: { pos: current.pos, text: current.node.textContent }
-                }));
+                chevronWidget.dispatchEvent(new CustomEvent('kgv-toggle-heading-fold', { bubbles: true, detail: { pos: current.pos, text: current.node.textContent } }));
               });
 
               decorations.push(
@@ -146,9 +144,7 @@ export const CollapsibleHeadingsExtension = Extension.create({
                 badgeWidget.addEventListener('click', (e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  window.dispatchEvent(new CustomEvent('kgv-toggle-heading-fold', {
-                    detail: { pos: current.pos, text: current.node.textContent }
-                  }));
+                  chevronWidget.dispatchEvent(new CustomEvent('kgv-toggle-heading-fold', { bubbles: true, detail: { pos: current.pos, text: current.node.textContent } }));
                 });
 
                 decorations.push(

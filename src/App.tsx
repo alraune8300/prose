@@ -1000,6 +1000,48 @@ export default function App() {
     });
   }, [activeProjectId, activePageId, scheduleSaveProject]);
 
+  const updateTargetPage = useCallback((targetId: string, patch: Partial<Page>) => {
+    if (!activeProjectId) return;
+    setProjects((prevProjects) => {
+      return prevProjects.map((proj) => {
+        if (proj.id !== activeProjectId) return proj;
+
+        const now = new Date().toISOString();
+        let pageFound = false;
+
+        const updatedPages = (proj.pages || []).map((p) => {
+          if (p.id === targetId) { pageFound = true; return { ...p, ...patch, lastModified: now }; }
+          return p;
+        });
+
+        const updatedDrafts = (proj.drafts || []).map((p) => {
+          if (p.id === targetId) { pageFound = true; return { ...p, ...patch, lastModified: now }; }
+          return p;
+        });
+
+        const updatedScratchpad = (proj.scratchpad || []).map((p) => {
+          if (p.id === targetId) { pageFound = true; return { ...p, ...patch, lastModified: now }; }
+          return p;
+        });
+
+        if (!pageFound) {
+          return proj;
+        }
+
+        const updatedProj = {
+          ...proj,
+          pages: updatedPages,
+          drafts: updatedDrafts,
+          scratchpad: updatedScratchpad,
+          lastModified: now,
+        };
+        scheduleSaveProject(updatedProj);
+        return updatedProj;
+      });
+    });
+  }, [activeProjectId, scheduleSaveProject]);
+
+
   const handleOpenGithubCloudSave = useCallback(async () => {
     if (saveTimerRef.current) {
       clearTimeout(saveTimerRef.current);
@@ -1024,6 +1066,11 @@ export default function App() {
   const handleContentChange = useCallback((html: string) => {
     updateActivePage({ content: html });
   }, [updateActivePage]);
+
+  const handleTargetContentChange = useCallback((targetId: string, html: string) => {
+    updateTargetPage(targetId, { content: html });
+  }, [updateTargetPage]);
+
 
   const handlePageFormatChange = useCallback((newFormat: PageFormat) => {
     setPageFormat(newFormat);
@@ -2930,9 +2977,16 @@ export default function App() {
         lang={lang}
         uiFont={uiFont}
         docFont={docFont}
-        onUpdateContent={(newContent) => {
-          if (activePage) {
-            handleContentChange(newContent);
+        headingFont={headingFont}
+        monoFont={monoFont}
+        fontSize={fontSize}
+        formatState={formatState}
+        t={t}
+        availableFonts={availableFonts}
+        handleFormatChange={handleFormatChange}
+        onUpdateContent={(targetId, newContent) => {
+          if (targetId) {
+            handleTargetContentChange(targetId, newContent);
           }
         }}
       />

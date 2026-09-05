@@ -1,4 +1,6 @@
-import React, { useEffect, useState, useRef, useMemo } from 'react';
+const fs = require('fs');
+
+const code = `import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { GitCompare, Clock, Sparkles, CheckCircle2, RotateCcw, X, Lock, Unlock } from 'lucide-react';
 import { getPageVersionsFromDB } from './db';
 import type { ThemeColors, VersionSnapshot, Lang, Page, Project, FormatState } from './types';
@@ -6,9 +8,6 @@ import type { Dict } from './i18n';
 import { format } from 'date-fns';
 import { CustomSelect } from './CustomSelect';
 import Editor from './Editor';
-import Toolbar from './Toolbar';
-import type { CustomFont } from './types';
-import type { Editor as TiptapEditorType } from '@tiptap/react';
 
 interface SplitRevisionStudioProps {
   isOpen: boolean;
@@ -25,8 +24,6 @@ interface SplitRevisionStudioProps {
   formatState: FormatState;
   t: Dict;
   onUpdateContent: (targetId: string, content: string) => void;
-  availableFonts?: CustomFont[];
-  handleFormatChange?: (changes: Partial<FormatState>) => void;
 }
 
 type FileType = 'snapshot' | 'page' | 'draft' | 'scratchpad';
@@ -46,8 +43,6 @@ export const SplitRevisionStudio: React.FC<SplitRevisionStudioProps> = ({
   formatState,
   t,
   onUpdateContent,
-  availableFonts,
-  handleFormatChange,
 }) => {
   const [leftType, setLeftType] = useState<FileType>('snapshot');
   const [leftId, setLeftId] = useState<string>('');
@@ -183,18 +178,18 @@ export const SplitRevisionStudio: React.FC<SplitRevisionStudioProps> = ({
 
     if (isLeft && versions.length > 0) {
       versions.forEach(v => {
-        pushOpt('Snapshots', `snapshot:${v.id}`, v.label ? `${truncateTitle(v.label, 3)} (${format(new Date(v.timestamp), 'MMM d, HH:mm')})` : format(new Date(v.timestamp), 'PPpp'));
+        pushOpt('Snapshots', \`snapshot:\${v.id}\`, v.label ? \`\${truncateTitle(v.label, 3)} (\${format(new Date(v.timestamp), 'MMM d, HH:mm')})\` : format(new Date(v.timestamp), 'PPpp'));
       });
     }
 
     activeProject?.pages?.forEach(p => {
-      pushOpt(lang === 'vi' ? 'Trang chính' : 'Main Pages', `page:${p.id}`, truncateTitle(p.title || 'Untitled', 4));
+      pushOpt(lang === 'vi' ? 'Trang chính' : 'Main Pages', \`page:\${p.id}\`, truncateTitle(p.title || 'Untitled', 4));
     });
     activeProject?.drafts?.forEach(p => {
-      pushOpt(lang === 'vi' ? 'Bản nháp' : 'Drafts', `draft:${p.id}`, truncateTitle(p.title || 'Draft', 4));
+      pushOpt(lang === 'vi' ? 'Bản nháp' : 'Drafts', \`draft:\${p.id}\`, truncateTitle(p.title || 'Draft', 4));
     });
     activeProject?.scratchpad?.forEach(p => {
-      pushOpt('Scratchpads', `scratchpad:${p.id}`, truncateTitle(p.title || 'Scratchpad', 4));
+      pushOpt('Scratchpads', \`scratchpad:\${p.id}\`, truncateTitle(p.title || 'Scratchpad', 4));
     });
 
     return groups;
@@ -203,7 +198,7 @@ export const SplitRevisionStudio: React.FC<SplitRevisionStudioProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col backdrop-blur-md bg-black/40 animate-in fade-in duration-200" style={{ fontFamily: `'${uiFont}', sans-serif` }}>
+    <div className="fixed inset-0 z-50 flex flex-col backdrop-blur-md bg-black/40 animate-in fade-in duration-200" style={{ fontFamily: \`'\${uiFont}', sans-serif\` }}>
       
       {/* Floating Action Buttons */}
       <div className="absolute top-4 right-6 flex items-center gap-2 z-50">
@@ -213,7 +208,7 @@ export const SplitRevisionStudio: React.FC<SplitRevisionStudioProps> = ({
           style={{ 
             color: syncScroll ? theme.accent : theme.textMuted,
             backgroundColor: theme.surface,
-            border: `1px solid ${theme.border}`
+            border: \`1px solid \${theme.border}\`
           }}
           title="Sync scroll between left and right views"
         >
@@ -225,7 +220,7 @@ export const SplitRevisionStudio: React.FC<SplitRevisionStudioProps> = ({
           style={{ 
             color: theme.accent,
             backgroundColor: theme.surface,
-            border: `1px solid ${theme.border}`
+            border: \`1px solid \${theme.border}\`
           }}
           title="Save changes and close"
         >
@@ -237,7 +232,7 @@ export const SplitRevisionStudio: React.FC<SplitRevisionStudioProps> = ({
           style={{ 
             color: theme.textMuted,
             backgroundColor: theme.surface,
-            border: `1px solid ${theme.border}`
+            border: \`1px solid \${theme.border}\`
           }}
         >
           <X size={16} />
@@ -251,7 +246,7 @@ export const SplitRevisionStudio: React.FC<SplitRevisionStudioProps> = ({
         <div className="flex-1 flex flex-col border-r shadow-lg relative z-10" style={{ borderColor: theme.border, backgroundColor: theme.background }}>
           <div className="absolute top-4 left-6 z-20">
             <CustomSelect
-              value={`${leftType}:${leftId || ''}`}
+              value={\`\${leftType}:\${leftId || ''}\`}
               onChange={(val) => {
                 const [t, id] = val.split(':');
                 if (t && id) {
@@ -261,9 +256,9 @@ export const SplitRevisionStudio: React.FC<SplitRevisionStudioProps> = ({
               }}
               groups={getGroups(true)}
               theme={theme}
-              buttonClassName="flex items-center gap-2 px-3 py-1.5 rounded-lg shadow-sm text-[13px] font-medium transition-colors hover:opacity-80 backdrop-blur-md"
-              buttonStyle={{ backgroundColor: theme.surface ? `${theme.surface}e0` : 'rgba(255,255,255,0.9)', borderColor: theme.border, borderWidth: '1px', color: theme.text }}
-              dropdownClassName="w-64"
+              buttonClassName="flex items-center gap-2 px-3 py-1.5 rounded-lg shadow-sm text-[13px] font-medium transition-colors hover:opacity-80"
+              buttonStyle={{ backgroundColor: theme.surface, borderColor: theme.border, borderWidth: '1px', color: theme.text }}
+              dropdownClassName="!top-10 !left-0 w-64"
               renderButtonContent={(opt) => (
                 <>
                   <Clock size={14} style={{ color: theme.textMuted }} />
@@ -280,7 +275,6 @@ export const SplitRevisionStudio: React.FC<SplitRevisionStudioProps> = ({
              <Editor 
                 content={leftHtml}
                 onContentChange={(html) => setLeftHtml(html)}
-                onEditorReady={(editor) => { if (!activeEditor) setActiveEditor(editor as TiptapEditorType); }}
                 theme={theme}
                 lang={lang}
                 docFont={docFont}
@@ -301,7 +295,7 @@ export const SplitRevisionStudio: React.FC<SplitRevisionStudioProps> = ({
         <div className="flex-1 flex flex-col relative" style={{ backgroundColor: theme.background }}>
           <div className="absolute top-4 left-6 z-20">
             <CustomSelect
-              value={`${rightType}:${rightId || ''}`}
+              value={\`\${rightType}:\${rightId || ''}\`}
               onChange={(val) => {
                 const [t, id] = val.split(':');
                 if (t && id) {
@@ -311,9 +305,9 @@ export const SplitRevisionStudio: React.FC<SplitRevisionStudioProps> = ({
               }}
               groups={getGroups(false)}
               theme={theme}
-              buttonClassName="flex items-center gap-2 px-3 py-1.5 rounded-lg shadow-sm text-[13px] font-medium transition-colors hover:opacity-80 backdrop-blur-md"
-              buttonStyle={{ backgroundColor: theme.surface ? `${theme.surface}e0` : 'rgba(255,255,255,0.9)', borderColor: theme.border, borderWidth: '1px', color: theme.text }}
-              dropdownClassName="w-64"
+              buttonClassName="flex items-center gap-2 px-3 py-1.5 rounded-lg shadow-sm text-[13px] font-medium transition-colors hover:opacity-80"
+              buttonStyle={{ backgroundColor: theme.surface, borderColor: theme.border, borderWidth: '1px', color: theme.text }}
+              dropdownClassName="!top-10 !left-0 w-64"
               renderButtonContent={(opt) => (
                 <>
                   <Sparkles size={14} style={{ color: theme.accent }} />
@@ -349,4 +343,6 @@ export const SplitRevisionStudio: React.FC<SplitRevisionStudioProps> = ({
     </div>
   );
 };
-export default SplitRevisionStudio;
+`;
+
+fs.writeFileSync('src/SplitRevisionStudio.tsx', code);
