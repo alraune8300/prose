@@ -154,17 +154,15 @@ function Editor({
       callbacksRef.current.onContentChange(html);
     },
     onUpdate: ({ editor }) => {
-      const html = editor.getHTML();
-      lastEmittedContentRef.current = html;
-      
       handleTypewriterScroll(editor);
-
       if (updateTimeoutRef.current) {
         clearTimeout(updateTimeoutRef.current);
       }
       updateTimeoutRef.current = setTimeout(() => {
+        const html = editor.getHTML();
+        lastEmittedContentRef.current = html;
         callbacksRef.current.onContentChange(html);
-      }, 400);
+      }, 600);
     },
 
     editorProps: {

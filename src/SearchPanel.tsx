@@ -13,6 +13,7 @@ interface SearchPanelProps {
 
 export default function SearchPanel({ c, uiFont, lang, }: SearchPanelProps) {
   const [findText, setFindText] = useState('');
+  const [activeSearchText, setActiveSearchText] = useState('');
   const [replaceText, setReplaceText] = useState('');
   const [matchCase, setMatchCase] = useState(false);
   const [wholeWord, setWholeWord] = useState(false);
@@ -20,8 +21,8 @@ export default function SearchPanel({ c, uiFont, lang, }: SearchPanelProps) {
   const [resultsCount, setResultsCount] = useState(0);
 
   useEffect(() => {
-    window.dispatchEvent(new CustomEvent('kgv-search-query', { detail: { find: findText, matchCase, wholeWord, regex } }));
-  }, [findText, matchCase, wholeWord, regex]);
+    window.dispatchEvent(new CustomEvent('kgv-search-query', { detail: { find: activeSearchText, matchCase, wholeWord, regex } }));
+  }, [activeSearchText, matchCase, wholeWord, regex]);
 
   useEffect(() => {
     function handleCount(e: Event) {
@@ -55,7 +56,15 @@ export default function SearchPanel({ c, uiFont, lang, }: SearchPanelProps) {
           <input
             type="text"
             value={findText}
-            onChange={e => setFindText(e.target.value)}
+            onChange={e => {
+              setFindText(e.target.value);
+              if (e.target.value === '') setActiveSearchText('');
+            }}
+            onKeyDown={e => {
+              if (e.key === 'Enter') {
+                setActiveSearchText(findText);
+              }
+            }}
             style={{
               width: '100%',
               padding: '8px 64px 8px 12px',
@@ -72,14 +81,20 @@ export default function SearchPanel({ c, uiFont, lang, }: SearchPanelProps) {
             {findText && (
               <>
                 <button
-                  onClick={() => window.dispatchEvent(new CustomEvent('kgv-search-nav', { detail: { direction: 'prev', find: findText, matchCase, wholeWord, regex } }))}
+                  onClick={() => {
+                    if (activeSearchText !== findText) setActiveSearchText(findText);
+                    setTimeout(() => window.dispatchEvent(new CustomEvent('kgv-search-nav', { detail: { direction: 'prev', find: findText, matchCase, wholeWord, regex } })), 10);
+                  }}
                   style={{ background: 'none', border: 'none', color: c.textMuted, cursor: 'pointer', padding: 2, display: 'flex' }}
                   title={t(lang, 'previousMatch')}
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
                 </button>
                 <button
-                  onClick={() => window.dispatchEvent(new CustomEvent('kgv-search-nav', { detail: { direction: 'next', find: findText, matchCase, wholeWord, regex } }))}
+                  onClick={() => {
+                    if (activeSearchText !== findText) setActiveSearchText(findText);
+                    setTimeout(() => window.dispatchEvent(new CustomEvent('kgv-search-nav', { detail: { direction: 'next', find: findText, matchCase, wholeWord, regex } })), 10);
+                  }}
                   style={{ background: 'none', border: 'none', color: c.textMuted, cursor: 'pointer', padding: 2, display: 'flex' }}
                   title={t(lang, 'nextMatch')}
                 >
@@ -89,7 +104,7 @@ export default function SearchPanel({ c, uiFont, lang, }: SearchPanelProps) {
             )}
             {findText && (
               <button
-                onClick={() => setFindText('')}
+                onClick={() => { setFindText(''); setActiveSearchText(''); }}
                 style={{
                   background: 'none', border: 'none', color: c.textMuted,
                   cursor: 'pointer', padding: '4px 2px', display: 'flex', marginLeft: 2

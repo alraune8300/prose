@@ -60,6 +60,7 @@ export const SplitRevisionStudio: React.FC<SplitRevisionStudioProps> = ({
   const [liveHtml, setLiveHtml] = useState('');
   
   const [syncScroll, setSyncScroll] = useState(false);
+  const [activeEditor, setActiveEditor] = useState<TiptapEditorType | null>(null);
   const leftColRef = useRef<HTMLDivElement>(null);
   const rightColRef = useRef<HTMLDivElement>(null);
   const isSyncingLeftRef = useRef(false);
@@ -68,9 +69,11 @@ export const SplitRevisionStudio: React.FC<SplitRevisionStudioProps> = ({
   useEffect(() => {
     if (isOpen && activePage?.id && activeProject?.id) {
       getPageVersionsFromDB(activeProject.id, activePage.id).then(v => {
-        setVersions(v || []);
-        if (v && v.length > 0 && !leftId && leftType === 'snapshot') {
-          setLeftId(v[0].id);
+        const vList = v || [];
+        setVersions(vList);
+        if (vList && vList.length > 0 && !leftId && leftType === 'snapshot') {
+          setLeftId(vList[0].id);
+          setLeftHtml(getHtmlContent('snapshot', vList[0].id, vList));
         }
       });
       if (!rightId) {
@@ -86,10 +89,10 @@ export const SplitRevisionStudio: React.FC<SplitRevisionStudioProps> = ({
     return words.slice(0, len).join(' ') + '...';
   };
 
-  const getHtmlContent = (type: FileType, id: string) => {
+  const getHtmlContent = (type: FileType, id: string, vList?: VersionSnapshot[]) => {
     if (!id) return '';
     if (type === 'snapshot') {
-      const v = versions.find(v => v.id === id);
+      const v = (vList || versions).find(v => v.id === id);
       return v?.content || '';
     } else if (type === 'page') {
       const p = activeProject?.pages?.find(p => p.id === id);
@@ -245,6 +248,29 @@ export const SplitRevisionStudio: React.FC<SplitRevisionStudioProps> = ({
       </div>
       
       {/* Split Columns Container */}
+      <div className="w-full flex justify-center bg-white dark:bg-zinc-900 border-b border-gray-200 dark:border-zinc-800 p-2 z-20">
+            {activeEditor && availableFonts && handleFormatChange && (
+              <Toolbar
+                editor={activeEditor}
+                theme={theme}
+                uiFont={uiFont}
+                t={t}
+                lang={lang}
+                selectedFont={formatState?.fontFam || docFont}
+                selectedSize={formatState?.fontSize || fontSize}
+                availableFonts={availableFonts}
+                onFontChange={(fam) => {
+                  activeEditor.chain().focus().setFontFamily(fam).run();
+                }}
+                onSizeChange={(size) => {
+                  handleFormatChange({ fontSize: size });
+                }}
+                onFormattingChange={(changes) => {
+                  handleFormatChange(changes);
+                }}
+              />
+            )}
+          </div>
       <div className="flex-1 flex overflow-hidden">
         
         {/* Left Column */}
@@ -257,6 +283,7 @@ export const SplitRevisionStudio: React.FC<SplitRevisionStudioProps> = ({
                 if (t && id) {
                   setLeftType(t as FileType);
                   setLeftId(id);
+                  setLeftHtml(getHtmlContent(t as FileType, id));
                 }
               }}
               groups={getGroups(true)}
@@ -276,8 +303,11 @@ export const SplitRevisionStudio: React.FC<SplitRevisionStudioProps> = ({
           <div 
             ref={leftColRef}
             className="flex-1 relative flex flex-col overflow-hidden kgv-revision-editor-container pt-12"
+            onFocusCapture={(e) => { const editorEl = e.currentTarget.querySelector('.ProseMirror'); if (editorEl && (editorEl as any).editor) setActiveEditor((editorEl as any).editor); }}
+            onClickCapture={(e) => { const editorEl = e.currentTarget.querySelector('.ProseMirror'); if (editorEl && (editorEl as any).editor) setActiveEditor((editorEl as any).editor); }}
           >
              <Editor 
+                key={`${leftType}-${leftId}`}
                 content={leftHtml}
                 onContentChange={(html) => setLeftHtml(html)}
                 onEditorReady={(editor) => { if (!activeEditor) setActiveEditor(editor as TiptapEditorType); }}
@@ -307,6 +337,7 @@ export const SplitRevisionStudio: React.FC<SplitRevisionStudioProps> = ({
                 if (t && id) {
                   setRightType(t as FileType);
                   setRightId(id);
+                  setLiveHtml(getHtmlContent(t as FileType, id));
                 }
               }}
               groups={getGroups(false)}
@@ -326,8 +357,11 @@ export const SplitRevisionStudio: React.FC<SplitRevisionStudioProps> = ({
           <div 
             ref={rightColRef}
             className="flex-1 relative flex flex-col overflow-hidden kgv-revision-editor-container pt-12"
+            onFocusCapture={(e) => { const editorEl = e.currentTarget.querySelector('.ProseMirror'); if (editorEl && (editorEl as any).editor) setActiveEditor((editorEl as any).editor); }}
+            onClickCapture={(e) => { const editorEl = e.currentTarget.querySelector('.ProseMirror'); if (editorEl && (editorEl as any).editor) setActiveEditor((editorEl as any).editor); }}
           >
              <Editor 
+                key={`${rightType}-${rightId}`}
                 content={liveHtml}
                 onContentChange={(html) => setLiveHtml(html)}
                 theme={theme}
