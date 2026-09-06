@@ -9,13 +9,15 @@ export function StoryCodexPanel({
   theme,
   lang,
   entities,
-  onUpdate
+  onUpdate,
+  uiFont
 }: {
   theme: ThemeColors,
   lang: string,
   entities: CodexEntity[],
   onUpdate: (entities: CodexEntity[]) => void,
-  editor?: any
+  editor?: any,
+  uiFont?: string
 }) {
   const [filter, setFilter] = useState('');
   const [frequencies, setFrequencies] = useState<Record<string, number>>({});
@@ -122,15 +124,23 @@ export function StoryCodexPanel({
         </div>
       ) : (
         <>
-          <div className="relative mb-4">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 opacity-50" />
+          <div className="relative mb-4 flex items-center">
             <input 
-              className="w-full pl-8 pr-3 py-1.5 rounded-lg border outline-none bg-transparent text-sm"
-              style={{ borderColor: theme.border }}
+              className="w-full outline-none bg-transparent"
+              style={{ 
+                border: 'none',
+                borderBottom: `1px solid ${theme.border}`,
+                borderRadius: 0,
+                padding: '4px 0',
+                paddingRight: '24px',
+                fontFamily: (uiFont || 'inherit'),
+                fontSize: '0.9rem'
+              }}
               placeholder={t(lang as Lang, 'searchEntities')}
               value={filter}
               onChange={e => setFilter(e.target.value)}
             />
+            <Search size={16} className="absolute right-0 opacity-50" style={{ pointerEvents: 'none' }} />
           </div>
           
           <div className="flex-1 overflow-y-auto pr-1 flex flex-col gap-2">

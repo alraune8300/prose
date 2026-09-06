@@ -115,7 +115,7 @@ export default function ThemeStudioModal({
         {/* Modal Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b" style={{ borderColor: theme.borderFaint }}>
           <div>
-            <h2 className="text-xl font-serif" style={{ color: theme.text, fontFamily: `'${uiFont}', Georgia, serif` }}>
+            <h2 className="text-xl" style={{ color: theme.text, fontFamily: uiFont || "inherit" }}>
               {isBuilderMode ? (t.editTheme || 'Edit theme') : (t.themePresets || 'Themes')}
             </h2>
             <p className="text-xs mt-0.5" style={{ color: theme.textMuted }}>
@@ -124,24 +124,30 @@ export default function ThemeStudioModal({
           </div>
           <div className="flex items-center gap-3">
             {!isBuilderMode && (
-              <div className="relative w-48 sm:w-64">
-                <Search size={14} className="absolute left-3 top-2.5" style={{ color: theme.textMuted }} />
+              <div className="relative w-48 sm:w-64 flex items-center">
                 <input
                   type="text"
-                  placeholder={t.searchThemes || t.searchForThemes || 'Search for themes...'}
+                  placeholder={t.searchThemes || t.searchForThemes || 'Search themes...'}
                   value={themeSearchQuery}
                   onChange={e => setThemeSearchQuery(e.target.value)}
-                  className="w-full pl-9 pr-8 py-1.5 rounded-lg text-xs border outline-none"
+                  className="w-full outline-none"
                   style={{ 
-                    backgroundColor: theme.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)', 
-                    borderColor: theme.border, 
+                    backgroundColor: 'transparent',
+                    border: 'none',
+                    borderBottom: `1px solid ${theme.border}`,
+                    borderRadius: 0,
+                    padding: '4px 0',
+                    paddingRight: '24px',
                     color: theme.text,
-                    fontFamily: uiFont
+                    fontFamily: `'${uiFont}', sans-serif`,
+                    fontSize: '0.9rem'
                   }}
                 />
-                {themeSearchQuery && (
-                  <button onClick={() => setThemeSearchQuery('')} className="absolute right-2.5 top-2.5 text-xs" style={{ color: theme.textMuted }}>
-                    <X size={12} />
+                {!themeSearchQuery ? (
+                  <Search size={16} className="absolute right-0" style={{ color: theme.text, pointerEvents: 'none' }} />
+                ) : (
+                  <button onClick={() => setThemeSearchQuery('')} className="absolute right-0 z-10" style={{ color: theme.text }}>
+                    <X size={16} />
                   </button>
                 )}
               </div>
@@ -370,7 +376,7 @@ export default function ThemeStudioModal({
               {(themeCategoryFilter === 'all' || themeSearchQuery) && (
                 <div className="mb-8">
                    <div className="flex items-center justify-between mb-4">
-                     <h3 className="text-sm font-serif font-semibold" style={{ color: theme.text }}>Custom <span className="text-xs font-mono px-1.5 py-0.5 rounded ml-2" style={{ background: theme.bg, border: `1px solid ${theme.border}` }}>{customThemes.length}</span></h3>
+                     <h3 className="text-sm font-semibold" style={{ color: theme.text, fontFamily: `'${uiFont}', sans-serif` }}>Custom <span className="text-xs font-mono px-1.5 py-0.5 rounded ml-2" style={{ background: theme.bg, border: `1px solid ${theme.border}` }}>{customThemes.length}</span></h3>
                      <button onClick={handleCreateNew} className="text-xs font-medium flex items-center gap-1 cursor-pointer transition-colors px-2.5 py-1.5 rounded-lg border" style={{ color: theme.accent, borderColor: theme.accent, backgroundColor: theme.accentLight }}>
                         <Plus size={14} /> Create new
                      </button>
@@ -481,7 +487,7 @@ export default function ThemeStudioModal({
 
               {/* Presets */}
               <div>
-                <h3 className="text-sm font-serif font-semibold mb-4" style={{ color: theme.text }}>Presets <span className="text-xs font-mono px-1.5 py-0.5 rounded ml-2" style={{ background: theme.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)', border: `1px solid ${theme.borderFaint}` }}>{PRESETS.length}</span></h3>
+                <h3 className="text-sm font-semibold mb-4" style={{ color: theme.text, fontFamily: `'${uiFont}', sans-serif` }}>Presets <span className="text-xs font-mono px-1.5 py-0.5 rounded ml-2" style={{ background: theme.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)', border: `1px solid ${theme.borderFaint}` }}>{PRESETS.length}</span></h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {PRESETS.filter(preset => {
                     const matchesCategory = themeCategoryFilter === 'all' || 

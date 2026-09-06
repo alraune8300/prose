@@ -2,12 +2,14 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { PRESETS, THEME_CATEGORIES } from './theme'
 import { FormatState, CustomFont, PageFormat, Panel } from './types'
-import GoogleFontsPanel from './GoogleFontsPanel'
+import { FontsPanel } from './FontsPanel'
 import SearchPanel from './SearchPanel'
 import VersionHistoryPanel from './VersionHistoryPanel'
 import TableInspectorPanel from './TableInspectorPanel'
 import { DocumentOutlinePanel } from './DocumentOutlinePanel'
 import { ArchivePanel } from './ArchivePanel'
+import { FormatPanel } from './FormatPanel';
+
 import { TrashPanel } from './TrashPanel'
 import { Lang, t as i18nT, LANG_LABELS, LANG_FLAGS } from './i18n'
 import { Accordion } from './components/Accordion'
@@ -180,6 +182,20 @@ function NumInputItem({
     </div>
   )
 }
+
+
+const CornerButton = ({ children, onClick, disabled, style }: { children: React.ReactNode, onClick: () => void, disabled?: boolean, style?: React.CSSProperties }) => {
+  return (
+    <button
+      disabled={disabled}
+      onClick={onClick}
+      className={`relative flex items-center justify-center w-full py-2.5 group transition-opacity ${disabled ? 'opacity-30 cursor-not-allowed' : 'cursor-pointer hover:opacity-70'}`}
+      style={{ background: 'transparent', border: 'none', color: 'inherit', ...style }}
+    >
+      <span style={{ fontFamily: 'inherit', fontSize: '0.75rem', letterSpacing: '0.05em', fontWeight: 600 }}>{children}</span>
+    </button>
+  );
+};
 
 function RightPanel(props: Record<string, unknown>) {
   const cProp = props.c as Record<string, unknown> | undefined
@@ -605,43 +621,44 @@ ${content.split('\n\n').map(para => {
           <div style={{ flex: 1, height: '100%', maxHeight: '100%', overflowY: 'auto', overflowX: 'hidden', padding: '16px 16px', minWidth: 0, minHeight: 0 }}>
             {/* Header bar with title and explicit collapse button */}
             <div style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              paddingBottom: 10, marginBottom: 16, borderBottom: `1px solid ${c.borderFaint}`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative',
+              paddingBottom: 16, marginBottom: 16, borderBottom: `1px solid ${c.borderFaint}`,
               flexShrink: 0,
             }}>
-              <span style={{ fontFamily: uiFont, fontSize: '0.88rem', fontWeight: 700, color: c.text, letterSpacing: '0.08em', textTransform: 'uppercase', flex: 1, paddingRight: 8, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {panel === 'outline' ? (t(lang, 'outline') || 'Outline') :
-                 panel === 'format' ? (t(lang, 'format') || 'Format') :
-                 panel === 'table' ? (t(lang, 'table') || t(lang, 'insertTable') || 'Table') :
-                 panel === 'export' ? 'Import / Export & Snapshots' :
-                 panel === 'fonts' ? (t(lang, 'fonts') || 'Fonts') :
-                 panel === 'archive' ? (t(lang, 'archive') || 'Archive') :
-                 panel === 'trash' ? (t(lang, 'bin') || 'Trash') :
-                 panel === 'timer' ? (t(lang, 'timer') || 'Timer') :
-                 panel === 'review' ? ('Review Center') :
-                 panel === 'search' ? (t(lang, 'findAndReplace') || 'Find and replace') :
-                 (t(lang, 'settings') || 'Settings')}
-              </span>
               <button
                 type="button"
                 onClick={onClose}
                 title={t(lang, 'collapse') || 'Collapse'}
                 style={{
+                  position: 'absolute', left: 0,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  background: 'transparent', border: 'none', color: c.textMuted,
-                  cursor: 'pointer', padding: 4, borderRadius: 6, transition: 'all 0.15s'
+                  background: 'transparent', border: 'none', color: c.text,
+                  cursor: 'pointer', padding: 0, transition: 'all 0.15s'
                 }}
-                onMouseEnter={e => { e.currentTarget.style.color = c.text; e.currentTarget.style.background = c.isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)' }}
-                onMouseLeave={e => { e.currentTarget.style.color = c.textMuted; e.currentTarget.style.background = 'transparent' }}
+                onMouseEnter={e => { e.currentTarget.style.opacity = '0.7' }}
+                onMouseLeave={e => { e.currentTarget.style.opacity = '1' }}
               >
-                <PanelRightClose size={15} />
+                <PanelRightClose size={20} strokeWidth={1.5} />
               </button>
+              <span style={{ fontFamily: uiFont, fontSize: '0.85rem', fontWeight: 600, color: c.text, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+                {panel === 'outline' ? (t(lang, 'outline') || 'Outline') :
+                 panel === 'format' ? (t(lang, 'format') || 'Format') :
+                 panel === 'table' ? (t(lang, 'table') || t(lang, 'insertTable') || 'Table') :
+                 panel === 'export' ? 'IMPORT & EXPORT' :
+                 panel === 'fonts' ? (t(lang, 'fonts') || 'Fonts') :
+                 panel === 'archive' ? (t(lang, 'archive') || 'Archive') :
+                 panel === 'trash' ? (t(lang, 'bin') || 'Trash') :
+                 panel === 'timer' ? (t(lang, 'timer') || 'Timer') :
+                 panel === 'review' ? ('Review Center') :
+                 panel === 'search' ? (t(lang, 'findAndReplace') || 'Find & replace') :
+                 (t(lang, 'settings') || 'Settings')}
+              </span>
             </div>
 
             {/* OUTLINE PANEL */}
             {panel === 'outline' && (
               <div className="flex flex-col h-full overflow-y-auto w-full">
-                <DocumentOutlinePanel
+                <DocumentOutlinePanel activePageTitle={(props.activePage as any)?.title}
                   theme={c as any}
                   uiFont={uiFont}
                   lang={lang}
@@ -693,389 +710,21 @@ ${content.split('\n\n').map(para => {
 
             {/* FORMAT PANEL */}
             {panel === 'format' && (
-              <div>
-                <Accordion title={t(lang, 'typography') || 'Typography'} uiFont={uiFont} c={c}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                    <div>
-                      {label(t(lang, 'fontSize') || 'Font size')}
-                      {numInput(formatState.fontSize, 8, 96, 1, 'px', v => {
-                        const editor = (props.editor as TiptapEditorType | null);
-                        if (editor) editor.chain().focus().setFontSize(v).run();
-                        onFormatChange({ fontSize: v });
-                      })}
-                    </div>
-                    <div>
-                      {label(t(lang, 'lineHeight') || 'Line height')}
-                      {numInput(formatState.lineH, 1.0, 4.0, 0.05, '×', v => {
-                        const editor = (props.editor as TiptapEditorType | null);
-                        if (editor) editor.chain().focus().setLineHeight(v).run();
-                        onFormatChange({ lineH: v });
-                      }, 2)}
-                    </div>
-                    <div>
-                      {label(t(lang, 'letterSpacing') || 'Letter spacing')}
-                      {numInput(formatState.letterSpacing, -3, 8, 0.5, 'px', v => {
-                        const editor = (props.editor as TiptapEditorType | null);
-                        if (editor) (editor.chain().focus() as unknown as Record<string, (arg: number) => { run: () => boolean }>).setLetterSpacing?.(v)?.run?.();
-                        onFormatChange({ letterSpacing: v });
-                      }, 1)}
-                    </div>
-                    <div>
-                      {label(t(lang, 'wordSpacing') || 'Word spacing')}
-                      {numInput(formatState.wordSpacing, -4, 16, 0.5, 'px', v => {
-                        const editor = (props.editor as TiptapEditorType | null);
-                        if (editor) (editor.chain().focus() as unknown as Record<string, (arg: number) => { run: () => boolean }>).setWordSpacing?.(v)?.run?.();
-                        onFormatChange({ wordSpacing: v });
-                      }, 1)}
-                    </div>
-                  </div>
-                </Accordion>
-
-                <Accordion title={t(lang, 'paragraph') || 'Paragraph'} uiFont={uiFont} c={c}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                    <div>
-                      {label(t(lang, 'alignment') || 'Alignment')}
-                      <div style={{
-                        display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 3,
-                        background: c.isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.025)',
-                        padding: 3, borderRadius: 7, border: `1px solid ${c.borderFaint}`
-                      }}>
-                        {[
-                          { id: 'left', icon: AlignLeft },
-                          { id: 'center', icon: AlignCenter },
-                          { id: 'right', icon: AlignRight },
-                          { id: 'justify', icon: AlignJustify },
-                        ].map(({ id: a, icon: IconComp }) => {
-                          const editor = (props.editor as TiptapEditorType | null);
-                          const active = editor ? editor.isActive({ textAlign: a }) : formatState.align === a;
-                          return (
-                            <button
-                              key={a}
-                              type="button"
-                              onClick={() => {
-                                if (editor) editor.chain().focus().setTextAlign(a).run();
-                                onFormatChange({ align: a as any });
-                              }}
-                              style={{
-                                padding: '6px 0', borderRadius: 5, border: 'none',
-                                background: active ? (c.isDark ? 'rgba(255,255,255,0.12)' : '#ffffff') : 'transparent',
-                                color: active ? c.accent : c.textMuted,
-                                boxShadow: active ? '0 1px 2px rgba(0,0,0,0.08)' : 'none',
-                                cursor: 'pointer', transition: 'all 0.12s',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center'
-                              }}
-                            >
-                              <IconComp size={14} />
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                    <div>
-                      {label(t(lang, 'paraSpacing') || 'Para spacing')}
-                      {numInput(formatState.paraSpacing, 0, 4, 0.1, 'em', v => onFormatChange({ paraSpacing: v }), 1)}
-                    </div>
-                    <ToggleSwitch
-                      checked={Boolean(formatState.firstLineIndent)}
-                      onChange={() => onFormatChange({ firstLineIndent: !formatState.firstLineIndent })}
-                      label={t(lang, 'firstLineIndent') || 'First line indent'}
-                      uiFont={uiFont}
-                      c={c} />
-                  </div>
-                </Accordion>
-
-                <Accordion title={t(lang, 'quickStyles')} uiFont={uiFont} c={c}>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 4 }}>
-                    {[
-                      { label: 'Normal', action: (ed: TiptapEditorType) => ed?.chain().focus().setParagraph().run(), active: (ed: TiptapEditorType) => ed?.isActive('paragraph') },
-                      { label: 'H1', action: (ed: TiptapEditorType) => ed?.chain().focus().toggleHeading({ level: 1 }).run(), active: (ed: TiptapEditorType) => ed?.isActive('heading', { level: 1 }) },
-                      { label: 'H2', action: (ed: TiptapEditorType) => ed?.chain().focus().toggleHeading({ level: 2 }).run(), active: (ed: TiptapEditorType) => ed?.isActive('heading', { level: 2 }) },
-                      { label: 'H3', action: (ed: TiptapEditorType) => ed?.chain().focus().toggleHeading({ level: 3 }).run(), active: (ed: TiptapEditorType) => ed?.isActive('heading', { level: 3 }) },
-                      { label: 'Quote', action: (ed: TiptapEditorType) => ed?.chain().focus().toggleBlockquote().run(), active: (ed: TiptapEditorType) => ed?.isActive('blockquote') },
-                      { label: 'Code', action: (ed: TiptapEditorType) => ed?.chain().focus().toggleCodeBlock().run(), active: (ed: TiptapEditorType) => ed?.isActive('codeBlock') },
-                    ].map(s => {
-                      const editor = (props.editor as TiptapEditorType | null);
-                      const active = editor ? s.active(editor) : false;
-                      return (
-                        <button key={s.label} onClick={() => {
-                          if (editor) {
-                            s.action(editor);
-                          } else {
-                            applyLinePrefix(s.label === 'H1' ? '# ' : s.label === 'H2' ? '## ' : s.label === 'H3' ? '### ' : s.label === 'Quote' ? '> ' : s.label === 'Code' ? '```\n' : '');
-                          }
-                        }}
-                          style={{
-                            padding: '6px 4px', borderRadius: 6,
-                            border: `1px solid ${active ? c.accent : c.borderFaint}`,
-                            background: active ? c.accentLight : 'transparent',
-                            color: active ? c.accent : c.text,
-                            fontFamily: uiFont, fontSize: '0.72rem', fontWeight: active ? 600 : 500,
-                            cursor: 'pointer', transition: 'all 0.12s', textAlign: 'center'
-                          }}
-                        >
-                          {s.label}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </Accordion>
-
-                <Accordion title={t(lang, 'advancedTypography') || 'Advanced Typography'} uiFont={uiFont} c={c}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                    <div>
-                      {label(t(lang, 'textTransform') || 'Text transform')}
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 3 }}>
-                        {([
-                          { val: 'none', label: 'Aa' },
-                          { val: 'uppercase', label: 'AA' },
-                          { val: 'lowercase', label: 'aa' },
-                          { val: 'capitalize', label: 'Aa.' },
-                        ] as const).map(({ val, label: lbl }) => (
-                          <button key={val}
-                            onClick={() => {
-                              const editor = (props.editor as TiptapEditorType | null);
-                              if (editor) (editor.chain().focus() as unknown as Record<string, (arg: string) => { run: () => boolean }>).setTextTransform?.(val)?.run?.();
-                              onFormatChange({ textTransform: val } as Partial<FormatState>);
-                            }}
-                            style={{
-                              padding: '5px 0', borderRadius: 5, cursor: 'pointer', fontFamily: uiFont, fontSize: '0.7rem',
-                              border: `1px solid ${(formatState as unknown as Record<string,string>)['textTransform'] === val ? c.accent : c.borderFaint}`,
-                              background: (formatState as unknown as Record<string,string>)['textTransform'] === val ? c.accentLight : 'transparent',
-                              color: (formatState as unknown as Record<string,string>)['textTransform'] === val ? c.accent : c.textMuted,
-                              transition: 'all 0.12s', textAlign: 'center'
-                            }}>
-                            {lbl}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                    <div>
-                      {label(t(lang, 'superscriptSubscript') || 'Script')}
-                      <div style={{ display: 'flex', gap: 6 }}>
-                        <button onClick={() => {
-                            const editor = (props.editor as TiptapEditorType | null);
-                            if (editor) editor.chain().focus().toggleSuperscript().run();
-                            else { const ta = textareaRef.current; if (ta) { const s = ta.selectionStart, e = ta.selectionEnd; const sel = content.slice(s, e); onContentChange(content.slice(0, s) + `<sup>${sel || 'sup'}</sup>` + content.slice(e)) } }
-                          }}
-                          style={{
-                            flex: 1, padding: '5px 4px', borderRadius: 6,
-                            border: `1px solid ${(props.editor as TiptapEditorType | null)?.isActive?.('superscript') ? c.accent : c.borderFaint}`,
-                            background: (props.editor as TiptapEditorType | null)?.isActive?.('superscript') ? c.accentLight : 'transparent',
-                            fontFamily: uiFont, fontSize: '0.72rem',
-                            color: (props.editor as TiptapEditorType | null)?.isActive?.('superscript') ? c.accent : c.textMuted,
-                            cursor: 'pointer', transition: 'all 0.12s', textAlign: 'center'
-                          }}>
-                          X<sup style={{ fontSize: '0.65em' }}>2</sup> Superscript
-                        </button>
-                        <button onClick={() => {
-                            const editor = (props.editor as TiptapEditorType | null);
-                            if (editor) editor.chain().focus().toggleSubscript().run();
-                            else { const ta = textareaRef.current; if (ta) { const s = ta.selectionStart, e = ta.selectionEnd; const sel = content.slice(s, e); onContentChange(content.slice(0, s) + `<sub>${sel || 'sub'}</sub>` + content.slice(e)) } }
-                          }}
-                          style={{
-                            flex: 1, padding: '5px 4px', borderRadius: 6,
-                            border: `1px solid ${(props.editor as TiptapEditorType | null)?.isActive?.('subscript') ? c.accent : c.borderFaint}`,
-                            background: (props.editor as TiptapEditorType | null)?.isActive?.('subscript') ? c.accentLight : 'transparent',
-                            fontFamily: uiFont, fontSize: '0.72rem',
-                            color: (props.editor as TiptapEditorType | null)?.isActive?.('subscript') ? c.accent : c.textMuted,
-                            cursor: 'pointer', transition: 'all 0.12s', textAlign: 'center'
-                          }}>
-                          X<sub style={{ fontSize: '0.65em' }}>2</sub> Subscript
-                        </button>
-                      </div>
-                    </div>
-                    <div>
-                      {label(t(lang, 'openTypeFeatures') || 'OpenType')}
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 4 }}>
-                        {[
-                          { label: t(lang, 'ligatures') || 'Ligatures', feat: 'liga' },
-                          { label: t(lang, 'smallCaps') || 'Small caps', feat: 'smcp' },
-                          { label: t(lang, 'oldFigures') || 'Old figures', feat: 'onum' },
-                          { label: t(lang, 'fractions') || 'Fractions', feat: 'frac' },
-                        ].map(({ label: lbl, feat }) => {
-                          const active = ((formatState as unknown as Record<string, string>)['fontFeatures'] ?? '').includes(feat)
-                          return (
-                            <button key={feat}
-                              onClick={() => {
-                                const current = ((formatState as unknown as Record<string, string>)['fontFeatures'] ?? '').split(',').filter(Boolean)
-                                const next = active ? current.filter(f => f !== feat) : [...current, feat]
-                                const featStr = next.join(',')
-                                const editor = (props.editor as TiptapEditorType | null);
-                                if (editor) (editor.chain().focus() as unknown as Record<string, (arg: string) => { run: () => boolean }>).setFontFeatures?.(featStr)?.run?.();
-                                onFormatChange({ fontFeatures: featStr } as Partial<FormatState>)
-                              }}
-                              style={{
-                                padding: '4px 6px', borderRadius: 5, cursor: 'pointer', fontFamily: uiFont, fontSize: '0.68rem',
-                                border: `1px solid ${active ? c.accent : c.borderFaint}`,
-                                background: active ? c.accentLight : 'transparent',
-                                color: active ? c.accent : c.textMuted, transition: 'all 0.12s', textAlign: 'center'
-                              }}>
-                              {lbl}
-                            </button>
-                          )
-                        })}
-                      </div>
-                    </div>
-                  </div>
-                </Accordion>
-
-                <Accordion title={t(lang, 'pageFormat') || 'Page Format'} uiFont={uiFont} c={c}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                    <div>
-                      {label(t(lang, 'paperSize') || 'Paper size')}
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 4 }}>
-                        {(['A4', 'Letter', 'Legal', 'A5', 'Tabloid', 'pageless'] as const).map(size => (
-                          <button key={size} onClick={() => onPageFormatChange({ ...pageFormat, paperSize: size, mode: size === 'pageless' ? 'pageless' : 'pages' })}
-                            style={{
-                              padding: '5px 4px', borderRadius: 6, cursor: 'pointer',
-                              border: `1px solid ${pageFormat.paperSize === size ? c.accent : c.borderFaint}`,
-                              background: pageFormat.paperSize === size ? c.accentLight : 'transparent',
-                              color: pageFormat.paperSize === size ? c.accent : c.text,
-                              fontFamily: uiFont, fontSize: '0.7rem', fontWeight: pageFormat.paperSize === size ? 600 : 400,
-                              transition: 'all 0.12s', textAlign: 'center'
-                            }}
-                          >
-                            {size}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                    {pageFormat.paperSize !== 'pageless' && (
-                      <div>
-                        {label(t(lang, 'orientation') || 'Orientation')}
-                        <div style={{ display: 'flex', gap: 6 }}>
-                          {(['portrait', 'landscape'] as const).map(o => (
-                            <button key={o} onClick={() => onPageFormatChange({ ...pageFormat, orientation: o })}
-                              style={{
-                                flex: 1, padding: '5px 4px', borderRadius: 6, cursor: 'pointer',
-                                border: `1px solid ${pageFormat.orientation === o ? c.accent : c.borderFaint}`,
-                                background: pageFormat.orientation === o ? c.accentLight : 'transparent',
-                                color: pageFormat.orientation === o ? c.accent : c.textMuted,
-                                fontFamily: uiFont, fontSize: '0.72rem', fontWeight: pageFormat.orientation === o ? 600 : 400,
-                                transition: 'all 0.12s', textAlign: 'center'
-                              }}
-                            >
-                              {o === 'portrait' ? t(lang, 'portrait') : t(lang, 'landscape')}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    <div>
-                      {label(t(lang, 'maxWidth') || 'Max width')}
-                      {numInput(formatState.maxW, 300, 1200, 10, 'px', v => onFormatChange({ maxW: v }))}
-                    </div>
-                  </div>
-                </Accordion>
-
-                <Accordion title={t(lang, 'pageNumbering') || 'Page Numbering'} uiFont={uiFont} c={c}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    <ToggleSwitch
-                      checked={Boolean(formatState.pageNumbering?.enabled)}
-                      onChange={() => {
-                        const current = formatState.pageNumbering || {
-                          enabled: false,
-                          position: 'bottom-center',
-                          style: 'arabic',
-                          skipTitlePage: true,
-                        };
-                        onFormatChange({
-                          pageNumbering: { ...current, enabled: !current.enabled }
-                        });
-                      }}
-                      label={t(lang, 'showPageNumbers') || 'Show page numbers'}
-                      description={t(lang, 'showPageNumbersDesc') || 'Display dynamic page counter on print & preview'}
-                      uiFont={uiFont}
-                      c={c} />
-
-                    {formatState.pageNumbering?.enabled && (
-                      <>
-                        <div>
-                          {label(t(lang, 'position') || 'Position')}
-                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 4 }}>
-                            {([
-                              { id: 'bottom-center', label: 'B-Center' },
-                              { id: 'bottom-right', label: 'B-Right' },
-                              { id: 'top-right', label: 'T-Right' },
-                            ] as const).map(pos => {
-                              const active = (formatState.pageNumbering?.position || 'bottom-center') === pos.id;
-                              return (
-                                <button
-                                  key={pos.id}
-                                  onClick={() => {
-                                    const current = formatState.pageNumbering || { enabled: true, position: 'bottom-center', style: 'arabic', skipTitlePage: true };
-                                    onFormatChange({ pageNumbering: { ...current, position: pos.id } });
-                                  }}
-                                  style={{
-                                    padding: '5px 2px', borderRadius: 5, cursor: 'pointer',
-                                    border: `1px solid ${active ? c.accent : c.borderFaint}`,
-                                    background: active ? c.accentLight : 'transparent',
-                                    color: active ? c.accent : c.textMuted,
-                                    fontFamily: uiFont, fontSize: '0.68rem', fontWeight: active ? 600 : 400,
-                                    transition: 'all 0.12s', textAlign: 'center'
-                                  }}
-                                >
-                                  {pos.label}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </div>
-
-                        <ToggleSwitch
-                          checked={formatState.pageNumbering?.skipTitlePage !== false}
-                          onChange={() => {
-                            const current = formatState.pageNumbering || { enabled: true, position: 'bottom-center', style: 'arabic', skipTitlePage: true };
-                            onFormatChange({ pageNumbering: { ...current, skipTitlePage: !current.skipTitlePage } });
-                          }}
-                          label={t(lang, 'skipTitlePage') || 'Skip title page'}
-                          uiFont={uiFont}
-                          c={c} />
-                      </>
-                    )}
-                  </div>
-                </Accordion>
-
-                <Accordion title={t(lang, 'smartFormatting') || 'Smart Formatting'} uiFont={uiFont} c={c}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                    <ToggleSwitch
-                      checked={Boolean(formatState.typewriterScroll)}
-                      onChange={() => onFormatChange({ typewriterScroll: !formatState.typewriterScroll })}
-                      label={t(lang, 'typewriterScroll') || 'Typewriter Scroll'}
-                      uiFont={uiFont}
-                      c={c} />
-                    <ToggleSwitch
-                      checked={Boolean(formatState.smartQuotes)}
-                      onChange={() => onFormatChange({ smartQuotes: !formatState.smartQuotes })}
-                      label={t(lang, 'smartQuotes') || 'Smart Quotes (“ ”)'}
-                      uiFont={uiFont}
-                      c={c} />
-                    <ToggleSwitch
-                      checked={Boolean(formatState.smartEllipses)}
-                      onChange={() => onFormatChange({ smartEllipses: !formatState.smartEllipses })}
-                      label={t(lang, 'smartEllipses') || 'Smart Ellipses (…)'}
-                      uiFont={uiFont}
-                      c={c} />
-                    <ToggleSwitch
-                      checked={Boolean(formatState.smartArrows ?? true)}
-                      onChange={() => onFormatChange({ smartArrows: !(formatState.smartArrows ?? true) })}
-                      label={t(lang, 'smartArrows') || 'Smart Arrows (-> →)'}
-                      uiFont={uiFont}
-                      c={c} />
-                    <ToggleSwitch
-                      checked={Boolean(formatState.markdownShortcuts)}
-                      onChange={() => onFormatChange({ markdownShortcuts: !formatState.markdownShortcuts })}
-                      label={t(lang, 'markdownShortcuts') || 'Markdown Shortcuts'}
-                      uiFont={uiFont}
-                      c={c} />
-                    <ToggleSwitch
-                      checked={Boolean(formatState.doubleSpacePeriod)}
-                      onChange={() => onFormatChange({ doubleSpacePeriod: !formatState.doubleSpacePeriod })}
-                      label={t(lang, 'doubleSpacePeriod') || 'Double-Space Period'}
-                      uiFont={uiFont}
-                      c={c} />
-                  </div>
-                </Accordion>
+              <div className="flex flex-col h-full overflow-y-auto w-full kgv-scroll">
+                <FormatPanel
+                  editor={props.editor}
+                  formatState={formatState as any}
+                  onFormatChange={onFormatChange}
+                  pageFormat={pageFormat}
+                  onPageFormatChange={onPageFormatChange}
+                  c={c as any}
+                  uiFont={uiFont}
+                  lang={lang}
+                  content={content}
+                  onContentChange={onContentChange}
+                  textareaRef={textareaRef}
+                  applyLinePrefix={applyLinePrefix}
+                />
               </div>
             )}
 
@@ -1100,68 +749,49 @@ ${content.split('\n\n').map(para => {
                   </div>
                 </div>
 
-                <Accordion title={t(lang, 'universalImport') || 'Import'} uiFont={uiFont} c={c}>
-                  <button
-                    onClick={() => importFileInputRef.current?.click()}
-                    style={{
-                      width: '100%', padding: '9px 12px', borderRadius: 7, cursor: 'pointer',
-                      background: 'transparent',
-                      border: `1px dashed ${c.accentMid}`,
-                      color: c.text, fontFamily: uiFont, fontSize: '0.78rem', fontWeight: 500,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                      transition: 'all 0.15s',
-                    }}
-                    onMouseEnter={e => { e.currentTarget.style.background = c.accentLight }}
-                    onMouseLeave={e => { e.currentTarget.style.background = 'transparent' }}
-                  >
-                    <Upload size={14} style={{ color: c.accent }} />
-                    <span>{t(lang, 'importFile') || 'Import File'}</span>
-                  </button>
+                <Accordion title={t(lang, 'universalImport') || 'IMPORT'} uiFont={uiFont} c={c} >
+                  <div className="flex flex-col py-2 pb-4 px-12" style={{ color: c.text }}>
+                    <CornerButton onClick={() => importFileInputRef.current?.click()}>
+                      {t(lang, 'importFile') || 'IMPORT FILE'}
+                    </CornerButton>
+                  </div>
                 </Accordion>
 
-                <Accordion title={t(lang, 'universalExport') || 'Export'} uiFont={uiFont} c={c}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                    <button onClick={handleCopy}
-                      style={{
-                        padding: '8px 12px', borderRadius: 7, cursor: 'pointer',
-                        background: copied ? 'hsl(145, 52%, 94%)' : c.accentLight,
-                        border: `1px solid ${copied ? 'hsl(145, 52%, 70%)' : c.accent}`,
-                        color: copied ? 'hsl(145, 52%, 34%)' : c.accent,
-                        fontFamily: uiFont, fontSize: '0.78rem', fontWeight: 600,
-                        display: 'flex', alignItems: 'center', gap: 8, transition: 'all 0.15s'
-                      }}
-                    >
-                      {copied ? <Check size={14} /> : <Copy size={14} />}
-                      <span>{copied ? t(lang, 'copied') : (t(lang, 'copyToClipboard') || 'Copy to Clipboard')}</span>
-                    </button>
-
+                <Accordion title={t(lang, 'universalExport') || 'EXPORT'} uiFont={uiFont} c={c} >
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6, paddingTop: 4, paddingBottom: 16 }}>
                     {[
-                      { icon: FileSpreadsheet, label: t(lang, 'exportOdt') || 'ODT / DOC', action: () => props.onExportOdt ? (props.onExportOdt as () => void)() : handleDownloadDocx() },
-                      { icon: FileCode, label: t(lang, 'exportHtml') || 'HTML', action: () => props.onExportHtml ? (props.onExportHtml as () => void)() : handleDownload('html') },
-                      { icon: FileText, label: t(lang, 'exportMd') || 'Markdown', action: () => props.onExportMd ? (props.onExportMd as () => void)() : handleDownload('md') },
-                      { icon: Download, label: t(lang, 'backupJson') || 'JSON Backup', action: () => props.onExportJsonBackup ? (props.onExportJsonBackup as () => void)() : undefined },
-                      { icon: Printer, label: t(lang, 'printDoc') || 'Print / PDF', action: handlePrintPDF },
-                    ].map(({ icon: IconComp, label: btnLabel, action }) => (
+                      { label: t(lang, 'exportOdt') || 'EXPORT AS ODT', action: () => props.onExportOdt ? (props.onExportOdt as () => void)() : handleDownloadDocx() },
+                      { label: t(lang, 'exportHtml') || 'EXPORT AS HTML', action: () => props.onExportHtml ? (props.onExportHtml as () => void)() : handleDownload('html') },
+                      { label: t(lang, 'exportMd') || 'EXPORT AS MARKDOWN', action: () => props.onExportMd ? (props.onExportMd as () => void)() : handleDownload('md') },
+                      { label: t(lang, 'backupJson') || 'EXPORT WORKSPACE - JSON', action: () => props.onExportJsonBackup ? (props.onExportJsonBackup as () => void)() : undefined },
+                    ].map(({ label: btnLabel, action }) => (
                       <button
                         key={btnLabel}
                         onClick={action}
                         style={{
-                          padding: '8px 12px', borderRadius: 7, cursor: 'pointer',
-                          background: 'transparent', border: `1px solid ${c.borderFaint}`,
-                          color: c.text, fontFamily: uiFont, fontSize: '0.78rem', fontWeight: 500,
-                          display: 'flex', alignItems: 'center', gap: 8, transition: 'all 0.15s',
+                          background: 'transparent',
+                          border: 'none',
+                          color: c.text,
+                          fontFamily: (uiFont || 'inherit'),
+                          fontSize: '0.8rem',
+                          fontWeight: 500,
+                          cursor: 'pointer',
+                          textAlign: 'left',
+                          padding: '4px 0',
+                          transition: 'opacity 0.2s',
+                          opacity: 0.9,
+                          letterSpacing: '0.05em'
                         }}
-                        onMouseEnter={e => { e.currentTarget.style.borderColor = c.accent; e.currentTarget.style.background = c.isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.02)' }}
-                        onMouseLeave={e => { e.currentTarget.style.borderColor = c.borderFaint; e.currentTarget.style.background = 'transparent' }}
+                        onMouseEnter={e => { e.currentTarget.style.opacity = '0.5' }}
+                        onMouseLeave={e => { e.currentTarget.style.opacity = '0.9' }}
                       >
-                        <IconComp size={14} style={{ color: c.textMuted }} />
-                        <span>{btnLabel}</span>
+                        {btnLabel}
                       </button>
                     ))}
-                    </div>
-                  </Accordion>
+                  </div>
+                </Accordion>
 
-                <Accordion title={t(lang, 'snapshots') || 'Snapshots'} uiFont={uiFont} c={c}>
+                <Accordion title={t(lang, 'snapshots') || 'SNAPSHOT'} uiFont={uiFont} c={c} >
                   <div style={{ height: '300px', display: 'flex', flexDirection: 'column' }}>
                     <VersionHistoryPanel
                       activePage={props.activePage as any}
@@ -1354,116 +984,22 @@ ${content.split('\n\n').map(para => {
 
             {/* FONTS PANEL */}
             {panel === 'fonts' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                <Accordion title={t(lang, 'fontRoles') || 'Font roles'} uiFont={uiFont} c={c}>
-                  {([
-                    { role: 'body' as const, label: t(lang, 'body') || 'Body', value: bodyFont },
-                    { role: 'heading' as const, label: t(lang, 'heading') || 'Heading', value: headingFont },
-                    { role: 'ui' as const, label: t(lang, 'ui') || 'UI', value: uiFont2 },
-                  ]).map(({ role, label: lbl, value }) => (
-                    <div key={role} style={{ marginBottom: 8 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 3 }}>
-                        <span style={{ fontFamily: uiFont, fontSize: '0.66rem', color: c.textMuted, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{lbl}</span>
-                        <span style={{ fontFamily: `'${value}', serif`, fontSize: '0.72rem', color: c.textMuted }}>
-                          {value}
-                        </span>
-                      </div>
-                      <CustomSelect
-                        value={value}
-                        onChange={(v) => onFontAssign(role, v)}
-                        theme={c}
-                        fontFamily={uiFont}
-                        options={availableFontNames.concat(customFonts.map(f => f.name || f.family)).map(n => ({ value: n, label: n }))}
-                        buttonStyle={{
-                          width: '100%', padding: '5px 8px', borderRadius: 6,
-                          border: `1px solid ${c.borderFaint}`,
-                          background: 'transparent', fontFamily: uiFont,
-                          fontSize: '0.78rem', color: c.text, cursor: 'pointer', outline: 'none',
-                          display: 'flex', justifyContent: 'space-between', alignItems: 'center'
-                        }}
-                      />
-                    </div>
-                  ))}
-                </Accordion>
-
-                <Accordion title={t(lang, 'googleFontsEngine') || 'Google Fonts'} uiFont={uiFont} c={c}>
-                  <div style={{ marginTop: 4 }}>
-                    <GoogleFontsPanel apiKey={props.apiKey as string} onSaveApiKey={props.onSaveApiKey as any}
-                      c={c}
-                      lang={lang}
-                      uiFont={uiFont}
-                      bodyFont={bodyFont}
-                      headingFont={headingFont}
-                      uiFontRole={uiFont2}
-                      onApplyToSelection={(name) => {
-                        window.dispatchEvent(new CustomEvent('kgv-apply-font-selection', { detail: name }))
-                      }}
-                      onApplyToDoc={(name) => onFontAssign('body', name)}
-                      onApplyToUi={(name) => onFontAssign('ui', name)}
-                      onAssignRole={onFontAssign}
-                      />
-                  </div>
-                </Accordion>
-
-                <Accordion title={t(lang, 'customFonts') || 'Custom Fonts'} uiFont={uiFont} c={c}>
-                  <div
-                    onDragOver={e => { e.preventDefault(); setDragOver(true) }}
-                    onDragLeave={() => setDragOver(false)}
-                    onDrop={e => {
-                      e.preventDefault(); setDragOver(false)
-                      const file = e.dataTransfer.files[0]
-                      if (file) onFontUpload(file)
-                    }}
-                    onClick={() => fileInputRef.current?.click()}
-                    style={{
-                      border: `1px dashed ${dragOver ? c.accent : c.borderFaint}`,
-                      borderRadius: 7, padding: '12px', textAlign: 'center',
-                      cursor: 'pointer', transition: 'all 0.15s',
-                      background: dragOver ? c.accentLight : 'transparent',
-                      marginBottom: 8,
-                    }}
-                  >
-                    <div style={{ fontFamily: uiFont, fontSize: '0.72rem', color: c.textMuted, lineHeight: 1.4 }}>
-                      {t(lang, 'dropFontHere')}<br />
-                      <span style={{ fontSize: '0.64rem', color: c.textMuted }}>{t(lang, 'clickToBrowse')}</span>
-                    </div>
-                  </div>
-                  <input
-                    ref={fileInputRef} type="file" accept=".ttf,.otf,.woff,.woff2"
-                    style={{ display: 'none' }}
-                    onChange={e => {
-                      const f = e.target.files?.[0];
-                      if (f) onFontUpload(f);
-                      e.target.value = '';
-                    }}
-                  />
-                  {customFonts.map(font => {
-                    const fontName = font.name || font.family || 'CustomFont';
-                    const fontId = font.id || font.family || font.name || fontName;
-                    return (
-                      <div key={fontId} style={{
-                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                        padding: '5px 8px', borderRadius: 5,
-                        background: c.isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)',
-                        marginBottom: 4,
-                      }}>
-                        <span style={{ fontFamily: `'${fontName}', sans-serif`, fontSize: '0.75rem', color: c.text }}>
-                          {fontName}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => onFontDelete(fontId)}
-                          style={{
-                            background: 'none', border: 'none', cursor: 'pointer',
-                            color: c.textMuted, fontSize: '0.8rem',
-                          }}
-                        >
-                          ×
-                        </button>
-                      </div>
-                    );
-                  })}
-                </Accordion>
+              <div className="flex flex-col h-full overflow-y-auto w-full kgv-scroll">
+                <FontsPanel
+                  c={c as any}
+                  uiFont={uiFont}
+                  lang={lang}
+                  bodyFont={bodyFont}
+                  headingFont={headingFont}
+                  uiFont2={uiFont2}
+                  onFontAssign={onFontAssign}
+                  availableFontNames={availableFontNames}
+                  customFonts={customFonts as any}
+                  apiKey={props.apiKey as string}
+                  onSaveApiKey={props.onSaveApiKey as any}
+                  onFontUpload={onFontUpload}
+                  onFontDelete={onFontDelete}
+                />
               </div>
             )}
 
@@ -1479,36 +1015,47 @@ ${content.split('\n\n').map(para => {
             {/* SETTINGS PANEL */}
             {panel === 'settings' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                                <Accordion title={t(lang, 'language') || 'Language'} uiFont={uiFont} c={c}>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                    {Object.entries(LANG_LABELS).map(([k, v]) => (
-                      <button
-                        key={k}
-                        type="button"
-                        onClick={() => onLangChange(k as Lang)}
-                        style={{
-                          padding: '6px 10px',
-                          borderRadius: 6,
-                          border: `1px solid ${lang === k ? c.accent : c.borderFaint}`,
-                          background: lang === k ? c.accentLight : 'transparent',
-                          color: lang === k ? c.accent : c.text,
-                          fontFamily: uiFont,
-                          fontSize: '0.75rem',
-                          fontWeight: lang === k ? 600 : 400,
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 6
-                        }}
-                      >
-                        <span>{LANG_FLAGS[k as Lang] || ''}</span>
-                        <span>{v}</span>
-                      </button>
-                    ))}
+                <Accordion title={t(lang, 'language') || 'LANGUAGES'} uiFont={uiFont} c={c} >
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6, paddingTop: 4, paddingBottom: 16 }}>
+                    {(['en', 'fr', 'vi', 'it', 'de', 'ja', 'zh', 'ko', 'es'] as Lang[]).map((k) => {
+                      const labels: Record<Lang, string> = {
+                        en: 'English',
+                        fr: 'Français',
+                        vi: 'Vietnamese',
+                        it: 'Italiano',
+                        de: 'German',
+                        ja: 'Japanese',
+                        zh: 'Chinese',
+                        ko: 'Korean',
+                        es: 'Spanish',
+                      };
+                      return (
+                        <button
+                          key={k}
+                          type="button"
+                          onClick={() => onLangChange(k as Lang)}
+                          style={{
+                            background: 'transparent',
+                            border: 'none',
+                            color: lang === k ? c.text : c.textMuted,
+                            fontFamily: (uiFont || 'inherit'),
+                            fontSize: '0.9rem',
+                            fontWeight: lang === k ? 600 : 400,
+                            cursor: 'pointer',
+                            textAlign: 'right',
+                            padding: '2px 0',
+                            transition: 'opacity 0.2s',
+                            opacity: lang === k ? 1 : 0.8
+                          }}
+                          onMouseEnter={e => { e.currentTarget.style.opacity = '1' }}
+                          onMouseLeave={e => { e.currentTarget.style.opacity = lang === k ? '1' : '0.8' }}
+                        >
+                          {labels[k as Lang]}
+                        </button>
+                      );
+                    })}
                   </div>
                 </Accordion>
-
-                
               </div>
             )}
           </div>

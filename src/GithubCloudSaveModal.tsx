@@ -193,276 +193,211 @@ export default function GithubCloudSaveModal({
   };
 
   return (
-    <div className="fixed inset-0 z-[999999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md transition-opacity duration-200">
+    <div className="fixed inset-0 z-[999999] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm transition-opacity duration-200">
       <div
-        className="w-full max-w-lg rounded-2xl shadow-2xl border flex flex-col overflow-hidden transition-all duration-200"
+        className="w-full max-w-lg rounded-2xl shadow-xl flex flex-col overflow-hidden relative p-6 sm:p-8"
         style={{
           fontFamily: uiFont,
           backgroundColor: modalBg,
-          borderColor: borderColor,
           color: textColor,
+          border: `1px solid ${borderColor}`
         }}
       >
-        {/* Minimalist Header */}
-        <div
-          className="flex items-center justify-between px-5 py-4 border-b"
-          style={{
-            backgroundColor: headerBg,
-            borderColor: borderFaint,
-          }}
+        <button
+          type="button"
+          onClick={onClose}
+          className="absolute top-4 right-4 p-2 opacity-50 hover:opacity-100 transition-all cursor-pointer"
+          style={{ color: textColor }}
         >
-          <div className="flex items-center gap-3">
-            <div
-              className="w-9 h-9 rounded-xl flex items-center justify-center shadow-sm text-white shrink-0"
-              style={{ backgroundColor: accentColor }}
-            >
-              <Github size={19} />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="text-sm font-bold tracking-tight">{t(lang, 'githubCloudSaveTitle')}</h3>
-                <span className="flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 shrink-0">
-                  <ShieldCheck size={11} /> AES-256
-                </span>
-              </div>
-              <p className="text-[11px] mt-0.5 opacity-70" style={{ color: textMuted }}>
-                {t(lang, 'githubCloudSaveDesc')}
-              </p>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="p-1.5 rounded-lg opacity-70 hover:opacity-100 transition-all cursor-pointer hover:bg-black/5 dark:hover:bg-white/10"
-            style={{ color: textColor }}
-          >
-            <X size={17} />
-          </button>
+          <X size={20} strokeWidth={1.5} />
+        </button>
+
+        {/* Header */}
+        <div className="flex items-center gap-3 mb-8">
+          <h2 className="text-xl sm:text-2xl font-normal tracking-wide uppercase" style={{ fontFamily: uiFont }}>Github Sync</h2>
+          <Github size={24} strokeWidth={1.5} />
         </div>
 
         {/* Content Body */}
-        <div className="p-5 overflow-y-auto max-h-[75vh] space-y-4">
+        <div className="space-y-6">
           {/* Status notification banner */}
           {statusMsg && (
             <div
-              className={`p-3 rounded-xl border flex items-start gap-2.5 text-xs leading-relaxed transition-all ${
+              className={`p-3 flex items-start gap-2.5 text-sm transition-all rounded-xl ${
                 statusMsg.type === 'success'
-                  ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500'
-                  : 'bg-rose-500/10 border-rose-500/30 text-rose-500'
+                  ? 'bg-emerald-500/10 text-emerald-500'
+                  : 'bg-rose-500/10 text-rose-500'
               }`}
             >
               {statusMsg.type === 'success' ? (
-                <CheckCircle2 size={15} className="shrink-0 mt-0.5" />
+                <CheckCircle2 size={16} className="shrink-0 mt-0.5" />
               ) : (
-                <AlertCircle size={15} className="shrink-0 mt-0.5" />
+                <AlertCircle size={16} className="shrink-0 mt-0.5" />
               )}
-              <div className="flex-1 font-medium text-[11px] sm:text-xs">{statusMsg.text}</div>
+              <div className="flex-1 font-medium">{statusMsg.text}</div>
             </div>
           )}
 
-          {/* Section 1: Secret Code (Encryption key) */}
-          <div
-            className="p-3.5 sm:p-4 rounded-xl border transition-all"
-            style={{
-              backgroundColor: cardBg,
-              borderColor: borderFaint,
-            }}
-          >
-            <div className="flex items-center gap-1.5 mb-1">
-              <Lock size={14} style={{ color: accentColor }} />
-              <label className="text-[11px] font-bold tracking-wider uppercase opacity-90">{t(lang, 'secretCode')}</label>
-            </div>
-            <p className="text-[11px] mb-2.5 leading-snug" style={{ color: textFaint }}>
-              {t(lang, 'secretCodeDesc')}
-            </p>
+          {/* Section 1: Secret Code */}
+          <div>
+            <label className="block text-xs sm:text-sm font-normal tracking-wider uppercase mb-2 opacity-90" style={{ fontFamily: uiFont }}>{t(lang, 'secretCode')}</label>
             <div className="relative">
               <input
                 type={showSecret ? 'text' : 'password'}
                 value={config.secretCode}
                 onChange={e => setConfig(prev => ({ ...prev, secretCode: e.target.value }))}
                 onBlur={handleSaveConfig}
-                placeholder={t(lang, 'enterSecretCodePlaceholder')}
-                className="w-full px-3 py-2 pr-9 text-xs rounded-lg border outline-none transition-all"
+                className="w-full outline-none transition-all"
                 style={{
-                  backgroundColor: inputBg,
-                  borderColor: borderColor,
+                  backgroundColor: 'transparent',
                   color: textColor,
+                  border: 'none',
+                  borderBottom: `1px solid ${borderColor}`,
+                  borderRadius: 0,
+                  padding: '4px 0',
+                  paddingRight: '24px',
+                  fontFamily: (uiFont || 'inherit'),
+                  fontSize: '0.9rem'
                 }}
               />
               <button
                 type="button"
                 onClick={() => setShowSecret(!showSecret)}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 opacity-60 hover:opacity-100 transition-opacity"
+                className="absolute right-0 top-1/2 -translate-y-1/2 opacity-60 hover:opacity-100 transition-opacity z-10"
                 style={{ color: textColor }}
               >
-                {showSecret ? <EyeOff size={14} /> : <Eye size={14} />}
+                {showSecret ? <EyeOff size={16} strokeWidth={1.5} /> : <Eye size={16} strokeWidth={1.5} />}
               </button>
             </div>
           </div>
 
           {/* Section 2: GitHub Personal Access Token */}
-          <div
-            className="p-3.5 sm:p-4 rounded-xl border transition-all"
-            style={{
-              backgroundColor: cardBg,
-              borderColor: borderFaint,
-            }}
-          >
-            <div className="flex items-center justify-between mb-1">
-              <div className="flex items-center gap-1.5">
-                <Key size={14} style={{ color: accentColor }} />
-                <label className="text-[11px] font-bold tracking-wider uppercase opacity-90">{t(lang, 'githubToken')}</label>
-              </div>
+          <div>
+            <div className="flex items-end justify-between mb-2">
+              <label className="text-xs sm:text-sm font-normal tracking-wider uppercase opacity-90" style={{ fontFamily: uiFont }}>{t(lang, 'githubToken')}</label>
               <a
                 href="https://github.com/settings/tokens/new?scopes=gist&description=KgvWritingAppCloudSave"
                 target="_blank"
                 rel="noreferrer"
-                className="text-[10px] font-semibold opacity-80 hover:opacity-100 flex items-center gap-0.5 underline"
-                style={{ color: accentColor }}
+                className="text-xs font-semibold opacity-80 hover:opacity-100"
+                style={{ color: textColor, fontFamily: uiFont }}
               >
-                Token <ExternalLink size={10} />
+                Token
               </a>
             </div>
-            <p className="text-[11px] mb-2.5 leading-snug" style={{ color: textFaint }}>
-              {t(lang, 'githubTokenDesc')}
-            </p>
-            <div className="flex gap-2">
-              <div className="relative flex-1">
+            
+            <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+              <div className="relative w-full sm:flex-1">
                 <input
                   type={showToken ? 'text' : 'password'}
                   value={config.githubToken}
                   onChange={e => setConfig(prev => ({ ...prev, githubToken: e.target.value }))}
                   onBlur={handleSaveConfig}
-                  placeholder="ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-                  className="w-full px-3 py-2 pr-9 text-xs rounded-lg border outline-none transition-all font-mono"
+                  className="w-full outline-none transition-all font-mono"
                   style={{
-                    backgroundColor: inputBg,
-                    borderColor: borderColor,
+                    backgroundColor: 'transparent',
                     color: textColor,
+                    border: 'none',
+                    borderBottom: `1px solid ${borderColor}`,
+                    borderRadius: 0,
+                    padding: '4px 0',
+                    paddingRight: '24px',
+                    fontSize: '0.9rem'
                   }}
                 />
                 <button
                   type="button"
                   onClick={() => setShowToken(!showToken)}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 opacity-60 hover:opacity-100 transition-opacity"
+                  className="absolute right-0 top-1/2 -translate-y-1/2 opacity-60 hover:opacity-100 transition-opacity z-10"
                   style={{ color: textColor }}
                 >
-                  {showToken ? <EyeOff size={14} /> : <Eye size={14} />}
+                  {showToken ? <EyeOff size={16} strokeWidth={1.5} /> : <Eye size={16} strokeWidth={1.5} />}
                 </button>
               </div>
               <button
                 type="button"
                 onClick={handleTestToken}
                 disabled={loading && actionType === 'test'}
-                className="px-3 py-2 text-xs font-medium rounded-lg text-white transition-all cursor-pointer flex items-center gap-1.5 shrink-0 disabled:opacity-50 active:scale-95 shadow-sm"
-                style={{ backgroundColor: accentColor }}
+                className="text-xs font-semibold uppercase cursor-pointer hover:opacity-70 transition-opacity disabled:opacity-50 tracking-wider flex items-center gap-1.5 whitespace-nowrap"
+                style={{ color: textColor, fontFamily: uiFont }}
               >
                 {loading && actionType === 'test' ? (
-                  <RefreshCw size={12} className="animate-spin" />
-                ) : (
-                  <CheckCircle2 size={12} />
-                )}
+                  <RefreshCw size={14} className="animate-spin" />
+                ) : null}
                 {t(lang, 'testConnection')}
               </button>
             </div>
-
             {githubUser && (
-              <div className="mt-2 text-[11px] text-emerald-500 font-medium flex items-center gap-1">
-                <CheckCircle2 size={12} /> {t(lang, 'authenticatedAs')} <span className="font-bold">@{githubUser}</span>
+              <div className="text-xs mt-2 opacity-80" style={{ color: textColor, fontFamily: uiFont }}>
+                Authenticated as: {githubUser}
               </div>
             )}
           </div>
 
           {/* Section 3: Gist Sync Details & Actions */}
-          <div
-            className="p-3.5 sm:p-4 rounded-xl border transition-all"
-            style={{
-              backgroundColor: cardBg,
-              borderColor: borderFaint,
-            }}
-          >
-            <div className="flex items-center justify-between mb-1.5">
-              <label className="text-[11px] font-bold tracking-wider uppercase opacity-90">{t(lang, 'gistIdLabel')}</label>
+          <div>
+            <div className="flex items-end justify-between mb-2">
+              <label className="text-xs sm:text-sm font-normal tracking-wider uppercase opacity-90" style={{ fontFamily: uiFont }}>{t(lang, 'gistIdLabel')}</label>
               {config.gistId && (
                 <a
                   href={`https://gist.github.com/${config.gistId}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="text-[10px] opacity-70 hover:opacity-100 flex items-center gap-1"
-                  style={{ color: textColor }}
+                  className="text-xs font-semibold opacity-80 hover:opacity-100"
+                  style={{ color: textColor, fontFamily: uiFont }}
                 >
-                  {t(lang, 'viewGist')} <ExternalLink size={9} />
+                  View Gist
                 </a>
               )}
             </div>
-            <div className="flex gap-2 mb-3">
+            <div>
               <input
                 type="text"
                 value={config.gistId || ''}
                 onChange={e => setConfig(prev => ({ ...prev, gistId: e.target.value }))}
                 onBlur={handleSaveConfig}
-                placeholder={t(lang, 'gistIdPlaceholder')}
-                className="flex-1 px-3 py-1.5 text-xs rounded-lg border outline-none font-mono transition-all"
+                className="w-full outline-none font-mono transition-all"
                 style={{
-                  backgroundColor: inputBg,
-                  borderColor: borderColor,
+                  backgroundColor: 'transparent',
                   color: textColor,
+                  border: 'none',
+                  borderBottom: `1px solid ${borderColor}`,
+                  borderRadius: 0,
+                  padding: '4px 0',
+                  fontSize: '0.9rem'
                 }}
               />
-              {config.gistId && (
-                <button
-                  type="button"
-                  onClick={copyGistIdToClipboard}
-                  className="px-2.5 py-1.5 text-xs rounded-lg border flex items-center gap-1 transition-all cursor-pointer hover:bg-black/5 dark:hover:bg-white/10"
-                  style={{ borderColor: borderColor, color: textColor }}
-                  title={t(lang, 'copyGistId')}
-                >
-                  {copiedGistId ? <Check size={13} className="text-emerald-500" /> : <Copy size={13} />}
-                </button>
-              )}
             </div>
+          </div>
 
-            {/* Action Buttons */}
-            <div className="grid grid-cols-2 gap-2.5 pt-0.5">
-              <button
-                type="button"
-                onClick={handlePush}
-                disabled={loading}
-                className="w-full py-2 px-3 rounded-lg text-white font-medium text-xs shadow-sm flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-95 disabled:opacity-50"
-                style={{ backgroundColor: accentColor }}
-              >
-                {loading && actionType === 'push' ? (
-                  <RefreshCw size={14} className="animate-spin" />
-                ) : (
-                  <UploadCloud size={15} />
-                )}
-                <span>{t(lang, 'backupData')}</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={handlePull}
-                disabled={loading}
-                className="w-full py-2 px-3 rounded-lg border font-medium text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer active:scale-95 disabled:opacity-50 hover:bg-black/5 dark:hover:bg-white/10"
-                style={{
-                  borderColor: borderColor,
-                  color: textColor,
-                }}
-              >
-                {loading && actionType === 'pull' ? (
-                  <RefreshCw size={14} className="animate-spin" />
-                ) : (
-                  <DownloadCloud size={15} />
-                )}
-                <span>{t(lang, 'restoreData')}</span>
-              </button>
-            </div>
+          {/* Action Buttons */}
+          <div className="flex justify-center gap-10 sm:gap-14 pt-6">
+            <button
+              type="button"
+              onClick={handlePush}
+              disabled={loading}
+              className="text-sm sm:text-base font-normal uppercase cursor-pointer hover:opacity-70 transition-opacity disabled:opacity-50 flex items-center gap-2"
+              style={{ color: textColor, fontFamily: uiFont }}
+            >
+              {loading && actionType === 'push' && <RefreshCw size={16} className="animate-spin" />}
+              {t(lang, 'backupData')}
+            </button>
+            
+            <button
+              type="button"
+              onClick={handlePull}
+              disabled={loading}
+              className="text-sm sm:text-base font-normal uppercase cursor-pointer hover:opacity-70 transition-opacity disabled:opacity-50 flex items-center gap-2"
+              style={{ color: textColor, fontFamily: uiFont }}
+            >
+              {loading && actionType === 'pull' && <RefreshCw size={16} className="animate-spin" />}
+              {t(lang, 'restoreData')}
+            </button>
           </div>
 
           {/* Footer details */}
           {config.lastSyncedAt && (
-            <div className="text-[10px] text-center flex items-center justify-center gap-1 pt-0.5 opacity-60" style={{ color: textMuted }}>
-              <Cloud size={11} style={{ color: accentColor }} />
+            <div className="text-xs text-center pt-2 opacity-70" style={{ color: textColor, fontFamily: uiFont }}>
               {t(lang, 'lastSynced')} {new Date(config.lastSyncedAt).toLocaleString(lang === 'vi' ? 'vi-VN' : 'en-US')}
             </div>
           )}
@@ -471,4 +406,5 @@ export default function GithubCloudSaveModal({
     </div>
   );
 }
+
 

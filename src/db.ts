@@ -7,6 +7,9 @@ export interface AppSettings {
   activePageId?: string;
   currentTheme?: string;
   fontFamily?: string;
+  headingFont?: string;
+  monoFont?: string;
+  uiFont?: string;
   fontSize?: number;
   lineHeight?: number;
   pageFormat?: PageFormat;
@@ -18,6 +21,7 @@ export interface AppSettings {
   isPreviewMode?: boolean;
   readerStyle?: "classic" | "zen";
   language?: string;
+  injectedGoogleFonts?: string[];
   updatedAt?: string;
 }
 

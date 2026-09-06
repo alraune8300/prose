@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { FileText, FolderOpen, FolderInput, Plus, Download, Upload, Grid, List, Trash2, Edit2, Check, X, RotateCcw, Home, AlertCircle, Search, ArrowUpDown, FileJson, Clock, PaintRoller, Github, ChevronRight, Archive, ArchiveRestore } from 'lucide-react';
+import { FileText, FolderOpen, FolderInput, Download, Upload, Grid, List, Trash2, Edit2, Check, X, RotateCcw, Home, AlertCircle, PaintRoller, Github, ChevronRight, ChevronLeft, Archive, ArchiveRestore } from 'lucide-react';
 
 import { Project, ThemeColors, Folder } from './types';
 import { db, getAllProjectsFromDB, saveProjectToDB, deleteProjectFromDB, getAllFoldersFromDB, saveFolderToDB } from './db';
@@ -131,9 +131,30 @@ function WelcomeScreen({ theme, onSelectTheme, onOpenThemeModal, uiFont, lang = 
   const activeFolders = folders.filter(f => !f.isDeleted && !f.isArchived);
   const archivedFolders = folders.filter(f => !f.isDeleted && f.isArchived);
   const trashedFolders = folders.filter(f => f.isDeleted);
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>(() => {
+    try {
+      return (localStorage.getItem('kgv-file-view-mode') as 'grid' | 'list') || 'grid';
+    } catch {
+      return 'grid';
+    }
+  });
+
+  const handleSetViewMode = (mode: 'grid' | 'list') => {
+    setViewMode(mode);
+    try {
+      localStorage.setItem('kgv-file-view-mode', mode);
+    } catch (e) {
+      console.warn('Could not save view mode preference:', e);
+    }
+  };
+  const [searchQuery] = useState('');
   const [tab, setTab] = useState<'active' | 'archive' | 'trash'>('active');
-  const [timeGreeting, setTimeGreeting] = useState('');
+  const [timeGreeting, setTimeGreeting] = useState(() => {
+    const hour = new Date().getHours();
+    if (hour < 12) return t(lang, 'goodMorning') || 'Good morning';
+    if (hour < 18) return t(lang, 'goodAfternoon') || 'Good afternoon';
+    return t(lang, 'goodEvening') || 'Good evening';
+  });
   
   const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
   const [movingProjectId, setMovingProjectId] = useState<string | null>(null);
@@ -141,7 +162,6 @@ function WelcomeScreen({ theme, onSelectTheme, onOpenThemeModal, uiFont, lang = 
   const [dragOverFolderId, setDragOverFolderId] = useState<string | null | 'root'>(null);
   const [editingFolderId, setEditingFolderId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
-  const [hoveredFolderId, setHoveredFolderId] = useState<string | null>(null);
   
   const [currentFolderId, setCurrentFolderId] = useState<string | null>(initialFolderId ?? null);
 
@@ -158,8 +178,22 @@ function WelcomeScreen({ theme, onSelectTheme, onOpenThemeModal, uiFont, lang = 
     }
   }, [onFolderChange]);
 
-  const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState<SortOption>('lastOpened');
+  const [sortBy, setSortBy] = useState<SortOption>(() => {
+    try {
+      return (localStorage.getItem('kgv-file-sort-by') as SortOption) || 'lastOpened';
+    } catch {
+      return 'lastOpened';
+    }
+  });
+
+  const handleSetSortBy = (val: SortOption) => {
+    setSortBy(val);
+    try {
+      localStorage.setItem('kgv-file-sort-by', val);
+    } catch (e) {
+      console.warn('Could not save sort by preference:', e);
+    }
+  };
   const [isNewMenuOpen, setIsNewMenuOpen] = useState(false);
   const [isDataMenuOpen, setIsDataMenuOpen] = useState(false);
   
@@ -172,13 +206,7 @@ function WelcomeScreen({ theme, onSelectTheme, onOpenThemeModal, uiFont, lang = 
     name: ''
   });
 
-  // Folder & File visual tokens derived directly from accent colour
-  const folderBg = useMemo(() => {
-    if (theme.accent.startsWith('#')) {
-      return theme.isDark ? `${theme.accent}14` : `${theme.accent}0e`;
-    }
-    return theme.accentLight || (theme.isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)');
-  }, [theme.accent, theme.isDark, theme.accentLight]);
+
 
   const folderHoverBg = useMemo(() => {
     if (theme.accent.startsWith('#')) {
@@ -186,20 +214,6 @@ function WelcomeScreen({ theme, onSelectTheme, onOpenThemeModal, uiFont, lang = 
     }
     return theme.isDark ? 'rgba(255,255,255,0.09)' : 'rgba(0,0,0,0.06)';
   }, [theme.accent, theme.isDark]);
-
-  const folderBorder = useMemo(() => {
-    if (theme.accent.startsWith('#')) {
-      return `${theme.accent}33`;
-    }
-    return theme.accentMid || (theme.isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)');
-  }, [theme.accent, theme.accentMid, theme.isDark]);
-
-  const folderHoverBorder = useMemo(() => {
-    if (theme.accent.startsWith('#')) {
-      return `${theme.accent}88`;
-    }
-    return theme.accent;
-  }, [theme.accent]);
 
   const fileBg = useMemo(() => {
     if (theme.accent.startsWith('#')) {
@@ -274,7 +288,7 @@ function WelcomeScreen({ theme, onSelectTheme, onOpenThemeModal, uiFont, lang = 
     setDragProjectId(null);
     await loadData();
     if (onReloadProjects) onReloadProjects();
-    setToastMsg(t(lang, 'projectMoved') || 'Project moved successfully');
+    setToastMsg({ text: t(lang, 'projectMoved') || 'Project moved successfully', type: 'success' });
   };
 
   const handleArchiveProject = async (project: Project, e: React.MouseEvent) => {
@@ -323,17 +337,6 @@ function WelcomeScreen({ theme, onSelectTheme, onOpenThemeModal, uiFont, lang = 
     setToastMsg({ text: t(lang, 'itemUnarchived') || 'Folder restored from archive', type: 'success' });
   };
 
-  const handleUnarchiveAll = async () => {
-    for (const p of archivedProjects) {
-      await saveProjectToDB({ ...p, isArchived: false, archivedAt: null });
-    }
-    for (const f of archivedFolders) {
-      await saveFolderToDB({ ...f, isArchived: false, archivedAt: null });
-    }
-    await loadData();
-    if (onReloadProjects) onReloadProjects();
-    setToastMsg({ text: t(lang, 'itemUnarchived') || 'All items restored from archive', type: 'success' });
-  };
 
   const handleSoftDeleteProject = async (project: Project, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -468,7 +471,7 @@ function WelcomeScreen({ theme, onSelectTheme, onOpenThemeModal, uiFont, lang = 
       name: t(lang, 'newFolder') || 'New Folder',
       parentId: currentFolderId || undefined,
       isDeleted: false,
-      createdAt: new Date().toISOString(),
+      created_at: Date.now(),
     };
     await saveFolderToDB(newFld);
     await loadData();
@@ -599,810 +602,703 @@ function WelcomeScreen({ theme, onSelectTheme, onOpenThemeModal, uiFont, lang = 
                 <AlertCircle size={20} strokeWidth={2} />
               </div>
               <div>
-                <h3 className="font-semibold text-sm" style={{ color: theme.text }}>{t(lang, 'deleteConfirmTitle')}</h3>
-                <p className="text-xs mt-1" style={{ color: theme.textMuted }}>{t(lang, 'deleteConfirmDesc')}</p>
+                <h3 className="text-lg font-bold">{t(lang, 'confirmDelete')}</h3>
+                <p className="text-sm mt-1" style={{ color: theme.textMuted }}>
+                  {deleteConfirmDialog.type === 'folder' 
+                    ? t(lang, 'confirmDeleteFolderMsg')?.replace('{name}', deleteConfirmDialog.name)
+                    : t(lang, 'confirmDeleteProjectMsg')?.replace('{name}', deleteConfirmDialog.name)}
+                </p>
               </div>
             </div>
-            
-            <div className="flex items-center justify-end gap-2 mt-2">
-              <button 
-                onClick={() => setDeleteConfirmDialog({ isOpen: false, type: null, id: null, name: '' })}
-                className="px-4 py-2 rounded-lg text-xs font-medium transition-colors"
-                style={{ color: theme.textMuted,   }}
-              >
+            <div className="flex justify-end gap-3 mt-2">
+              <button onClick={() => setDeleteConfirmDialog({ isOpen: false, type: null, id: null, name: '' })} className="px-4 py-2 rounded-xl text-sm font-medium transition-colors hover:bg-neutral-500/10 cursor-pointer">
                 {t(lang, 'cancel')}
               </button>
-              <button 
-                onClick={executeHardDelete}
-                className="px-4 py-2 rounded-lg text-xs font-medium text-white transition-colors hover:bg-red-600 bg-red-500"
-              >
-                {t(lang, 'confirmDelete')}
+              <button onClick={executeHardDelete} className="px-4 py-2 rounded-xl text-sm font-medium text-white bg-red-500 hover:bg-red-600 transition-colors shadow-sm cursor-pointer">
+                {t(lang, 'delete')}
               </button>
             </div>
           </div>
         </div>
       )}
 
-
-            {/* Move Project Modal */}
-      {movingProjectId && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)' }} onClick={() => setMovingProjectId(null)}>
-          <div className="p-5 rounded-2xl shadow-xl flex flex-col gap-4 animate-fade-in-up w-[320px] max-w-full" style={{ backgroundColor: theme.surface, border: `1px solid ${theme.border}` }} onClick={(e) => e.stopPropagation()}>
-            <h3 className="font-semibold text-sm" style={{ color: theme.text }}>{t(lang, 'moveToFolder') || 'Move to folder...'}</h3>
-            <div className="flex flex-col gap-1 max-h-[250px] overflow-y-auto">
-              <button
-                className="flex items-center gap-2 w-full text-left px-3 py-2 rounded-lg transition-colors text-sm"
-                style={{ color: theme.text, backgroundColor: 'transparent' }}
-                onMouseEnter={e => e.currentTarget.style.backgroundColor = folderHoverBg}
-                onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
-                onClick={() => handleMoveProject(null)}
-              >
-                <Home size={14} style={{ color: theme.accent }} />
-                <span>{t(lang, 'home') || 'Home'}</span>
-              </button>
-              {activeFolders.map(folder => (
-                <button
-                  key={folder.id}
-                  className="flex items-center gap-2 w-full text-left px-3 py-2 rounded-lg transition-colors text-sm truncate"
-                  style={{ color: theme.text, backgroundColor: 'transparent' }}
-                  onMouseEnter={e => e.currentTarget.style.backgroundColor = folderHoverBg}
-                  onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
-                  onClick={() => handleMoveProject(folder.id)}
-                >
-                  <FolderOpen size={14} style={{ color: theme.accent }} />
-                  <span className="truncate">{folder.name || 'Untitled Folder'}</span>
-                </button>
-              ))}
-            </div>
-            <div className="flex items-center justify-end mt-1">
-              <button 
-                onClick={() => setMovingProjectId(null)}
-                className="px-4 py-2 rounded-lg text-xs font-medium transition-colors"
-                style={{ color: theme.textMuted }}
-              >
-                {t(lang, 'cancel')}
-              </button>
-            </div>
-          </div>
+      {/* Toast */}
+      {toastMsg && (
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-full shadow-lg flex items-center gap-2 animate-fade-in-up text-sm font-medium" style={{ backgroundColor: theme.isDark ? '#333' : '#fff', color: theme.text, border: `1px solid ${theme.border}` }}>
+          {toastMsg.type === 'success' ? <Check size={16} className="text-green-500" /> : <AlertCircle size={16} className="text-red-500" />}
+          {toastMsg.text}
         </div>
       )}
 
-      {/* Sidebar Navigation (Responsive: Header bar on mobile, left column on md+) */}
-      <div 
-        className="w-full md:w-64 flex-shrink-0 flex flex-row md:flex-col pt-4 md:pt-12 px-4 sm:px-6 pb-4 md:pb-6 border-b md:border-b-0 md:border-r items-center md:items-start justify-between md:justify-between gap-3"
-        style={{ borderColor: theme.borderFaint, backgroundColor: theme.surface }}
-      >
-        <div className="flex flex-row md:flex-col items-center md:items-start gap-3 md:gap-10 w-full">
-          <div className="mb-0 md:mb-0 px-0 md:px-2 flex items-center justify-center md:justify-start w-full">
-            <div className="flex items-center gap-2.5">
-              <h2 className="text-2xl md:text-3xl font-serif tracking-tight" style={{ color: theme.text, fontFamily: `'${uiFont}', Georgia, serif` }}>
-                Prose
-              </h2>
-            </div>
-          </div>
-          <nav className="flex flex-row md:flex-col gap-1.5 md:gap-2 w-full mt-2">
-            <button 
-              onClick={() => { setTab('active'); }} 
-              className="flex items-center justify-between px-3 py-1.5 md:py-2.5 rounded-full transition-all border cursor-pointer"
-              style={{ 
-                backgroundColor: tab === 'active' ? (theme.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)') : 'transparent',
-                borderColor: tab === 'active' ? theme.border : 'transparent',
-                color: tab === 'active' ? theme.text : theme.textMuted
-              }}
-              onMouseEnter={e => { if (tab !== 'active') e.currentTarget.style.backgroundColor = theme.panel; }}
-              onMouseLeave={e => { if (tab !== 'active') e.currentTarget.style.backgroundColor = 'transparent'; }}
-            >
-              <div className="flex items-center gap-2 md:gap-3">
-                <Home size={16} strokeWidth={tab === 'active' ? 2 : 1.5} />
-                <span className="font-medium text-xs md:text-sm">{t(lang, 'active')}</span>
-              </div>
-            </button>
-            
-            <button 
-              onClick={() => { setTab('archive'); }} 
-              className="flex items-center justify-between px-3 py-1.5 md:py-2.5 rounded-full transition-all border cursor-pointer"
-              style={{ 
-                backgroundColor: tab === 'archive' ? (theme.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)') : 'transparent',
-                borderColor: tab === 'archive' ? theme.border : 'transparent',
-                color: tab === 'archive' ? theme.text : theme.textMuted
-              }}
-              onMouseEnter={e => { if (tab !== 'archive') e.currentTarget.style.backgroundColor = theme.panel; }}
-              onMouseLeave={e => { if (tab !== 'archive') e.currentTarget.style.backgroundColor = 'transparent'; }}
-            >
-              <div className="flex items-center gap-2 md:gap-3">
-                <Archive size={16} strokeWidth={tab === 'archive' ? 2 : 1.5} />
-                <span className="font-medium text-xs md:text-sm">{t(lang, 'archive')}</span>
-              </div>
-              {(archivedProjects.length + archivedFolders.length) > 0 && (
-                <span className="text-[10px] px-1.5 py-0.5 rounded-full font-semibold" style={{ backgroundColor: folderBg, color: theme.accent }}>
-                  {archivedProjects.length + archivedFolders.length}
-                </span>
-              )}
-            </button>
-
-            <button 
-              onClick={() => { setTab('trash'); }} 
-              className="flex items-center justify-between px-3 py-1.5 md:py-2.5 rounded-full transition-all border cursor-pointer"
-              style={{ 
-                backgroundColor: tab === 'trash' ? (theme.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)') : 'transparent',
-                borderColor: tab === 'trash' ? theme.border : 'transparent',
-                color: tab === 'trash' ? theme.text : theme.textMuted
-              }}
-              onMouseEnter={e => { if (tab !== 'trash') e.currentTarget.style.backgroundColor = theme.panel; }}
-              onMouseLeave={e => { if (tab !== 'trash') e.currentTarget.style.backgroundColor = 'transparent'; }}
-            >
-              <div className="flex items-center gap-2 md:gap-3">
-                <Trash2 size={16} strokeWidth={tab === 'trash' ? 2 : 1.5} />
-                <span className="font-medium text-xs md:text-sm">{t(lang, 'trash')}</span>
-              </div>
-              {(trashedProjects.length + trashedFolders.length) > 0 && (
-                <span className="text-[10px] px-1.5 py-0.5 rounded-full font-semibold" style={{ backgroundColor: theme.isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)', color: theme.textMuted }}>
-                  {trashedProjects.length + trashedFolders.length}
-                </span>
-              )}
-            </button>
-          </nav>
+      {/* SIDEBAR - Redesigned */}
+      <div className="w-full md:w-64 flex-shrink-0 flex flex-col px-8 py-12 md:py-16">
+        <div className="mb-16">
+          <h1 className="text-4xl md:text-5xl tracking-tight" style={{ color: theme.text, fontFamily: `'${uiFont}', sans-serif` }}>
+            dotter
+          </h1>
         </div>
 
-        {/* Bottom Area: Theme Settings Button & GitHub Cloud Save */}
-        <div className="w-full pt-4 mt-auto border-t flex items-center gap-2" style={{ borderColor: theme.borderFaint }}>
-          {onSelectTheme && (
-            <button
-              onClick={() => { if (onOpenThemeModal) onOpenThemeModal(); }}
-              title={t(lang, 'themePresets') || 'Themes'}
-              className="flex-1 p-2.5 rounded-lg border text-xs font-medium flex items-center justify-center transition-all cursor-pointer shadow-sm"
-              style={{
-                borderColor: theme.border,
-                backgroundColor: theme.surface,
-                color: theme.text,
-              }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = theme.accent; e.currentTarget.style.backgroundColor = theme.panel; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = theme.border; e.currentTarget.style.backgroundColor = theme.surface; }}
+        <nav className="flex flex-col gap-6">
+          <button 
+            onClick={() => setTab('active')} 
+            className={`text-left text-lg flex items-center gap-2 transition-all cursor-pointer ${tab === 'active' ? 'font-medium opacity-100' : 'font-light opacity-70 hover:opacity-100'}`}
+            style={{ color: theme.text }}
+          >
+            {lang === 'vi' ? 'Tệp' : 'File'}
+          </button>
+          
+          <button 
+            onClick={() => setTab('archive')} 
+            className={`text-left text-lg flex items-center gap-2 transition-all cursor-pointer ${tab === 'archive' ? 'font-medium opacity-100' : 'font-light opacity-70 hover:opacity-100'}`}
+            style={{ color: theme.text }}
+          >
+            {lang === 'vi' ? 'Lưu trữ' : 'Archive'}
+          </button>
+          
+          <button 
+            onClick={() => setTab('trash')} 
+            className={`text-left text-lg flex items-center gap-2 transition-all cursor-pointer ${tab === 'trash' ? 'font-medium opacity-100' : 'font-light opacity-70 hover:opacity-100'}`}
+            style={{ color: theme.text }}
+          >
+            {lang === 'vi' ? 'Thùng rác' : 'Trash'}
+          </button>
+        </nav>
+
+        {/* Bottom Sidebar Actions */}
+        <div className="mt-auto pt-8 flex items-center gap-4">
+          {onOpenThemeModal && (
+            <button 
+              onClick={onOpenThemeModal} 
+              className="opacity-70 hover:opacity-100 transition-opacity cursor-pointer" 
+              style={{ color: theme.text }}
+              title={t(lang, 'theme') || 'Theme'}
             >
-              <PaintRoller size={16} style={{ color: theme.text }} />
+              <PaintRoller size={24} strokeWidth={1.5} />
             </button>
           )}
-
           {onOpenGithubCloudSave && (
-            <button
-              onClick={onOpenGithubCloudSave}
-              title={t(lang, 'cloudSaveSync') || 'Cloud Sync'}
-              className="flex-1 p-2.5 rounded-lg border text-xs font-medium flex items-center justify-center transition-all cursor-pointer shadow-sm"
-              style={{
-                borderColor: theme.border,
-                backgroundColor: theme.surface,
-                color: theme.text,
-              }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = theme.accent; e.currentTarget.style.backgroundColor = theme.panel; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = theme.border; e.currentTarget.style.backgroundColor = theme.surface; }}
+            <button 
+              onClick={onOpenGithubCloudSave} 
+              className="opacity-70 hover:opacity-100 transition-opacity cursor-pointer" 
+              style={{ color: theme.text }}
+              title="GitHub Sync"
             >
-              <Github size={16} style={{ color: theme.text }} />
+              <Github size={24} strokeWidth={1.5} />
             </button>
           )}
         </div>
       </div>
 
-      {/* Main Content Area */}
-      <div 
-        className="flex-1 flex flex-col p-4 sm:p-6 md:p-8 lg:p-12 overflow-y-auto w-full min-w-0" 
-        style={{ paddingBottom: 'calc(1rem + env(safe-area-inset-bottom))' }}
-        onClick={() => { setIsNewMenuOpen(false); setIsDataMenuOpen(false); }}
-      >
-        {/* Header / Greeting */}
-        <div className="w-full max-w-5xl flex flex-col md:flex-row items-start md:items-end justify-between mt-4 mb-10 gap-4 animate-fade-in-up relative z-40">
-          <div className="flex flex-col gap-1">
-            <h1 className="text-4xl md:text-5xl tracking-tight" style={{ color: theme.text, fontFamily: `'${uiFont}', Georgia, serif` }}>
-              {timeGreeting},
-            </h1>
-            <p className="text-lg md:text-xl font-light" style={{ color: theme.textMuted }}>
-              {t(lang, 'whatAreWeWriting')}
-            </p>
-          </div>
-          
-          {/* Header Right Actions */}
-          <div className="flex flex-wrap items-center gap-2 pb-1">
-            {onChangeLang && (
-              <div className="flex items-center">
-                <CustomSelect
-                  value={lang}
-                  onChange={(val) => onChangeLang(val)}
-                  theme={theme}
-                  fontFamily={uiFont}
-                  buttonClassName="bg-transparent text-xs outline-none font-medium flex items-center gap-1 border rounded-full px-3 py-1.5 transition-all cursor-pointer"
-                  buttonStyle={{ fontFamily: uiFont, borderColor: theme.borderFaint, color: theme.text }}
-                  options={LANGUAGES}
-                  disableSearch={true}
-                />
-              </div>
-            )}
-            {tab === 'active' && (
-              <div className="flex items-center gap-2">
-               {/* Data (Import/Export) Dropdown */}
-               <div className="relative">
-                  <button 
-                    onClick={(e) => { e.stopPropagation(); setIsDataMenuOpen(!isDataMenuOpen); setIsNewMenuOpen(false); }}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all cursor-pointer font-medium text-sm border"
-                    style={{ 
-                      borderColor: theme.borderFaint,
-                      backgroundColor: 'transparent', 
-                      color: theme.text 
-                    }}
-                    onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = theme.panel; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
-                  >
-                    <Upload size={16} strokeWidth={2} />
-                    <span className="hidden sm:inline">{t(lang, 'importDocument')}</span>
-                  </button>
-                  {isDataMenuOpen && (
-                    <div 
-                      className="absolute top-full right-0 mt-2 w-56 rounded-xl shadow-xl py-2 z-50 animate-fade-in-up flex flex-col"
-                      style={{ backgroundColor: theme.surface, border: `1px solid ${theme.border}` }}
-                    >
-                      <div className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider" style={{ color: theme.textMuted }}>
-                        Import
-                      </div>
-                      <button onClick={() => { onImport(); setIsDataMenuOpen(false); }} className="flex items-center gap-3 w-full text-left px-3 py-2 text-sm transition-colors" style={{ color: theme.text }} onMouseEnter={e => e.currentTarget.style.backgroundColor = theme.panel} onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}>
-                        <Upload size={16} style={{ color: theme.textMuted }} />
-                        <span>{t(lang, 'importDocumentBtn')}</span>
-                      </button>
-                      <button onClick={() => { handleImportBackupJson(); setIsDataMenuOpen(false); }} className="flex items-center gap-3 w-full text-left px-3 py-2 text-sm transition-colors" style={{ color: theme.text }} onMouseEnter={e => e.currentTarget.style.backgroundColor = theme.panel} onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}>
-                        <FileJson size={16} className="text-emerald-500" />
-                        <span>{t(lang, 'backupImport')}</span>
-                      </button>
-                      
-                      <div className="h-[1px] w-full my-1" style={{ backgroundColor: theme.borderFaint }} />
-                      
-                      <div className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider" style={{ color: theme.textMuted }}>
-                        Export
-                      </div>
-                      <button onClick={() => { onExportAll(); setIsDataMenuOpen(false); }} className="flex items-center gap-3 w-full text-left px-3 py-2 text-sm transition-colors" style={{ color: theme.text }} onMouseEnter={e => e.currentTarget.style.backgroundColor = theme.panel} onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}>
-                        <Download size={16} style={{ color: theme.textMuted }} />
-                        <span>{t(lang, 'exportDocumentsBtn')}</span>
-                      </button>
-                      <button onClick={() => { handleExportBackupJson(); setIsDataMenuOpen(false); }} className="flex items-center gap-3 w-full text-left px-3 py-2 text-sm transition-colors" style={{ color: theme.text }} onMouseEnter={e => e.currentTarget.style.backgroundColor = theme.panel} onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}>
-                        <FileJson size={16} className="text-amber-500" />
-                        <span>{t(lang, 'backupExport')}</span>
-                      </button>
-                    </div>
-                  )}
-               </div>
+      {/* MAIN CONTENT AREA */}
+      <div className="flex-1 flex flex-col min-w-0 md:px-12 py-10 md:py-16 overflow-y-auto">
+        
+        {/* Header Greeting */}
+        <div className="mb-12">
+          <h2 className="text-4xl md:text-5xl mb-3" style={{ color: theme.text, fontFamily: `'${uiFont}', sans-serif` }}>
+            {timeGreeting},
+          </h2>
+          <h2 className="text-4xl md:text-5xl" style={{ color: theme.text, fontFamily: `'${uiFont}', sans-serif` }}>
+            {t(lang, 'tagline') || 'What are we writing today?'}
+          </h2>
+        </div>
 
-               {/* New Button with Dropdown */}
-                <div className="relative">
-                  <button 
-                    onClick={(e) => { e.stopPropagation(); setIsNewMenuOpen(!isNewMenuOpen); setIsDataMenuOpen(false); }}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-all cursor-pointer font-medium text-sm border"
-                    style={{ 
-                      backgroundColor: theme.isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)', color: theme.text, borderColor: theme.border
-                    }}
-                    onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.8'; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.opacity = '1'; }}
-                  >
-                    <Plus size={16} strokeWidth={2} />
-                    <span>{t(lang, 'new')}</span>
-                  </button>
-                  {isNewMenuOpen && (
-                    <div 
-                      className="absolute top-full right-0 mt-2 w-56 rounded-xl shadow-xl py-2 z-50 animate-fade-in-up flex flex-col"
-                      style={{ backgroundColor: theme.surface, border: `1px solid ${theme.border}` }}
-                    >
-                      <div className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider" style={{ color: theme.textMuted }}>
-                        Documents
-                      </div>
-                      <button onClick={() => { handleNewProject(); setIsNewMenuOpen(false); }} className="flex items-center gap-3 w-full text-left px-3 py-2 text-sm transition-colors" style={{ color: theme.text }} onMouseEnter={e => e.currentTarget.style.backgroundColor = folderHoverBg} onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}>
-                        <FileText size={16} style={{ color: theme.accent }} />
-                        <span>{t(lang, 'newDocument').replace('+', '').trim()}</span>
+        {/* Toolbar */}
+        <div className="flex flex-wrap items-center justify-between gap-6 mb-8 text-[15px]">
+          <div className="flex flex-wrap items-center gap-8">
+            
+            {/* Create Menu */}
+            <div className="relative">
+              <button 
+                onClick={(e) => { e.stopPropagation(); setIsNewMenuOpen(!isNewMenuOpen); setIsDataMenuOpen(false); }}
+                className="flex items-center gap-1 font-medium hover:opacity-70 transition-opacity cursor-pointer"
+                style={{ color: theme.text }}
+              >
+                Create <ChevronRight size={14} className={`transform transition-transform ${isNewMenuOpen ? 'rotate-90' : 'rotate-90'}`} />
+              </button>
+              
+              {isNewMenuOpen && (
+                <div className="absolute top-full left-0 mt-2 w-48 rounded-2xl shadow-xl border overflow-hidden z-20 animate-fade-in-up" style={{ backgroundColor: theme.surface, border: `1px solid ${theme.borderFaint}` }}>
+                  <div className="p-1.5 flex flex-col gap-0.5">
+                    <button onClick={() => { handleNewProject(); setIsNewMenuOpen(false); }} className="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium hover:bg-neutral-500/10 transition-colors cursor-pointer" style={{ color: theme.text }}>
+                      <FileText size={16} className="opacity-70" /> {t(lang, 'newProject')}
+                    </button>
+                    {tab === 'active' && (
+                      <button onClick={() => { handleNewFolder(); setIsNewMenuOpen(false); }} className="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium hover:bg-neutral-500/10 transition-colors cursor-pointer" style={{ color: theme.text }}>
+                        <FolderInput size={16} className="opacity-70" /> {t(lang, 'newFolder')}
                       </button>
-                      
-                      <div className="h-[1px] w-full my-1" style={{ backgroundColor: theme.borderFaint }} />
-                      
-                      <div className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider" style={{ color: theme.textMuted }}>
-                        Folders
-                      </div>
-                      <button onClick={() => { handleNewFolder(); setIsNewMenuOpen(false); }} className="flex items-center gap-3 w-full text-left px-3 py-2 text-sm transition-colors" style={{ color: theme.text }} onMouseEnter={e => e.currentTarget.style.backgroundColor = folderHoverBg} onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}>
-                        <FolderOpen size={16} style={{ color: theme.accent }} />
-                        <span>{t(lang, 'newFolder')}</span>
-                      </button>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
-            </div>
-          )}
-        </div>
-        </div>
-
-        {/* Quick Actions & Navigation Toolbar */}
-        <div className="w-full max-w-5xl flex flex-col gap-4 mb-8 animate-fade-in-up" style={{ animationDelay: '100ms' }}>
-          {/* Row 2: Search input, Sort selector & View Mode Toggle */}
-          <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t" style={{ borderColor: theme.borderFaint }}>
-            {/* Search Input */}
-            <div className="flex-1 min-w-[220px] max-w-md relative flex items-center">
-              <Search size={14} className="absolute left-3 pointer-events-none" style={{ color: theme.textMuted }} />
-              <input 
-                type="text"
-                placeholder={t(lang, 'searchProjects')}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-8 py-1.5 rounded-xl text-xs border outline-none transition-all"
-                style={{
-                  backgroundColor: theme.surface,
-                  borderColor: theme.borderFaint,
-                  color: theme.text,
-                }}
-                onFocus={(e) => e.target.style.borderColor = theme.accent}
-                onBlur={(e) => e.target.style.borderColor = theme.borderFaint}
-              />
-              {searchQuery && (
-                <button 
-                  onClick={() => setSearchQuery('')}
-                  className="absolute right-2.5 text-xs p-1 rounded-full hover:opacity-80"
-                  style={{ color: theme.textMuted }}
-                >
-                  <X size={12} />
-                </button>
               )}
             </div>
 
-            {/* Sort & View Mode controls */}
-            <div className="flex items-center gap-2">
-              {/* Sort Selector */}
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs" style={{ backgroundColor: theme.surface, borderColor: theme.borderFaint }}>
-                <ArrowUpDown size={13} style={{ color: theme.textMuted }} />
-                <span className="text-[11px] font-medium hidden sm:inline" style={{ color: theme.textMuted }}>{t(lang, 'sortBy')}:</span>
-                <CustomSelect
-                  value={sortBy}
-                  onChange={(val) => setSortBy(val as SortOption)}
-                  theme={theme}
-                  disableSearch={true}
-                  fontFamily={uiFont}
-                  buttonClassName="bg-transparent text-xs outline-none font-medium flex items-center gap-1"
-                  buttonStyle={{ fontFamily: uiFont }}
-                  options={[
-                    { value: 'lastOpened', label: t(lang, 'sortRecentlyOpened') || 'Vừa xem' },
-                    { value: 'updated', label: t(lang, 'sortUpdated') },
-                    { value: 'newest', label: t(lang, 'sortNewest') },
-                    { value: 'oldest', label: t(lang, 'sortOldest') },
-                    { value: 'nameAZ', label: t(lang, 'sortNameAZ') },
-                    { value: 'nameZA', label: t(lang, 'sortNameZA') },
-                    { value: 'pages', label: t(lang, 'sortPagesCount') },
-                  ]}
-                  dropdownClassName="w-48 right-0"
-                />
-              </div>
-
-              {/* View Mode Toggle */}
-              <div className="flex items-center gap-1 rounded-xl p-1 border" style={{ backgroundColor: theme.surface, borderColor: theme.borderFaint }}>
-                <button 
-                  onClick={() => setViewMode('grid')} 
-                  className="p-1.5 rounded-lg transition-all cursor-pointer"
-                  title={t(lang, 'viewGrid')}
-                  style={{ 
-                    background: viewMode === 'grid' ? theme.bg : 'transparent',
-                    color: viewMode === 'grid' ? theme.text : theme.textMuted
-                  }}
-                >
-                  <Grid size={15} strokeWidth={1.5} />
-                </button>
-                <button 
-                  onClick={() => setViewMode('list')} 
-                  className="p-1.5 rounded-lg transition-all cursor-pointer"
-                  title={t(lang, 'viewList')}
-                  style={{ 
-                    background: viewMode === 'list' ? theme.bg : 'transparent',
-                    color: viewMode === 'list' ? theme.text : theme.textMuted
-                  }}
-                >
-                  <List size={15} strokeWidth={1.5} />
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-        {/* Breadcrumbs */}
-        {tab === 'active' && currentFolderId !== null && (
-          <div className="w-full max-w-5xl mb-4 flex items-center justify-between gap-3 text-sm animate-fade-in-up" style={{ color: theme.textMuted }}>
-            <div className="flex items-center gap-1.5 text-xs sm:text-sm">
+            {/* File Menu */}
+            <div className="relative">
               <button 
-                onClick={() => handleSelectFolder(null)} 
-                className={`hover:underline px-2 py-1 rounded-lg transition-colors cursor-pointer ${dragOverFolderId === 'root' ? 'bg-black/10 dark:bg-white/10' : ''}`}
-                onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); setDragOverFolderId('root'); }}
-                onDragLeave={(e) => { e.preventDefault(); e.stopPropagation(); setDragOverFolderId(null); }}
-                onDrop={(e) => {
-                  e.preventDefault(); e.stopPropagation(); setDragOverFolderId(null);
-                  if (dragProjectId) handleMoveProject(null, dragProjectId);
-                }}
-                style={{ color: theme.textMuted }}
+                onClick={(e) => { e.stopPropagation(); setIsDataMenuOpen(!isDataMenuOpen); setIsNewMenuOpen(false); }}
+                className="flex items-center gap-1 font-medium hover:opacity-70 transition-opacity cursor-pointer"
+                style={{ color: theme.text }}
               >
-                {t(lang, 'home')}
+                File <ChevronRight size={14} className={`transform transition-transform ${isDataMenuOpen ? 'rotate-90' : 'rotate-90'}`} />
               </button>
-              {breadcrumbs.map((b, i) => (
-                <React.Fragment key={b.id}>
-                  <ChevronRight size={13} className="opacity-40" />
-                  <button 
-                    onClick={() => handleSelectFolder(b.id)} 
-                    className={`hover:underline px-1.5 py-0.5 rounded-lg transition-colors cursor-pointer ${i === breadcrumbs.length - 1 ? 'font-semibold' : ''}`}
-                    style={{ color: i === breadcrumbs.length - 1 ? theme.text : theme.textMuted }}
-                  >
-                    {b.name}
-                  </button>
-                </React.Fragment>
-              ))}
-            </div>
-          </div>
-        )}
-        {tab === 'archive' && (
-          <div className="w-full max-w-5xl mb-4 flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-xl border animate-fade-in-up gap-3" style={{ backgroundColor: theme.surface, borderColor: theme.borderFaint }}>
-            <div className="flex items-center gap-2.5">
-              <div className="p-2 rounded-lg" style={{ backgroundColor: folderBg, color: theme.accent }}>
-                <Archive size={16} strokeWidth={2} />
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-semibold" style={{ color: theme.text }}>
-                    {t(lang, 'archivedItems')}
-                  </span>
-                  <span className="text-[11px] px-1.5 py-0.5 rounded-full font-medium" style={{ backgroundColor: folderBg, color: theme.accent }}>
-                    {archivedProjects.length + archivedFolders.length}
-                  </span>
-                </div>
-                <p className="text-[11px] font-light mt-0.5" style={{ color: theme.textMuted }}>
-                  {t(lang, 'archiveDesc')}
-                </p>
-              </div>
-            </div>
-            {(archivedProjects.length > 0 || archivedFolders.length > 0) && (
-              <button
-                onClick={handleUnarchiveAll}
-                className="self-start sm:self-auto flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold cursor-pointer transition-all"
-                style={{ borderColor: theme.borderFaint, color: theme.accent, backgroundColor: folderBg }}
-                onMouseEnter={e => e.currentTarget.style.backgroundColor = folderHoverBg}
-                onMouseLeave={e => e.currentTarget.style.backgroundColor = folderBg}
-              >
-                <ArchiveRestore size={13} />
-                <span>{t(lang, 'unarchiveAll')}</span>
-              </button>
-            )}
-          </div>
-        )}
-        {tab === 'trash' && (trashedProjects.length > 0 || trashedFolders.length > 0) && (
-          <div className="w-full max-w-5xl mb-4 flex items-center justify-between p-3 rounded-xl border animate-fade-in-up" style={{ backgroundColor: theme.surface, borderColor: theme.borderFaint }}>
-            <span className="text-xs font-medium" style={{ color: theme.textMuted }}>
-              {t(lang, 'deletedItems')} ({trashedProjects.length + trashedFolders.length})
-            </span>
-            <button
-              onClick={handleEmptyAllTrash}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold text-red-500 hover:bg-red-500/10 cursor-pointer transition-all"
-              style={{ borderColor: theme.borderFaint }}
-            >
-              <Trash2 size={13} />
-              <span>{t(lang, 'emptyBin')}</span>
-            </button>
-          </div>
-        )}
-
-        {/* Projects / Files Grid */}
-        <div className="w-full max-w-5xl animate-fade-in-up" style={{ animationDelay: '200ms' }}>
-          {displayedProjects.length === 0 && displayedFolders.length === 0 ? (
-            <div 
-              className="w-full py-24 flex flex-col items-center justify-center border border-dashed rounded-2xl"
-              style={{ borderColor: theme.border, backgroundColor: theme.surface }}
-            >
-              <FileText size={32} className="mb-4" strokeWidth={1.5} style={{ color: theme.textMuted }} />
-              <p className="font-light text-sm" style={{ color: theme.textMuted }}>
-                {tab === 'active' ? t(lang, 'noProjectsFound') : tab === 'archive' ? t(lang, 'archiveEmpty') : t(lang, 'trashIsEmpty')}
-              </p>
-            </div>
-          ) : (
-            <div className={viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4' : 'flex flex-col gap-2'}>
               
-              {/* Render Folders First */}
-              {displayedFolders.map((folder) => {
-                if (viewMode === 'grid') {
-                  return (
-                    <div 
-                      key={folder.id}
-                      onClick={() => tab === 'active' && handleSelectFolder(folder.id)}
-                      className={`group relative w-full h-[140px] pt-[16px] transition-all ${tab === 'active' ? 'cursor-pointer hover:-translate-y-1' : ''}`}
-                      onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); setDragOverFolderId(folder.id); }}
-                      onDragLeave={(e) => { e.preventDefault(); e.stopPropagation(); setDragOverFolderId(null); }}
-                      onDrop={(e) => {
-                        e.preventDefault(); e.stopPropagation(); setDragOverFolderId(null);
-                        if (dragProjectId) handleMoveProject(folder.id, dragProjectId);
-                      }}
-                      onMouseEnter={() => setHoveredFolderId(folder.id)}
-                      onMouseLeave={() => setHoveredFolderId(null)}
-                    >
-                      {/* 100% Seamless Single-Path Vector Silhouette */}
-                      <FolderCardShape
-                        isHovered={hoveredFolderId === folder.id}
-                        isDragOver={dragOverFolderId === folder.id}
-                        accent={theme.accent}
-                        folderBg={folderBg}
-                        folderBorder={folderBorder}
-                        folderHoverBg={folderHoverBg}
-                        folderHoverBorder={folderHoverBorder}
-                      />
-
-                      {/* Content */}
-                      <div className="relative z-20 w-full h-full p-5 flex flex-col justify-between">
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1 min-w-0 pr-4">
-                            {editingFolderId === folder.id && tab === 'active' ? (
-                              <div className="flex items-center gap-2 w-full" onClick={(e) => e.stopPropagation()}>
-                                <input 
-                                  type="text" 
-                                  value={editName}
-                                  onChange={(e) => setEditName(e.target.value)}
-                                  className="w-full bg-transparent border-b outline-none px-1 py-0.5 text-xl font-serif"
-                                  style={{ borderColor: theme.accent, color: theme.text, fontFamily: `'${uiFont}', Georgia, serif` }}
-                                  autoFocus
-                                  onKeyDown={(e) => e.key === 'Enter' && handleSaveEditFolder(folder, e as unknown as React.MouseEvent)}
-                                />
-                                <button onClick={(e) => handleSaveEditFolder(folder, e)} className="p-1 rounded text-green-500 hover:bg-green-500/10 transition-colors cursor-pointer"><Check size={14}/></button>
-                                <button onClick={(e) => { e.stopPropagation(); setEditingFolderId(null); }} className="p-1 rounded text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer"><X size={14}/></button>
-                              </div>
-                            ) : (
-                              <h3 className="text-xl font-medium tracking-wide truncate" style={{ color: theme.text, fontFamily: `'${uiFont}', Georgia, serif` }}>
-                                {folder.name || 'Untitled Folder'}
-                              </h3>
-                            )}
-                          </div>
-                          {/* Actions (Always visible) */}
-                          <div className="flex-shrink-0 flex items-center gap-1 transition-opacity" onClick={(e) => e.stopPropagation()}>
-                            {tab === 'active' ? (
-                              <>
-                                <button onClick={(e) => handleStartEditFolder(folder.id, folder.name, e)} className="p-1.5 rounded-md hover:bg-neutral-500/10 transition-colors cursor-pointer" style={{ color: theme.accent }} title={t(lang, 'rename')}>
-                                  <Edit2 size={14} />
-                                </button>
-                                <button onClick={(e) => handleArchiveFolder(folder, e)} className="p-1.5 rounded-md hover:bg-neutral-500/10 transition-colors cursor-pointer" style={{ color: theme.accent }} title={t(lang, 'archiveFolder')}>
-                                  <Archive size={14} />
-                                </button>
-                                <button onClick={(e) => handleSoftDeleteFolder(folder, e)} className="p-1.5 rounded-md hover:bg-neutral-500/10 transition-colors cursor-pointer" style={{ color: theme.textMuted }} title={t(lang, 'moveToTrash')}>
-                                  <Trash2 size={14} />
-                                </button>
-                              </>
-                            ) : tab === 'archive' ? (
-                              <>
-                                <button onClick={(e) => handleUnarchiveFolder(folder, e)} className="p-1.5 rounded-md hover:bg-neutral-500/10 transition-colors cursor-pointer" style={{ color: theme.accent }} title={t(lang, 'unarchiveFolder')}>
-                                  <ArchiveRestore size={14} />
-                                </button>
-                                <button onClick={(e) => handleSoftDeleteFolder(folder, e)} className="p-1.5 rounded-md hover:bg-neutral-500/10 transition-colors cursor-pointer" style={{ color: theme.textMuted }} title={t(lang, 'moveToTrash')}>
-                                  <Trash2 size={14} />
-                                </button>
-                              </>
-                            ) : (
-                              <>
-                                <button onClick={(e) => handleRestoreFolder(folder, e)} className="p-1.5 rounded-md hover:bg-neutral-500/10 transition-colors cursor-pointer" style={{ color: theme.accent }} title={t(lang, 'restore')}>
-                                  <RotateCcw size={14} />
-                                </button>
-                                <button onClick={(e) => promptHardDelete('folder', folder.id, folder.name, e)} className="p-1.5 rounded-md hover:bg-neutral-500/10 transition-colors cursor-pointer" style={{ color: theme.textMuted }} title={t(lang, 'deleteForever')}>
-                                  <Trash2 size={14} />
-                                </button>
-                              </>
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-1.5 text-[0.7rem] font-light" style={{ color: theme.accent, opacity: 0.85 }}>
-                          <Clock size={12} strokeWidth={1.5} style={{ color: theme.accent }} />
-                          <span>{folder.created_at ? Intl.DateTimeFormat(lang, { month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(folder.created_at)) : t(lang, 'recently') || 'Recently'}</span>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                }
-
-                return (
-                  <div 
-                    key={folder.id}
-                  onClick={() => tab === 'active' && handleSelectFolder(folder.id)}
-                  className={`group relative flex flex-col justify-center px-4 py-3 rounded-md border transition-colors ${tab === 'active' ? 'cursor-pointer hover:-translate-y-0.5 shadow-sm' : ''}`}
-                  onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); setDragOverFolderId(folder.id); }}
-                  onDragLeave={(e) => { e.preventDefault(); e.stopPropagation(); setDragOverFolderId(null); }}
-                  onDrop={(e) => {
-                    e.preventDefault(); e.stopPropagation(); setDragOverFolderId(null);
-                    if (dragProjectId) handleMoveProject(folder.id, dragProjectId);
-                  }}
-                  style={{ 
-                    backgroundColor: folderBg,
-                    borderColor: dragOverFolderId === folder.id ? theme.accent : folderBorder
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = folderHoverBg;
-                    e.currentTarget.style.borderColor = folderHoverBorder;
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = folderBg;
-                    e.currentTarget.style.borderColor = dragOverFolderId === folder.id ? theme.accent : folderBorder;
-                  }}
-                >
-                  <div className="flex items-center space-x-2 w-full pr-24">
-                    <div className="flex-shrink-0" style={{ color: theme.accent }}>
-                      <FolderOpen size={16} strokeWidth={1.5} />
-                    </div>
-
-                    <div className="flex-1 min-w-0 flex items-center">
-                      {editingFolderId === folder.id && tab === 'active' ? (
-                        <div className="flex items-center gap-2 w-full" onClick={(e) => e.stopPropagation()}>
-                          <input 
-                            type="text" 
-                            value={editName}
-                            onChange={(e) => setEditName(e.target.value)}
-                            className="w-full bg-transparent border-b outline-none px-1 py-0.5 text-sm font-medium"
-                            style={{ borderColor: theme.accent, color: theme.text }}
-                            autoFocus
-                            onKeyDown={(e) => e.key === 'Enter' && handleSaveEditFolder(folder, e as unknown as React.MouseEvent)}
-                          />
-                          <button onClick={(e) => handleSaveEditFolder(folder, e)} className="p-1 rounded text-green-500 hover:bg-green-500/10 transition-colors cursor-pointer"><Check size={14}/></button>
-                          <button onClick={(e) => { e.stopPropagation(); setEditingFolderId(null); }} className="p-1 rounded text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer"><X size={14}/></button>
-                        </div>
-                      ) : (
-                        <h3 className="text-sm font-medium tracking-wide truncate" style={{ color: theme.text }}>
-                          {folder.name || 'Untitled Folder'}
-                        </h3>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Actions (Always visible) */}
-                  <div className="absolute top-1/2 -translate-y-1/2 right-3 flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
-                    {tab === 'active' ? (
+              {isDataMenuOpen && (
+                <div className="absolute top-full left-0 mt-2 w-56 rounded-2xl shadow-xl border overflow-hidden z-20 animate-fade-in-up" style={{ backgroundColor: theme.surface, border: `1px solid ${theme.borderFaint}` }}>
+                  <div className="p-1.5 flex flex-col gap-0.5">
+                    <button onClick={() => { handleImportBackupJson(); setIsDataMenuOpen(false); }} className="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium hover:bg-neutral-500/10 transition-colors cursor-pointer" style={{ color: theme.text }}>
+                      <Upload size={16} className="opacity-70" /> {t(lang, 'backupImport')}
+                    </button>
+                    <button onClick={() => { handleExportBackupJson(); setIsDataMenuOpen(false); }} className="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium hover:bg-neutral-500/10 transition-colors cursor-pointer" style={{ color: theme.text }}>
+                      <Download size={16} className="opacity-70" /> {t(lang, 'backupExport')}
+                    </button>
+                    {onEmptyAllTrash && tab === 'trash' && trashedProjects.length + trashedFolders.length > 0 && (
                       <>
-                        <button onClick={(e) => handleStartEditFolder(folder.id, folder.name, e)} className="p-1.5 rounded-md hover:bg-neutral-500/10 transition-colors cursor-pointer" style={{ color: theme.accent }} title={t(lang, 'rename')}>
-                          <Edit2 size={13} />
-                        </button>
-                        <button onClick={(e) => handleArchiveFolder(folder, e)} className="p-1.5 rounded-md hover:bg-neutral-500/10 transition-colors cursor-pointer" style={{ color: theme.accent }} title={t(lang, 'archiveFolder')}>
-                          <Archive size={13} />
-                        </button>
-                        <button onClick={(e) => handleSoftDeleteFolder(folder, e)} className="p-1.5 rounded-md hover:bg-neutral-500/10 transition-colors cursor-pointer" style={{ color: theme.textMuted }} title={t(lang, 'moveToTrash')}>
-                          <Trash2 size={13} />
-                        </button>
-                      </>
-                    ) : tab === 'archive' ? (
-                      <>
-                        <button onClick={(e) => handleUnarchiveFolder(folder, e)} className="p-1.5 rounded-md hover:bg-neutral-500/10 transition-colors cursor-pointer" style={{ color: theme.accent }} title={t(lang, 'unarchiveFolder')}>
-                          <ArchiveRestore size={13} />
-                        </button>
-                        <button onClick={(e) => handleSoftDeleteFolder(folder, e)} className="p-1.5 rounded-md hover:bg-neutral-500/10 transition-colors cursor-pointer" style={{ color: theme.textMuted }} title={t(lang, 'moveToTrash')}>
-                          <Trash2 size={13} />
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        <button onClick={(e) => handleRestoreFolder(folder, e)} className="p-1.5 rounded-md hover:bg-neutral-500/10 transition-colors cursor-pointer" style={{ color: theme.accent }} title={t(lang, 'restore')}>
-                          <RotateCcw size={13} />
-                        </button>
-                        <button onClick={(e) => promptHardDelete('folder', folder.id, folder.name, e)} className="p-1.5 rounded-md hover:bg-neutral-500/10 transition-colors cursor-pointer" style={{ color: theme.textMuted }} title={t(lang, 'deleteForever')}>
-                          <Trash2 size={13} />
+                        <div className="h-px w-full my-1" style={{ backgroundColor: theme.borderFaint }}></div>
+                        <button onClick={() => { handleEmptyAllTrash(); setIsDataMenuOpen(false); }} className="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer">
+                          <Trash2 size={16} /> {t(lang, 'emptyBin')}
                         </button>
                       </>
                     )}
                   </div>
                 </div>
+              )}
+            </div>
+            
+            {/* Breadcrumbs */}
+            {currentFolderId && tab === 'active' && (
+              <div className="flex items-center gap-2 font-medium" style={{ color: theme.text }}>
+                <span className="opacity-30">|</span>
+                <button onClick={() => handleSelectFolder(null)} className="hover:opacity-70 transition-opacity cursor-pointer">Home</button>
+                <ChevronLeft size={14} className="opacity-50" />
+                <span>{breadcrumbs[breadcrumbs.length - 1]?.name || 'Folder'}</span>
+              </div>
+            )}
+          </div>
+
+          <div className="flex items-center gap-6">
+            {/* Language */}
+            {onChangeLang && (
+              <CustomSelect
+                value={lang}
+                onChange={(val) => onChangeLang(val)}
+                theme={theme}
+                fontFamily={uiFont}
+                buttonClassName="bg-transparent outline-none cursor-pointer p-0 m-0 border-none"
+                buttonStyle={{ fontFamily: uiFont, color: theme.text }}
+                options={LANGUAGES}
+                disableSearch={true}
+                renderButtonContent={() => (
+                  <div className="flex items-center gap-1 font-medium hover:opacity-70 transition-opacity text-[15px]">
+                    Language <ChevronRight size={14} className="rotate-90" />
+                  </div>
+                )}
+              />
+            )}
+            
+            {/* Sort */}
+            <CustomSelect
+              value={sortBy}
+              onChange={(val) => handleSetSortBy(val as SortOption)}
+              theme={theme}
+              disableSearch={true}
+              fontFamily={uiFont}
+              buttonClassName="bg-transparent outline-none cursor-pointer p-0 m-0 border-none"
+              buttonStyle={{ fontFamily: uiFont, color: theme.text }}
+              options={[
+                { value: 'lastOpened', label: 'Last Opened' },
+                { value: 'updated', label: 'Recently Updated' },
+                { value: 'newest', label: 'Newest' },
+                { value: 'oldest', label: 'Oldest' },
+                { value: 'nameAZ', label: 'Name (A-Z)' },
+                { value: 'nameZA', label: 'Name (Z-A)' },
+                { value: 'pages', label: 'Pages' }
+              ]}
+              renderButtonContent={() => (
+                <div className="flex items-center gap-1 font-medium hover:opacity-70 transition-opacity text-[15px]">
+                  Sort by <ChevronRight size={14} className="rotate-90" />
+                </div>
+              )}
+            />
+
+            {/* View Mode Toggle */}
+            <div className="flex items-center gap-2 opacity-70">
+              <button 
+                onClick={() => handleSetViewMode('grid')}
+                className={`p-1 rounded cursor-pointer transition-colors ${viewMode === 'grid' ? 'opacity-100' : 'opacity-50 hover:opacity-80'}`}
+                style={{ color: theme.text }}
+                title="Grid view"
+              >
+                <Grid size={18} strokeWidth={1.5} />
+              </button>
+              <button 
+                onClick={() => handleSetViewMode('list')}
+                className={`p-1 rounded cursor-pointer transition-colors ${viewMode === 'list' ? 'opacity-100' : 'opacity-50 hover:opacity-80'}`}
+                style={{ color: theme.text }}
+                title="List view"
+              >
+                <List size={18} strokeWidth={1.5} />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Search Bar - only show if there are many items or if already searching, or we can just hide it completely to match the UI. 
+            The UI has no search bar. I will hide it to strictly match the image. */}
+        
+        {/* Content Area */}
+        <div className="flex-1 overflow-y-auto pr-2 pb-20 custom-scrollbar">
+          {displayedFolders.length === 0 && displayedProjects.length === 0 ? (
+             <div className="h-full flex flex-col items-center justify-center opacity-40" style={{ color: theme.textMuted }}>
+               <div className="text-xl" style={{ fontFamily: `'${uiFont}', sans-serif` }}>It's quiet here...</div>
+               <div className="text-sm mt-2 font-light">Create a new project to get started.</div>
+             </div>
+          ) : viewMode === 'grid' ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+              {/* Folders */}
+              {displayedFolders.map(folder => {
+                const folderFileCount = activeProjects.filter(p => (p.folderId || null) === folder.id).length;
+                return (
+                  <div 
+                    key={folder.id}
+                    draggable={tab === 'active'}
+                    onDragStart={(e) => {
+                      if (tab === 'active') {
+                        e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'folder', id: folder.id }));
+                      }
+                    }}
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      if (dragProjectId) setDragOverFolderId(folder.id);
+                    }}
+                    onDragLeave={(e) => { e.preventDefault(); setDragOverFolderId(null); }}
+                    onDrop={(e) => {
+                      e.preventDefault(); setDragOverFolderId(null);
+                      if (dragProjectId) handleMoveProject(folder.id, dragProjectId);
+                    }}
+                    onClick={() => tab === 'active' && handleSelectFolder(folder.id)}
+                    className="group relative h-36 rounded-2xl border transition-all duration-200 cursor-pointer overflow-hidden flex flex-col justify-between p-4 sm:p-5 select-none"
+                    style={{
+                      backgroundColor: dragOverFolderId === folder.id ? folderHoverBg : fileBg,
+                      borderColor: dragOverFolderId === folder.id ? theme.accent : fileBorder
+                    }}
+                    onMouseEnter={(e) => {
+                      if (dragOverFolderId !== folder.id) e.currentTarget.style.backgroundColor = fileHoverBg;
+                    }}
+                    onMouseLeave={(e) => {
+                      if (dragOverFolderId !== folder.id) e.currentTarget.style.backgroundColor = fileBg;
+                    }}
+                  >
+                    <div className="flex items-start justify-between gap-2 w-full">
+                      {editingFolderId === folder.id && tab === 'active' ? (
+                        <div className="flex items-center gap-2 w-full z-10" onClick={(e) => e.stopPropagation()}>
+                          <input 
+                            type="text" 
+                            value={editName}
+                            onChange={(e) => setEditName(e.target.value)}
+                            className="w-full bg-transparent border-b outline-none px-1 text-base font-medium"
+                            style={{ borderColor: theme.accent, color: theme.text }}
+                            autoFocus
+                            onKeyDown={(e) => e.key === 'Enter' && handleSaveEditFolder(folder, e as unknown as React.MouseEvent)}
+                          />
+                          <button onClick={(e) => handleSaveEditFolder(folder, e)} className="text-green-500 cursor-pointer p-1"><Check size={16}/></button>
+                          <button onClick={(e) => { e.stopPropagation(); setEditingFolderId(null); }} className="text-red-500 cursor-pointer p-1"><X size={16}/></button>
+                        </div>
+                      ) : (
+                        <div className="min-w-0 flex-1">
+                          <h3 className="text-base sm:text-[17px] font-medium tracking-tight truncate leading-snug" title={folder.name || 'Untitled Folder'} style={{ color: theme.text, fontFamily: `'${uiFont}', sans-serif` }}>
+                            {folder.name || 'Untitled Folder'}
+                          </h3>
+                        </div>
+                      )}
+
+                      <div className="flex-shrink-0 flex items-center gap-0.5 opacity-60 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
+                        {tab === 'active' ? (
+                          <>
+                            <button onClick={(e) => handleStartEditFolder(folder.id, folder.name, e)} className="p-1.5 rounded-lg hover:bg-neutral-500/20 transition-colors cursor-pointer" style={{ color: theme.text }} title="Rename">
+                              <Edit2 size={14} />
+                            </button>
+                            <button onClick={(e) => handleArchiveFolder(folder, e)} className="p-1.5 rounded-lg hover:bg-neutral-500/20 transition-colors cursor-pointer" style={{ color: theme.text }} title="Archive">
+                              <Archive size={14} />
+                            </button>
+                            <button onClick={(e) => handleSoftDeleteFolder(folder, e)} className="p-1.5 rounded-lg hover:bg-neutral-500/20 transition-colors cursor-pointer" style={{ color: theme.text }} title="Trash">
+                              <Trash2 size={14} />
+                            </button>
+                          </>
+                        ) : tab === 'archive' ? (
+                          <>
+                            <button onClick={(e) => handleUnarchiveFolder(folder, e)} className="p-1.5 rounded-lg hover:bg-neutral-500/20 transition-colors cursor-pointer" style={{ color: theme.text }} title="Unarchive">
+                              <ArchiveRestore size={14} />
+                            </button>
+                            <button onClick={(e) => handleSoftDeleteFolder(folder, e)} className="p-1.5 rounded-lg hover:bg-neutral-500/20 transition-colors cursor-pointer" style={{ color: theme.text }} title="Trash">
+                              <Trash2 size={14} />
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <button onClick={(e) => handleRestoreFolder(folder, e)} className="p-1.5 rounded-lg hover:bg-neutral-500/20 transition-colors cursor-pointer" style={{ color: theme.text }} title="Restore">
+                              <RotateCcw size={14} />
+                            </button>
+                            <button onClick={(e) => promptHardDelete('folder', folder.id, folder.name, e)} className="p-1.5 rounded-lg hover:bg-red-500/20 text-red-500 transition-colors cursor-pointer" title="Delete permanently">
+                              <Trash2 size={14} />
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center justify-between mt-auto pt-2">
+                       <div className="flex items-center gap-2 opacity-50">
+                         <FolderOpen size={18} strokeWidth={1.5} style={{ color: theme.text }} />
+                         {tab === 'active' && (
+                           <span className="text-xs font-mono font-medium" style={{ color: theme.text }}>
+                             {folderFileCount} {folderFileCount === 1 ? 'file' : 'files'}
+                           </span>
+                         )}
+                       </div>
+                       <span className="text-[10px] font-mono uppercase tracking-wider opacity-40" style={{ color: theme.text }}>
+                         Folder
+                       </span>
+                    </div>
+                  </div>
                 );
               })}
 
-              {/* Render Projects */}
-              {displayedProjects.map((project) => (
+              {/* Projects */}
+              {displayedProjects.map(project => (
                 <div 
                   key={project.id}
                   draggable={tab === 'active'}
-                  onDragStart={(e) => { e.stopPropagation(); setDragProjectId(project.id); }}
-                  onDragEnd={(e) => { e.stopPropagation(); setDragProjectId(null); setDragOverFolderId(null); }}
+                  onDragStart={(e) => {
+                    if (tab === 'active') {
+                      e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'project', id: project.id }));
+                      setDragProjectId(project.id);
+                    }
+                  }}
+                  onDragEnd={() => setDragProjectId(null)}
                   onClick={() => (tab === 'active' || tab === 'archive') && onOpenProject(project.id)}
-                  className={`group relative flex flex-col justify-center px-4 py-3 rounded-md border transition-colors ${tab === 'active' || tab === 'archive' ? 'cursor-pointer hover:-translate-y-0.5 shadow-sm' : ''} ${dragProjectId === project.id ? 'opacity-50' : ''}`}
-                  style={{ 
+                  className={`group relative h-36 rounded-2xl border transition-all duration-200 cursor-pointer overflow-hidden flex flex-col justify-between p-4 sm:p-5 select-none ${dragProjectId === project.id ? 'opacity-50' : 'opacity-100'}`}
+                  style={{
                     backgroundColor: fileBg,
                     borderColor: fileBorder
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.backgroundColor = fileHoverBg;
-                    e.currentTarget.style.borderColor = folderHoverBorder;
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.backgroundColor = fileBg;
-                    e.currentTarget.style.borderColor = fileBorder;
                   }}
                 >
-                  {/* Single Stream Line: Icon + Title */}
-                  <div className="flex items-center space-x-2 w-full pr-24">
-                    <div className="flex-shrink-0" style={{ color: theme.accent }}>
-                      <FileText size={14} strokeWidth={1.5} />
-                    </div>
-
-                    <div className="flex-1 min-w-0 flex items-center">
-                      {editingProjectId === project.id && tab === 'active' ? (
-                        <div className="flex items-center gap-2 w-full" onClick={(e) => e.stopPropagation()}>
-                          <input 
-                            type="text" 
-                            value={editName}
-                            onChange={(e) => setEditName(e.target.value)}
-                            className="w-full bg-transparent border-b outline-none px-1 py-0.5 text-sm font-medium"
-                            style={{ borderColor: theme.accent, color: theme.text }}
-                            autoFocus
-                            onKeyDown={(e) => e.key === 'Enter' && handleSaveEditProject(project, e as unknown as React.MouseEvent)}
-                          />
-                          <button onClick={(e) => handleSaveEditProject(project, e)} className="p-1 rounded text-green-500 hover:bg-green-500/10 transition-colors cursor-pointer"><Check size={14}/></button>
-                          <button onClick={(e) => { e.stopPropagation(); setEditingProjectId(null); }} className="p-1 rounded text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer"><X size={14}/></button>
-                        </div>
-                      ) : (
-                        <h3 className="text-sm font-medium tracking-wide truncate" style={{ color: theme.text }}>
-                          {project.title || t(lang, 'untitledProject')}
+                  <div className="flex items-start justify-between gap-2 w-full">
+                    {editingProjectId === project.id && tab === 'active' ? (
+                      <div className="flex items-center gap-2 w-full z-10" onClick={(e) => e.stopPropagation()}>
+                        <input 
+                          type="text" 
+                          value={editName}
+                          onChange={(e) => setEditName(e.target.value)}
+                          className="w-full bg-transparent border-b outline-none px-1 text-base font-medium"
+                          style={{ borderColor: theme.accent, color: theme.text }}
+                          autoFocus
+                          onKeyDown={(e) => e.key === 'Enter' && handleSaveEditProject(project, e as unknown as React.MouseEvent)}
+                        />
+                        <button onClick={(e) => handleSaveEditProject(project, e)} className="text-green-500 cursor-pointer p-1"><Check size={16}/></button>
+                        <button onClick={(e) => { e.stopPropagation(); setEditingProjectId(null); }} className="text-red-500 cursor-pointer p-1"><X size={16}/></button>
+                      </div>
+                    ) : (
+                      <div className="min-w-0 flex-1">
+                        <h3 className="text-base sm:text-[17px] font-medium tracking-tight truncate leading-snug" title={project.title || 'Untitled'} style={{ color: theme.text, fontFamily: `'${uiFont}', sans-serif` }}>
+                          {project.title || 'Untitled'}
                         </h3>
+                      </div>
+                    )}
+
+                    <div className="flex-shrink-0 flex items-center gap-0.5 opacity-60 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
+                      {tab === 'active' ? (
+                        <>
+                          <button onClick={(e) => { e.stopPropagation(); setMovingProjectId(project.id); }} className="p-1.5 rounded-lg hover:bg-neutral-500/20 transition-colors cursor-pointer" style={{ color: theme.text }} title="Move to folder">
+                            <FolderInput size={14} />
+                          </button>
+                          <button onClick={(e) => handleStartEditProject(project.id, project.title, e)} className="p-1.5 rounded-lg hover:bg-neutral-500/20 transition-colors cursor-pointer" style={{ color: theme.text }} title="Rename">
+                            <Edit2 size={14} />
+                          </button>
+                          <button onClick={(e) => handleArchiveProject(project, e)} className="p-1.5 rounded-lg hover:bg-neutral-500/20 transition-colors cursor-pointer" style={{ color: theme.text }} title="Archive">
+                            <Archive size={14} />
+                          </button>
+                          <button onClick={(e) => handleSoftDeleteProject(project, e)} className="p-1.5 rounded-lg hover:bg-neutral-500/20 transition-colors cursor-pointer" style={{ color: theme.text }} title="Trash">
+                            <Trash2 size={14} />
+                          </button>
+                        </>
+                      ) : tab === 'archive' ? (
+                        <>
+                          <button onClick={(e) => handleUnarchiveProject(project, e)} className="p-1.5 rounded-lg hover:bg-neutral-500/20 transition-colors cursor-pointer" style={{ color: theme.text }} title="Unarchive">
+                            <ArchiveRestore size={14} />
+                          </button>
+                          <button onClick={(e) => handleSoftDeleteProject(project, e)} className="p-1.5 rounded-lg hover:bg-neutral-500/20 transition-colors cursor-pointer" style={{ color: theme.text }} title="Trash">
+                            <Trash2 size={14} />
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button onClick={(e) => handleRestoreProject(project, e)} className="p-1.5 rounded-lg hover:bg-neutral-500/20 transition-colors cursor-pointer" style={{ color: theme.text }} title="Restore">
+                            <RotateCcw size={14} />
+                          </button>
+                          <button onClick={(e) => promptHardDelete('project', project.id, project.title, e)} className="p-1.5 rounded-lg hover:bg-red-500/20 text-red-500 transition-colors cursor-pointer" title="Delete permanently">
+                            <Trash2 size={14} />
+                          </button>
+                        </>
                       )}
                     </div>
                   </div>
 
-                  {/* Sub-Metadata Line */}
-                  <div className="mt-3 flex items-center gap-2 text-[10px] font-light tracking-wider uppercase ml-6" style={{ color: theme.accent, opacity: 0.8 }}>
-                    <span>{project.pages.length} {project.pages.length === 1 ? t(lang, 'pageSingular') : t(lang, 'pagePlural')}</span>
-                    <span>•</span>
-                    <span>{Intl.DateTimeFormat(lang, { month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(project.lastModified || project.createdAt || Date.now()))}</span>
+                  <div className="flex items-center justify-between mt-auto pt-2">
+                     <div className="flex items-center gap-2 opacity-50">
+                       <FileText size={17} strokeWidth={1.5} style={{ color: theme.text }} />
+                       <span className="text-xs uppercase tracking-wider font-light" style={{ color: theme.text }}>
+                         {Intl.DateTimeFormat(lang, { month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(project.lastModified || project.createdAt || Date.now()))}
+                       </span>
+                     </div>
+                     {project.pages && project.pages.length > 1 && (
+                       <span className="text-[11px] font-mono opacity-40 px-1.5 py-0.5 rounded border" style={{ borderColor: theme.borderFaint, color: theme.text }}>
+                         {project.pages.length}p
+                       </span>
+                     )}
                   </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            // LIST VIEW
+            <div className="flex flex-col gap-2">
+              {/* Folders List */}
+              {displayedFolders.map(folder => {
+                const folderFileCount = activeProjects.filter(p => (p.folderId || null) === folder.id).length;
+                return (
+                  <div 
+                    key={folder.id}
+                    draggable={tab === 'active'}
+                    onDragStart={(e) => {
+                      if (tab === 'active') {
+                        e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'folder', id: folder.id }));
+                      }
+                    }}
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      if (dragProjectId) setDragOverFolderId(folder.id);
+                    }}
+                    onDragLeave={(e) => { e.preventDefault(); setDragOverFolderId(null); }}
+                    onDrop={(e) => {
+                      e.preventDefault(); setDragOverFolderId(null);
+                      if (dragProjectId) handleMoveProject(folder.id, dragProjectId);
+                    }}
+                    onClick={() => tab === 'active' && handleSelectFolder(folder.id)}
+                    className="group flex items-center justify-between p-3 sm:p-3.5 rounded-xl border transition-all cursor-pointer select-none"
+                    style={{
+                      backgroundColor: dragOverFolderId === folder.id ? folderHoverBg : fileBg,
+                      borderColor: dragOverFolderId === folder.id ? theme.accent : fileBorder
+                    }}
+                  >
+                    <div className="flex items-center gap-3 min-w-0 flex-1 pr-3">
+                      {editingFolderId === folder.id && tab === 'active' ? (
+                        <div className="flex items-center gap-2 w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
+                          <input 
+                            type="text" 
+                            value={editName}
+                            onChange={(e) => setEditName(e.target.value)}
+                            className="w-full bg-transparent border-b outline-none px-1 text-sm font-medium"
+                            style={{ borderColor: theme.accent, color: theme.text }}
+                            autoFocus
+                            onKeyDown={(e) => e.key === 'Enter' && handleSaveEditFolder(folder, e as unknown as React.MouseEvent)}
+                          />
+                          <button onClick={(e) => handleSaveEditFolder(folder, e)} className="text-green-500 cursor-pointer p-1"><Check size={15}/></button>
+                          <button onClick={(e) => { e.stopPropagation(); setEditingFolderId(null); }} className="text-red-500 cursor-pointer p-1"><X size={15}/></button>
+                        </div>
+                      ) : (
+                        <>
+                          <FolderOpen size={18} className="opacity-50 flex-shrink-0" style={{ color: theme.text }} />
+                          <span className="font-medium text-[15px] truncate" title={folder.name || 'Untitled Folder'} style={{ color: theme.text, fontFamily: `'${uiFont}', sans-serif` }}>
+                            {folder.name || 'Untitled Folder'}
+                          </span>
+                        </>
+                      )}
+                    </div>
+                    <div className="flex-shrink-0 flex items-center gap-3">
+                      {tab === 'active' && (
+                        <span className="text-xs font-mono opacity-50 hidden sm:inline-block" style={{ color: theme.text }}>
+                          {folderFileCount} {folderFileCount === 1 ? 'file' : 'files'}
+                        </span>
+                      )}
+                      <div className="flex items-center gap-0.5 opacity-60 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
+                        {tab === 'active' ? (
+                          <>
+                            <button onClick={(e) => handleStartEditFolder(folder.id, folder.name, e)} className="p-1.5 rounded-lg hover:bg-neutral-500/20 transition-colors cursor-pointer" style={{ color: theme.text }} title="Rename">
+                              <Edit2 size={14}/>
+                            </button>
+                            <button onClick={(e) => handleArchiveFolder(folder, e)} className="p-1.5 rounded-lg hover:bg-neutral-500/20 transition-colors cursor-pointer" style={{ color: theme.text }} title="Archive">
+                              <Archive size={14}/>
+                            </button>
+                            <button onClick={(e) => handleSoftDeleteFolder(folder, e)} className="p-1.5 rounded-lg hover:bg-neutral-500/20 transition-colors cursor-pointer" style={{ color: theme.text }} title="Trash">
+                              <Trash2 size={14}/>
+                            </button>
+                          </>
+                        ) : tab === 'archive' ? (
+                          <>
+                            <button onClick={(e) => handleUnarchiveFolder(folder, e)} className="p-1.5 rounded-lg hover:bg-neutral-500/20 transition-colors cursor-pointer" style={{ color: theme.text }} title="Unarchive">
+                              <ArchiveRestore size={14}/>
+                            </button>
+                            <button onClick={(e) => handleSoftDeleteFolder(folder, e)} className="p-1.5 rounded-lg hover:bg-neutral-500/20 transition-colors cursor-pointer" style={{ color: theme.text }} title="Trash">
+                              <Trash2 size={14}/>
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <button onClick={(e) => handleRestoreFolder(folder, e)} className="p-1.5 rounded-lg hover:bg-neutral-500/20 transition-colors cursor-pointer" style={{ color: theme.text }} title="Restore">
+                              <RotateCcw size={14}/>
+                            </button>
+                            <button onClick={(e) => promptHardDelete('folder', folder.id, folder.name, e)} className="p-1.5 rounded-lg hover:bg-red-500/20 text-red-500 transition-colors cursor-pointer" title="Delete permanently">
+                              <Trash2 size={14}/>
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
 
-                  {/* Actions (Always visible) */}
-                  <div className="absolute top-3 right-3 flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
-                    {tab === 'active' ? (
-                      <>
-                        <button onClick={(e) => { e.stopPropagation(); setMovingProjectId(project.id); }} className="p-1.5 rounded-md hover:bg-neutral-500/10 transition-colors cursor-pointer" style={{ color: theme.accent }} title={t(lang, 'moveToFolder') || 'Move to Folder'}>
-                          <FolderInput size={13} />
-                        </button>
-                        <button onClick={(e) => handleStartEditProject(project.id, project.title, e)} className="p-1.5 rounded-md hover:bg-neutral-500/10 transition-colors cursor-pointer" style={{ color: theme.accent }} title={t(lang, 'rename')}>
-                          <Edit2 size={13} />
-                        </button>
-                        <button onClick={(e) => handleArchiveProject(project, e)} className="p-1.5 rounded-md hover:bg-neutral-500/10 transition-colors cursor-pointer" style={{ color: theme.accent }} title={t(lang, 'archiveProject')}>
-                          <Archive size={13} />
-                        </button>
-                        <button onClick={(e) => handleSoftDeleteProject(project, e)} className="p-1.5 rounded-md hover:bg-neutral-500/10 transition-colors cursor-pointer" style={{ color: theme.textMuted }} title={t(lang, 'moveToTrash')}>
-                          <Trash2 size={13} />
-                        </button>
-                      </>
-                    ) : tab === 'archive' ? (
-                      <>
-                        <button onClick={(e) => handleUnarchiveProject(project, e)} className="p-1.5 rounded-md hover:bg-neutral-500/10 transition-colors cursor-pointer" style={{ color: theme.accent }} title={t(lang, 'unarchiveProject')}>
-                          <ArchiveRestore size={13} />
-                        </button>
-                        <button onClick={(e) => handleSoftDeleteProject(project, e)} className="p-1.5 rounded-md hover:bg-neutral-500/10 transition-colors cursor-pointer" style={{ color: theme.textMuted }} title={t(lang, 'moveToTrash')}>
-                          <Trash2 size={13} />
-                        </button>
-                      </>
+              {/* Projects List */}
+              {displayedProjects.map(project => (
+                <div 
+                  key={project.id}
+                  draggable={tab === 'active'}
+                  onDragStart={(e) => {
+                    if (tab === 'active') {
+                      e.dataTransfer.setData('text/plain', JSON.stringify({ type: 'project', id: project.id }));
+                      setDragProjectId(project.id);
+                    }
+                  }}
+                  onDragEnd={() => setDragProjectId(null)}
+                  onClick={() => (tab === 'active' || tab === 'archive') && onOpenProject(project.id)}
+                  className={`group flex items-center justify-between p-3 sm:p-3.5 rounded-xl border transition-all cursor-pointer select-none ${dragProjectId === project.id ? 'opacity-50' : 'opacity-100'}`}
+                  style={{
+                    backgroundColor: fileBg,
+                    borderColor: fileBorder
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = fileHoverBg; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = fileBg; }}
+                >
+                  <div className="flex items-center gap-3 min-w-0 flex-1 pr-3">
+                    {editingProjectId === project.id && tab === 'active' ? (
+                      <div className="flex items-center gap-2 w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
+                        <input 
+                          type="text" 
+                          value={editName}
+                          onChange={(e) => setEditName(e.target.value)}
+                          className="w-full bg-transparent border-b outline-none px-1 text-sm font-medium"
+                          style={{ borderColor: theme.accent, color: theme.text }}
+                          autoFocus
+                          onKeyDown={(e) => e.key === 'Enter' && handleSaveEditProject(project, e as unknown as React.MouseEvent)}
+                        />
+                        <button onClick={(e) => handleSaveEditProject(project, e)} className="text-green-500 cursor-pointer p-1"><Check size={15}/></button>
+                        <button onClick={(e) => { e.stopPropagation(); setEditingProjectId(null); }} className="text-red-500 cursor-pointer p-1"><X size={15}/></button>
+                      </div>
                     ) : (
                       <>
-                        <button onClick={(e) => handleRestoreProject(project, e)} className="p-1.5 rounded-md hover:bg-neutral-500/10 transition-colors cursor-pointer" style={{ color: theme.accent }} title={t(lang, 'restore')}>
-                          <RotateCcw size={13} />
-                        </button>
-                        <button onClick={(e) => promptHardDelete('project', project.id, project.title, e)} className="p-1.5 rounded-md hover:bg-neutral-500/10 transition-colors cursor-pointer" style={{ color: theme.textMuted }} title={t(lang, 'deleteForever')}>
-                          <Trash2 size={13} />
-                        </button>
+                        <FileText size={18} className="opacity-50 flex-shrink-0" style={{ color: theme.text }} />
+                        <span className="font-medium text-[15px] truncate" title={project.title || 'Untitled'} style={{ color: theme.text, fontFamily: `'${uiFont}', sans-serif` }}>
+                          {project.title || 'Untitled'}
+                        </span>
                       </>
                     )}
+                  </div>
+                  <div className="flex-shrink-0 flex items-center gap-3">
+                    <span className="text-xs opacity-50 font-light hidden sm:inline-block" style={{ color: theme.text }}>
+                      {Intl.DateTimeFormat(lang, { month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(project.lastModified || project.createdAt || Date.now()))}
+                    </span>
+                    {project.pages && project.pages.length > 1 && (
+                      <span className="text-[11px] font-mono opacity-40 px-1.5 py-0.5 rounded border hidden sm:inline-block" style={{ borderColor: theme.borderFaint, color: theme.text }}>
+                        {project.pages.length}p
+                      </span>
+                    )}
+                    <div className="flex items-center gap-0.5 opacity-60 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
+                      {tab === 'active' ? (
+                        <>
+                          <button onClick={(e) => { e.stopPropagation(); setMovingProjectId(project.id); }} className="p-1.5 rounded-lg hover:bg-neutral-500/20 transition-colors cursor-pointer" style={{ color: theme.text }} title="Move to folder">
+                            <FolderInput size={14}/>
+                          </button>
+                          <button onClick={(e) => handleStartEditProject(project.id, project.title, e)} className="p-1.5 rounded-lg hover:bg-neutral-500/20 transition-colors cursor-pointer" style={{ color: theme.text }} title="Rename">
+                            <Edit2 size={14}/>
+                          </button>
+                          <button onClick={(e) => handleArchiveProject(project, e)} className="p-1.5 rounded-lg hover:bg-neutral-500/20 transition-colors cursor-pointer" style={{ color: theme.text }} title="Archive">
+                            <Archive size={14}/>
+                          </button>
+                          <button onClick={(e) => handleSoftDeleteProject(project, e)} className="p-1.5 rounded-lg hover:bg-neutral-500/20 transition-colors cursor-pointer" style={{ color: theme.text }} title="Trash">
+                            <Trash2 size={14}/>
+                          </button>
+                        </>
+                      ) : tab === 'archive' ? (
+                        <>
+                          <button onClick={(e) => handleUnarchiveProject(project, e)} className="p-1.5 rounded-lg hover:bg-neutral-500/20 transition-colors cursor-pointer" style={{ color: theme.text }} title="Unarchive">
+                            <ArchiveRestore size={14}/>
+                          </button>
+                          <button onClick={(e) => handleSoftDeleteProject(project, e)} className="p-1.5 rounded-lg hover:bg-neutral-500/20 transition-colors cursor-pointer" style={{ color: theme.text }} title="Trash">
+                            <Trash2 size={14}/>
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button onClick={(e) => handleRestoreProject(project, e)} className="p-1.5 rounded-lg hover:bg-neutral-500/20 transition-colors cursor-pointer" style={{ color: theme.text }} title="Restore">
+                            <RotateCcw size={14}/>
+                          </button>
+                          <button onClick={(e) => promptHardDelete('project', project.id, project.title, e)} className="p-1.5 rounded-lg hover:bg-red-500/20 text-red-500 transition-colors cursor-pointer" title="Delete permanently">
+                            <Trash2 size={14}/>
+                          </button>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}
             </div>
           )}
         </div>
+
+        {/* Move Project Dialog */}
+        {movingProjectId && (
+          <div className="absolute inset-0 z-50 flex flex-col p-8 animate-fade-in-up backdrop-blur-md" style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}>
+            <div className="flex-1 max-w-3xl mx-auto w-full flex flex-col" style={{ backgroundColor: theme.surface, borderRadius: '24px', border: `1px solid ${theme.border}`, boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
+              <div className="p-6 border-b flex justify-between items-center" style={{ borderColor: theme.borderFaint }}>
+                <h2 className="text-xl font-medium" style={{ color: theme.text }}>{t(lang, 'moveToFolder')}</h2>
+                <button onClick={() => setMovingProjectId(null)} className="p-2 rounded-full hover:bg-neutral-500/20 cursor-pointer" style={{ color: theme.text }}>
+                  <X size={20} />
+                </button>
+              </div>
+              <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-2">
+                <button
+                  onClick={() => handleMoveProject(null)}
+                  className="flex items-center gap-3 p-4 rounded-xl border transition-all hover:bg-neutral-500/10 cursor-pointer"
+                  style={{ borderColor: theme.borderFaint, color: theme.text }}
+                >
+                  <Home size={20} className="opacity-60" />
+                  <span className="font-medium text-lg">Home (Root)</span>
+                </button>
+                {activeFolders.map(folder => (
+                  <button
+                    key={folder.id}
+                    onClick={() => handleMoveProject(folder.id)}
+                    className="flex items-center gap-3 p-4 rounded-xl border transition-all hover:bg-neutral-500/10 cursor-pointer"
+                    style={{ borderColor: theme.borderFaint, color: theme.text }}
+                  >
+                    <FolderOpen size={20} className="opacity-60" />
+                    <span className="font-medium text-lg">{folder.name || 'Untitled Folder'}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
       </div>
-
-      {/* Toast Notification */}
-      {toastMsg && (
-        <div 
-          className="fixed right-6 z-50 px-4 py-3 rounded-xl shadow-lg border text-xs font-medium flex items-center gap-2 animate-fade-in-up"
-          style={{ 
-            bottom: 'calc(1.5rem + env(safe-area-inset-bottom))',
-            backgroundColor: toastMsg.type === 'success' ? (theme.isDark ? '#064e3b' : '#ecfdf5') : (theme.isDark ? '#7f1d1d' : '#fef2f2'),
-            borderColor: toastMsg.type === 'success' ? '#10b981' : '#ef4444',
-            color: toastMsg.type === 'success' ? (theme.isDark ? '#a7f3d0' : '#065f46') : (theme.isDark ? '#fecaca' : '#991b1b')
-          }}
-        >
-          {toastMsg.type === 'success' ? <Check size={16} /> : <AlertCircle size={16} />}
-          <span>{toastMsg.text}</span>
-          <button onClick={() => setToastMsg(null)} className="ml-2 hover:opacity-75"><X size={14} /></button>
-        </div>
-      )}
-
-      
     </div>
   );
 }
 
-export default React.memo(WelcomeScreen);
+export default WelcomeScreen;

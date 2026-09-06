@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef, useMemo } from 'react';
-import { GitCompare, Clock, Sparkles, CheckCircle2, RotateCcw, X, Lock, Unlock } from 'lucide-react';
+import { GitCompare, Clock, Sparkles, CheckCircle2, RotateCcw, X, Lock, Unlock, ChevronDown, ChevronUp } from 'lucide-react';
 import { getPageVersionsFromDB } from './db';
 import type { ThemeColors, VersionSnapshot, Lang, Page, Project, FormatState } from './types';
 import type { Dict } from './i18n';
@@ -30,6 +30,74 @@ interface SplitRevisionStudioProps {
 }
 
 type FileType = 'snapshot' | 'page' | 'draft' | 'scratchpad';
+
+
+const FileAccordion = ({ 
+  value, 
+  onChange, 
+  groups, 
+  theme, 
+  uiFont, 
+  docFont 
+}: { 
+  value: string, 
+  onChange: (val: string) => void, 
+  groups: { label: string; options: { value: string; label: string; }[] }[], 
+  theme: any, 
+  uiFont: string, 
+  docFont: string 
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <div className="relative z-50">
+      <button 
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center gap-1.5 hover:opacity-70 transition-opacity"
+        style={{ fontFamily: docFont, color: theme.text, fontSize: '1.4rem' }}
+      >
+        <span>File</span>
+        {isOpen ? <ChevronUp size={20} strokeWidth={1.5} /> : <ChevronDown size={20} strokeWidth={1.5} />}
+      </button>
+
+      {isOpen && (
+        <div className="absolute top-full left-0 mt-4 flex flex-col gap-6 min-w-[200px]">
+          {groups.map((group, gIdx) => (
+            <div key={gIdx} className="flex flex-col gap-2">
+              <div 
+                className="text-[11px] uppercase tracking-wider font-semibold opacity-70 ml-2"
+                style={{ fontFamily: uiFont, color: theme.text }}
+              >
+                {group.label}
+              </div>
+              <div className="flex flex-col gap-1 ml-4">
+                {group.options.map((opt) => (
+                  <button
+                    key={opt.value}
+                    onClick={() => {
+                      onChange(opt.value);
+                      setIsOpen(false);
+                    }}
+                    className="text-left px-2 py-1 text-[13px] hover:opacity-100 transition-opacity whitespace-nowrap truncate"
+                    style={{
+                      fontFamily: docFont,
+                      color: theme.text,
+                      opacity: value === opt.value ? 1 : 0.7,
+                      fontWeight: value === opt.value ? 600 : 400,
+                    }}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
 
 export const SplitRevisionStudio: React.FC<SplitRevisionStudioProps> = ({
   isOpen,
@@ -209,74 +277,74 @@ export const SplitRevisionStudio: React.FC<SplitRevisionStudioProps> = ({
     <div className="fixed inset-0 z-50 flex flex-col animate-in fade-in duration-200" style={{ fontFamily: `'${uiFont}', sans-serif`, backgroundColor: theme.bg }}>
       
       {/* Floating Action Buttons */}
-      <div className="absolute top-4 right-6 flex items-center gap-2 z-50">
+      <div className="absolute top-6 right-8 flex items-center gap-4 z-50">
         <button
           onClick={() => setSyncScroll(prev => !prev)}
-          className="flex items-center justify-center w-8 h-8 rounded-lg shadow-sm transition-colors hover:scale-105 active:scale-95"
+          className="flex items-center justify-center hover:opacity-70 transition-opacity"
           style={{ 
-            color: syncScroll ? theme.accent : theme.textMuted,
-            backgroundColor: theme.surface,
-            border: `1px solid ${theme.border}`
+            color: theme.text,
+            opacity: syncScroll ? 1 : 0.4
           }}
           title="Sync scroll between left and right views"
         >
-          {syncScroll ? <Lock size={15} /> : <Unlock size={15} />}
+          {syncScroll ? <Lock size={24} strokeWidth={1.5} /> : <Unlock size={24} strokeWidth={1.5} />}
         </button>
         <button
           onClick={handleAcceptAll}
-          className="flex items-center justify-center w-8 h-8 rounded-lg shadow-sm transition-colors hover:scale-105 active:scale-95"
+          className="flex items-center justify-center hover:opacity-70 transition-opacity"
           style={{ 
-            color: theme.accent,
-            backgroundColor: theme.surface,
-            border: `1px solid ${theme.border}`
+            color: theme.text,
           }}
           title="Save changes and close"
         >
-          <CheckCircle2 size={16} />
+          <CheckCircle2 size={24} strokeWidth={1.5} />
         </button>
         <button
           onClick={onClose}
-          className="flex items-center justify-center w-8 h-8 rounded-lg shadow-sm transition-colors hover:scale-105 active:scale-95"
+          className="flex items-center justify-center hover:opacity-70 transition-opacity"
           style={{ 
-            color: theme.textMuted,
-            backgroundColor: theme.surface,
-            border: `1px solid ${theme.border}`
+            color: theme.text,
+            opacity: 0.4
           }}
+          title="Close without saving"
         >
-          <X size={16} />
+          <X size={24} strokeWidth={1.5} />
         </button>
       </div>
       
       {/* Split Columns Container */}
-      <div className="w-full flex justify-center bg-white dark:bg-zinc-900 border-b border-gray-200 dark:border-zinc-800 p-2 z-20">
-            {activeEditor && availableFonts && handleFormatChange && (
-              <Toolbar
-                editor={activeEditor}
-                theme={theme}
-                uiFont={uiFont}
-                t={t}
-                lang={lang}
-                selectedFont={formatState?.fontFam || docFont}
-                selectedSize={formatState?.fontSize || fontSize}
-                availableFonts={availableFonts}
-                onFontChange={(fam) => {
-                  activeEditor.chain().focus().setFontFamily(fam).run();
-                }}
-                onSizeChange={(size) => {
-                  handleFormatChange({ fontSize: size });
-                }}
-                onFormattingChange={(changes) => {
-                  handleFormatChange(changes);
-                }}
-              />
-            )}
-          </div>
+      <div className="w-full flex justify-center p-2 z-20 absolute top-0 pointer-events-none">
+        <div className="pointer-events-auto">
+          {activeEditor && availableFonts && handleFormatChange && (
+            <Toolbar
+              editor={activeEditor}
+              theme={theme}
+              uiFont={uiFont}
+              t={t}
+              lang={lang}
+              selectedFont={formatState?.fontFam || docFont}
+              selectedSize={formatState?.fontSize || fontSize}
+              availableFonts={availableFonts}
+              onFontChange={(fam) => {
+                activeEditor.chain().focus().setFontFamily(fam).run();
+              }}
+              onSizeChange={(size) => {
+                handleFormatChange({ fontSize: size });
+              }}
+              onFormattingChange={(changes) => {
+                handleFormatChange(changes);
+              }}
+            />
+          )}
+        </div>
+      </div>
+
       <div className="flex-1 flex overflow-hidden">
         
         {/* Left Column */}
-        <div className="flex-1 flex flex-col border-r shadow-lg relative z-10" style={{ borderColor: theme.border, backgroundColor: theme.background }}>
-          <div className="absolute top-4 left-6 z-20">
-            <CustomSelect
+        <div className="flex-1 flex flex-col border-r relative z-10" style={{ borderColor: theme.border, backgroundColor: theme.background || 'transparent' }}>
+          <div className="absolute top-6 left-8 z-20">
+            <FileAccordion
               value={`${leftType}:${leftId || ''}`}
               onChange={(val) => {
                 const [t, id] = val.split(':');
@@ -288,21 +356,14 @@ export const SplitRevisionStudio: React.FC<SplitRevisionStudioProps> = ({
               }}
               groups={getGroups(true)}
               theme={theme}
-              buttonClassName="flex items-center gap-2 px-3 py-1.5 rounded-lg shadow-sm text-[13px] font-medium transition-colors hover:opacity-80 backdrop-blur-md"
-              buttonStyle={{ backgroundColor: theme.surface ? `${theme.surface}e0` : 'rgba(255,255,255,0.9)', borderColor: theme.border, borderWidth: '1px', color: theme.text }}
-              dropdownClassName="w-64"
-              renderButtonContent={(opt) => (
-                <>
-                  <Clock size={14} style={{ color: theme.textMuted }} />
-                  <span className="truncate max-w-[200px]">{opt ? opt.label : 'Select Content'}</span>
-                </>
-              )}
+              uiFont={uiFont}
+              docFont={docFont}
             />
           </div>
           
           <div 
             ref={leftColRef}
-            className="flex-1 relative flex flex-col overflow-hidden kgv-revision-editor-container pt-12"
+            className="flex-1 relative flex flex-col overflow-hidden kgv-revision-editor-container pt-24"
             onFocusCapture={(e) => { const editorEl = e.currentTarget.querySelector('.ProseMirror'); if (editorEl && (editorEl as any).editor) setActiveEditor((editorEl as any).editor); }}
             onClickCapture={(e) => { const editorEl = e.currentTarget.querySelector('.ProseMirror'); if (editorEl && (editorEl as any).editor) setActiveEditor((editorEl as any).editor); }}
           >
@@ -328,9 +389,9 @@ export const SplitRevisionStudio: React.FC<SplitRevisionStudioProps> = ({
         </div>
 
         {/* Right Column */}
-        <div className="flex-1 flex flex-col relative" style={{ backgroundColor: theme.background }}>
-          <div className="absolute top-4 left-6 z-20">
-            <CustomSelect
+        <div className="flex-1 flex flex-col relative" style={{ backgroundColor: theme.background || 'transparent' }}>
+          <div className="absolute top-6 left-8 z-20">
+            <FileAccordion
               value={`${rightType}:${rightId || ''}`}
               onChange={(val) => {
                 const [t, id] = val.split(':');
@@ -342,21 +403,14 @@ export const SplitRevisionStudio: React.FC<SplitRevisionStudioProps> = ({
               }}
               groups={getGroups(false)}
               theme={theme}
-              buttonClassName="flex items-center gap-2 px-3 py-1.5 rounded-lg shadow-sm text-[13px] font-medium transition-colors hover:opacity-80 backdrop-blur-md"
-              buttonStyle={{ backgroundColor: theme.surface ? `${theme.surface}e0` : 'rgba(255,255,255,0.9)', borderColor: theme.border, borderWidth: '1px', color: theme.text }}
-              dropdownClassName="w-64"
-              renderButtonContent={(opt) => (
-                <>
-                  <Sparkles size={14} style={{ color: theme.accent }} />
-                  <span className="truncate max-w-[200px]">{opt ? opt.label : 'Select Content'}</span>
-                </>
-              )}
+              uiFont={uiFont}
+              docFont={docFont}
             />
           </div>
           
           <div 
             ref={rightColRef}
-            className="flex-1 relative flex flex-col overflow-hidden kgv-revision-editor-container pt-12"
+            className="flex-1 relative flex flex-col overflow-hidden kgv-revision-editor-container pt-24"
             onFocusCapture={(e) => { const editorEl = e.currentTarget.querySelector('.ProseMirror'); if (editorEl && (editorEl as any).editor) setActiveEditor((editorEl as any).editor); }}
             onClickCapture={(e) => { const editorEl = e.currentTarget.querySelector('.ProseMirror'); if (editorEl && (editorEl as any).editor) setActiveEditor((editorEl as any).editor); }}
           >

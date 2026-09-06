@@ -252,7 +252,7 @@ export function setTableColumnColor(editor: Editor, color: string) {
     const tr = state.tr;
     let cur = tablePos + 1;
 
-    (tableNode as any).forEach((rowNode) => {
+    (tableNode as any).forEach((rowNode: ProseMirrorNode) => {
       let colIdx = 0;
       (rowNode as any).forEach((cellNode: ProseMirrorNode) => {
         colIdx++;
@@ -308,7 +308,7 @@ export function clearTableContents(editor: Editor) {
     });
 
     const newTable = tableNode.type.create(tableNode.attrs, newRows);
-    tr.replaceWith(tablePos, tablePos + tableNode.nodeSize, newTable);
+    tr.replaceWith(tablePos as number, (tablePos as number) + Number(tableNode.nodeSize), newTable);
     view.dispatch(tr);
   } catch (e) {
     console.warn('Failed to clear table contents', e);
@@ -502,7 +502,7 @@ export function insertParsedTable(editor: Editor, matrix: string[][]): boolean {
             rIdx++;
           });
 
-          const tr = state.tr.replaceWith(tablePos, tablePos + tableNode.nodeSize, tableNode.type.create(tableNode.attrs, newRows));
+          const tr = state.tr.replaceWith(tablePos as number, (tablePos as number) + Number(tableNode.nodeSize), tableNode.type.create(tableNode.attrs, newRows));
           view.dispatch(tr);
           return true;
         }
@@ -568,7 +568,7 @@ export function convertTableToList(editor: Editor): boolean {
     const listItems: ProseMirrorNode[] = [];
     let headers: string[] = [];
 
-    (tableNode as any).forEach((rowNode: ProseMirrorNode, _offset, rIdx) => {
+    (tableNode as any).forEach((rowNode: ProseMirrorNode, _offset: number, rIdx: number) => {
       const cellTexts: string[] = [];
       (rowNode as any).forEach((cellNode: ProseMirrorNode) => {
         cellTexts.push(cellNode.textContent?.trim() || '');
@@ -606,7 +606,7 @@ export function convertTableToList(editor: Editor): boolean {
     if (listItems.length === 0) return false;
 
     const bulletList = schema.nodes.bulletList.create(null, listItems);
-    const tr = state.tr.replaceWith(tablePos, tablePos + tableNode.nodeSize, bulletList);
+    const tr = state.tr.replaceWith(tablePos as number, (tablePos as number) + Number(tableNode.nodeSize), bulletList);
     view.dispatch(tr);
     return true;
   } catch (e) {
@@ -679,7 +679,7 @@ export function convertListToTable(editor: Editor): boolean {
       rowNodes
     );
 
-    const tr = state.tr.replaceWith(listPos, listPos + listNode.nodeSize, tableNode);
+    const tr = state.tr.replaceWith(listPos as number, (listPos as number) + Number((listNode as any).nodeSize), tableNode);
     view.dispatch(tr);
     return true;
   } catch (e) {
@@ -714,7 +714,7 @@ export function moveRow(editor: Editor, fromRowIdx: number, toRowIdx: number): b
     if (tablePos === null || !tableNode) return false;
 
     const rows: ProseMirrorNode[] = [];
-    (tableNode as any).forEach((r) => rows.push(r));
+    (tableNode as any).forEach((r: ProseMirrorNode) => rows.push(r));
 
     const from = fromRowIdx - 1;
     const to = toRowIdx - 1;
@@ -727,7 +727,7 @@ export function moveRow(editor: Editor, fromRowIdx: number, toRowIdx: number): b
     rows.splice(to, 0, movedRow);
 
     const newTable = tableNode.type.create(tableNode.attrs, rows);
-    const tr = state.tr.replaceWith(tablePos, tablePos + tableNode.nodeSize, newTable);
+    const tr = state.tr.replaceWith(tablePos as number, (tablePos as number) + Number(tableNode.nodeSize), newTable);
     view.dispatch(tr);
     return true;
   } catch (e) {
@@ -766,7 +766,7 @@ export function moveColumn(editor: Editor, fromColIdx: number, toColIdx: number)
 
     (tableNode as any).forEach((rowNode: ProseMirrorNode) => {
       const cells: ProseMirrorNode[] = [];
-      (rowNode as any).forEach(c => cells.push(c));
+      (rowNode as any).forEach((c: ProseMirrorNode) => cells.push(c));
 
       if (from < 0 || from >= cells.length || to < 0 || to >= cells.length || from === to) {
         isValid = false;
@@ -781,7 +781,7 @@ export function moveColumn(editor: Editor, fromColIdx: number, toColIdx: number)
     if (!isValid || newRows.length === 0) return false;
 
     const newTable = tableNode.type.create(tableNode.attrs, newRows);
-    const tr = state.tr.replaceWith(tablePos, tablePos + tableNode.nodeSize, newTable);
+    const tr = state.tr.replaceWith(tablePos as number, (tablePos as number) + Number(tableNode.nodeSize), newTable);
     view.dispatch(tr);
     return true;
   } catch (e) {

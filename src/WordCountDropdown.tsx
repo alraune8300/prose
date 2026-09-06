@@ -50,21 +50,14 @@ export default function WordCountDropdown({
       <button 
         type="button"
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-1.5 transition-all hover:opacity-80 active:scale-95 px-2.5 py-1 rounded-lg border shadow-xs cursor-pointer select-none text-xs"
+        className="flex items-center gap-1 transition-all hover:opacity-80 active:scale-95 cursor-pointer select-none text-[13.5px]  tracking-wide"
         style={{
-          backgroundColor: theme.surface,
-          borderColor: theme.border,
           color: theme.text,
-          fontFamily: `'${uiFont}', sans-serif`,
+          opacity: 0.8,
         }}
         title={`${wordCount.toLocaleString()} ${wordsLabel} · ${charCount.toLocaleString()} ${charsLabel} · ~${readMin} ${minLabel} ${readingTimeLabel}`}
       >
-        <BarChart2 size={13} style={{ color: theme.textMuted }} className="shrink-0" />
-        <span className="font-semibold">{wordCount.toLocaleString()}</span>
-        <span style={{ color: theme.textMuted }} className="font-normal">{wordsLabel}</span>
-        <span style={{ color: theme.border }} className="mx-0.5">·</span>
-        <Clock size={12} style={{ color: theme.textMuted }} className="shrink-0" />
-        <span style={{ color: theme.textMuted }} className="font-normal">{readMin} {minLabel}</span>
+        <span>{wordCount.toLocaleString()} {wordsLabel}</span>
       </button>
 
       {open && (

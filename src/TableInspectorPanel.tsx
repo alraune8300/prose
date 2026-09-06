@@ -1,16 +1,45 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import type { Editor } from '@tiptap/react';
-import {
-  Table as TableIcon,
-  Trash2, Plus, Minus,
-  ArrowUp, ArrowDown, ArrowLeft, ArrowRight,
-  AlignLeft, AlignCenter, AlignRight,
-  Maximize2
-} from 'lucide-react';
+import { Plus, Minus, AlignLeft, AlignCenter, AlignRight, AlignJustify } from 'lucide-react';
 import { Accordion } from './components/Accordion';
 import type { ThemeColors } from './types';
-import { getActiveTableInfo, adjustRowCount, adjustColumnCount, setTableAttribute } from './tableUtils';
+import { getActiveTableInfo, adjustRowCount, adjustColumnCount } from './tableUtils';
 import { t, Lang } from './i18n';
+
+
+const CornerButton = ({ children, onClick, disabled, uiFont }: { children: React.ReactNode, onClick: () => void, disabled?: boolean, theme?: any, uiFont?: string }) => {
+  return (
+    <button
+      disabled={disabled}
+      onClick={onClick}
+      className={`relative flex items-center justify-center w-full py-2.5 group transition-opacity ${disabled ? 'opacity-30 cursor-not-allowed' : 'cursor-pointer hover:opacity-70'}`}
+      style={{ background: 'transparent', border: 'none', color: 'inherit' }}
+    >
+      <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-current opacity-30 group-hover:opacity-100 transition-opacity" />
+      <div className="absolute top-0 right-0 w-2 h-2 border-t border-r border-current opacity-30 group-hover:opacity-100 transition-opacity" />
+      <div className="absolute bottom-0 left-0 w-2 h-2 border-b border-l border-current opacity-30 group-hover:opacity-100 transition-opacity" />
+      <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-current opacity-30 group-hover:opacity-100 transition-opacity" />
+      <span style={{ fontFamily: uiFont || 'inherit', fontSize: '0.85rem', letterSpacing: '0.05em' }}>{children}</span>
+    </button>
+  );
+};
+
+const NumberControl = ({ label, value, onInc, onDec, disabled, theme, uiFont }: { label: string, value: number, onInc: () => void, onDec: () => void, disabled?: boolean, theme: any, uiFont?: string }) => {
+  return (
+    <div className={`flex flex-col gap-2 w-full mb-3 ${disabled ? 'opacity-30 pointer-events-none' : ''}`}>
+      <span style={{ fontFamily: uiFont || 'inherit', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'inherit' }}>{label}</span>
+      <div className="flex items-center justify-between px-3 py-1.5" style={{ borderTop: '1px solid currentColor', borderBottom: '1px solid currentColor', background: theme.isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)' }}>
+        <button onClick={onInc} className="p-1 cursor-pointer hover:opacity-70" style={{ background: 'transparent', border: 'none', color: 'inherit' }}>
+          <Plus size={16} strokeWidth={2.5} />
+        </button>
+        <span style={{ fontFamily: uiFont || 'inherit', fontSize: '0.9rem' }}>{value}</span>
+        <button onClick={onDec} className="p-1 cursor-pointer hover:opacity-70" style={{ background: 'transparent', border: 'none', color: 'inherit' }}>
+          <Minus size={16} strokeWidth={2.5} />
+        </button>
+      </div>
+    </div>
+  );
+};
 
 export default function TableInspectorPanel({
   editor,
@@ -29,6 +58,11 @@ export default function TableInspectorPanel({
   } | null>(null);
 
   const l = (lang || 'en') as Lang;
+  const safeT = (k: keyof Strings, fallback: string) => {
+    const val = t(l, k);
+    if (!val || val === k) return fallback;
+    return val;
+  };
 
   const updateInfo = useCallback(() => {
     if (editor && !editor.isDestroyed) {
@@ -47,241 +81,107 @@ export default function TableInspectorPanel({
     };
   }, [editor, updateInfo]);
 
-  const btnStyle = {
-    padding: '8px 10px',
-    borderRadius: '6px',
-    border: `1px solid ${theme.border}`,
-    background: theme.isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)',
-    color: theme.text,
-    fontSize: '0.74rem',
-    fontWeight: 500,
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '5px',
-    transition: 'all 0.15s ease'
-  };
-
   const [createRows, setCreateRows] = useState(3);
-  const [createCols, setCreateCols] = useState(3);
-  const [withHeader, setWithHeader] = useState(true);
-
-  if (!tableInfo) {
-    return (
-      <div className="flex flex-col h-full w-full select-none overflow-y-auto" style={{ fontFamily: uiFont, backgroundColor: theme.bg, padding: 16 }} onMouseDown={(e) => e.preventDefault()}>
-        <div className="space-y-4">
-          <div className="text-center py-2">
-            <span className="text-xs font-semibold opacity-75" style={{ color: theme.textMuted }}>
-              {t(l, 'noTableSelected') || 'No Table Selected'}
-            </span>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div className="flex flex-col gap-1.5">
-              <span className="text-[10px] uppercase tracking-wider font-medium" style={{ color: theme.textMuted }}>
-                {t(l, 'rows') || 'Rows'}
-              </span>
-              <div className="flex items-center" style={{ border: `1px solid ${theme.borderFaint}`, borderRadius: 6, overflow: 'hidden' }}>
-                <button
-                  style={{ flex: 1, padding: 6, background: theme.surface, color: theme.text }}
-                  onClick={() => setCreateRows(prev => Math.max(1, prev - 1))}
-                >
-                  <Minus size={13} className="mx-auto" />
-                </button>
-                <span className="w-8 text-center text-xs font-mono">{createRows}</span>
-                <button
-                  style={{ flex: 1, padding: 6, background: theme.surface, color: theme.text }}
-                  onClick={() => setCreateRows(prev => Math.min(20, prev + 1))}
-                >
-                  <Plus size={13} className="mx-auto" />
-                </button>
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <span className="text-[10px] uppercase tracking-wider font-medium" style={{ color: theme.textMuted }}>
-                {t(l, 'columns') || 'Columns'}
-              </span>
-              <div className="flex items-center" style={{ border: `1px solid ${theme.borderFaint}`, borderRadius: 6, overflow: 'hidden' }}>
-                <button
-                  style={{ flex: 1, padding: 6, background: theme.surface, color: theme.text }}
-                  onClick={() => setCreateCols(prev => Math.max(1, prev - 1))}
-                >
-                  <Minus size={13} className="mx-auto" />
-                </button>
-                <span className="w-8 text-center text-xs font-mono">{createCols}</span>
-                <button
-                  style={{ flex: 1, padding: 6, background: theme.surface, color: theme.text }}
-                  onClick={() => setCreateCols(prev => Math.min(15, prev + 1))}
-                >
-                  <Plus size={13} className="mx-auto" />
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Quick preset sizes */}
-          <div className="flex gap-1.5">
-            {[[2, 2], [3, 3], [4, 4], [5, 4]].map(([r, c]) => (
-              <button
-                key={`${r}x${c}`}
-                onClick={() => { setCreateRows(r); setCreateCols(c); }}
-                className={`flex-1 py-1 text-[11px] font-mono rounded border transition-all cursor-pointer ${
-                  createRows === r && createCols === c ? 'font-bold shadow-xs' : 'opacity-70 hover:opacity-100'
-                }`}
-                style={{
-                  borderColor: createRows === r && createCols === c ? theme.accent : theme.borderFaint,
-                  backgroundColor: createRows === r && createCols === c ? (theme.accentLight || 'rgba(59,130,246,0.12)') : 'transparent',
-                  color: createRows === r && createCols === c ? theme.accent : theme.text
-                }}
-              >
-                {r}×{c}
-              </button>
-            ))}
-          </div>
-
-          <label className="flex items-center gap-2 text-xs cursor-pointer select-none pt-1" style={{ color: theme.text }}>
-            <input
-              type="checkbox"
-              checked={withHeader}
-              onChange={e => setWithHeader(e.target.checked)}
-              className="rounded"
-              style={{ accentColor: theme.accent }}
-            />
-            <span>{t(l, 'headerRow') || 'Header Row'}</span>
-          </label>
-
-          <button
-            onClick={() => editor?.chain().focus().insertTable({ rows: createRows, cols: createCols, withHeaderRow: withHeader }).run()}
-            style={{
-              width: '100%', padding: '10px 14px', borderRadius: 8, border: 'none',
-              background: theme.accent, color: '#fff', fontFamily: uiFont, fontSize: '0.8rem', fontWeight: 600,
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, cursor: 'pointer'
-            }}
-          >
-            <TableIcon size={16} />
-            {t(l, 'insertTable') || 'Insert Table'} ({createRows}×{createCols})
-          </button>
-        </div>
-      </div>
-    );
-  }
+  const [createCols, setCreateCols] = useState(4);
 
   return (
-    <div className="flex flex-col h-full w-full select-none overflow-y-auto" onMouseDown={(e) => e.preventDefault()} style={{ fontFamily: uiFont, backgroundColor: theme.bg }}>
-      <div className="p-4 space-y-6">
+    <div className="flex flex-col h-full w-full select-none overflow-y-auto" onMouseDown={(e) => e.preventDefault()} style={{ backgroundColor: theme.panel }}>
+      <div className="p-4 space-y-4">
         
-        {/* Table Properties */}
-        <Accordion title={t(l, 'tableProperties') || "Table Properties"} uiFont={uiFont} c={theme as Record<string, unknown>}>
-          <div className="space-y-4">
-            
-            <div className="grid grid-cols-2 gap-3">
-              <div className="flex flex-col gap-1">
-                <span className="text-[10px] uppercase tracking-wider" style={{ color: theme.textMuted }}>{t(l, 'rows') || "Rows"}</span>
-                <div className="flex items-center" style={{ border: `1px solid ${theme.borderFaint}`, borderRadius: 6, overflow: 'hidden' }}>
-                  <button style={{ flex: 1, padding: 6, background: theme.surface, color: theme.text }} onClick={() => adjustRowCount(editor!, -1)}><Minus size={14} className="mx-auto" /></button>
-                  <span className="w-8 text-center text-xs font-mono">{tableInfo.rowCount}</span>
-                  <button style={{ flex: 1, padding: 6, background: theme.surface, color: theme.text }} onClick={() => adjustRowCount(editor!, 1)}><Plus size={14} className="mx-auto" /></button>
-                </div>
-              </div>
-              <div className="flex flex-col gap-1">
-                <span className="text-[10px] uppercase tracking-wider" style={{ color: theme.textMuted }}>{t(l, 'columns') || "Columns"}</span>
-                <div className="flex items-center" style={{ border: `1px solid ${theme.borderFaint}`, borderRadius: 6, overflow: 'hidden' }}>
-                  <button style={{ flex: 1, padding: 6, background: theme.surface, color: theme.text }} onClick={() => adjustColumnCount(editor!, -1)}><Minus size={14} className="mx-auto" /></button>
-                  <span className="w-8 text-center text-xs font-mono">{tableInfo.colCount}</span>
-                  <button style={{ flex: 1, padding: 6, background: theme.surface, color: theme.text }} onClick={() => adjustColumnCount(editor!, 1)}><Plus size={14} className="mx-auto" /></button>
-                </div>
-              </div>
+        <Accordion title={safeT('createTable', 'Create Table')} uiFont={uiFont} c={theme as Record<string, unknown>}>
+          <div className="flex flex-col py-2 pb-4" style={{ color: theme.text }}>
+            <div className="flex justify-center mb-6 px-12">
+              <CornerButton uiFont={uiFont} onClick={() => editor?.chain().focus().insertTable({ rows: createRows, cols: createCols, withHeaderRow: true }).run()}>
+                {safeT('insertTable', 'Insert Table')}
+              </CornerButton>
             </div>
-
-            <div className="grid grid-cols-2 gap-2">
-              <button style={btnStyle} onClick={() => editor?.chain().focus().addRowBefore().run()} title={t(l, 'addRowAbove')}>
-                <ArrowUp size={14} /> {t(l, 'addRow') || 'Add Row'}
-              </button>
-              <button style={btnStyle} onClick={() => editor?.chain().focus().addRowAfter().run()} title={t(l, 'addRowBelow')}>
-                <ArrowDown size={14} /> {t(l, 'addRow') || 'Add Row'}
-              </button>
-              <button style={btnStyle} onClick={() => editor?.chain().focus().addColumnBefore().run()} title={t(l, 'addColumnBefore')}>
-                <ArrowLeft size={14} /> {t(l, 'addCol') || 'Add Col'}
-              </button>
-              <button style={btnStyle} onClick={() => editor?.chain().focus().addColumnAfter().run()} title={t(l, 'addColumnAfter')}>
-                <ArrowRight size={14} /> {t(l, 'addCol') || 'Add Col'}
-              </button>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2 mt-2">
-              <button style={{...btnStyle, color: '#ef4444', borderColor: theme.isDark ? 'rgba(239, 68, 68, 0.3)' : 'rgba(239, 68, 68, 0.2)'}} onClick={() => editor?.chain().focus().deleteRow().run()}>
-                <Trash2 size={14} /> {t(l, 'row') || 'Row'}
-              </button>
-              <button style={{...btnStyle, color: '#ef4444', borderColor: theme.isDark ? 'rgba(239, 68, 68, 0.3)' : 'rgba(239, 68, 68, 0.2)'}} onClick={() => editor?.chain().focus().deleteColumn().run()}>
-                <Trash2 size={14} /> {t(l, 'col') || 'Col'}
-              </button>
-            </div>
-
-            <button style={{...btnStyle, width: '100%', color: '#ef4444', borderColor: theme.isDark ? 'rgba(239, 68, 68, 0.3)' : 'rgba(239, 68, 68, 0.2)'}} onClick={() => editor?.chain().focus().deleteTable().run()}>
-              <Trash2 size={14} /> {t(l, 'deleteTable') || 'Delete Table'}
-            </button>
-
+            <NumberControl uiFont={uiFont} 
+              label={safeT('row', 'Row')} 
+              value={createRows} 
+              onInc={() => setCreateRows(r => Math.min(20, r + 1))} 
+              onDec={() => setCreateRows(r => Math.max(1, r - 1))} theme={theme}
+            />
+            <NumberControl uiFont={uiFont} 
+              label={safeT('col', 'Column')} 
+              value={createCols} 
+              onInc={() => setCreateCols(c => Math.min(15, c + 1))} 
+              onDec={() => setCreateCols(c => Math.max(1, c - 1))} theme={theme}
+            />
           </div>
         </Accordion>
 
-        {/* Alignment */}
-        <Accordion title={t(l, 'alignment') || "Alignment"} uiFont={uiFont} c={theme as Record<string, unknown>}>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <span className="text-[10px] uppercase tracking-wider" style={{ color: theme.textMuted }}>{t(l, 'alignment') || "Alignment"}</span>
-              <div className="flex gap-2">
-                {[
-                  { align: 'left', icon: AlignLeft },
-                  { align: 'center', icon: AlignCenter },
-                  { align: 'right', icon: AlignRight }
-                ].map(({ align, icon: Icon }) => {
-                  const isActive = editor?.isActive({ textAlign: align });
-                  return (
-                    <button
-                      key={align}
-                      onClick={() => editor?.chain().focus().setTextAlign(align).run()}
-                      style={{
-                        ...btnStyle, flex: 1,
-                        background: isActive ? theme.accent : (theme.isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)'),
-                        color: isActive ? '#fff' : theme.text,
-                        borderColor: isActive ? theme.accent : theme.border
-                      }}
-                    >
-                      <Icon size={16} />
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
+        <Accordion title={safeT('tableProperties', 'Table Properties')} uiFont={uiFont} c={theme as Record<string, unknown>}>
+          <div className="flex flex-col py-2 pb-4" style={{ color: theme.text }}>
+            <NumberControl uiFont={uiFont} 
+              label={safeT('row', 'Row')} 
+              value={tableInfo?.rowCount || 3} 
+              disabled={!tableInfo}
+              onInc={() => tableInfo && adjustRowCount(editor!, 1)} 
+              onDec={() => tableInfo && adjustRowCount(editor!, -1)} theme={theme}
+            />
+            <NumberControl uiFont={uiFont} 
+              label={safeT('col', 'Column')} 
+              value={tableInfo?.colCount || 4} 
+              disabled={!tableInfo}
+              onInc={() => tableInfo && adjustColumnCount(editor!, 1)} 
+              onDec={() => tableInfo && adjustColumnCount(editor!, -1)} theme={theme}
+            />
+            <NumberControl uiFont={uiFont} 
+              label={safeT('addRow', 'Add Row')} 
+              value={1} 
+              disabled={!tableInfo}
+              onInc={() => tableInfo && editor?.chain().focus().addRowAfter().run()} 
+              onDec={() => tableInfo && editor?.chain().focus().addRowBefore().run()} theme={theme}
+            />
+            <NumberControl uiFont={uiFont} 
+              label={safeT('addCol', 'Add Column')} 
+              value={1} 
+              disabled={!tableInfo}
+              onInc={() => tableInfo && editor?.chain().focus().addColumnAfter().run()} 
+              onDec={() => tableInfo && editor?.chain().focus().addColumnBefore().run()} theme={theme}
+            />
             
-            <div className="space-y-2">
-              <span className="text-[10px] uppercase tracking-wider" style={{ color: theme.textMuted }}>{t(l, 'tableLayout') || "Table Layout"}</span>
-              <div className="flex gap-2">
-                {[
-                  { type: 'left', icon: AlignLeft },
-                  { type: 'center', icon: AlignCenter },
-                  { type: 'full', icon: Maximize2 }
-                ].map(({ type, icon: Icon }) => {
-                  const isActive = tableInfo.alignment === type;
-                  return (
-                    <button
-                      key={type}
-                      onClick={() => setTableAttribute(editor!, 'data-align', type)}
-                      style={{
-                        ...btnStyle, flex: 1,
-                        background: isActive ? theme.accent : (theme.isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)'),
-                        color: isActive ? '#fff' : theme.text,
-                        borderColor: isActive ? theme.accent : theme.border
-                      }}
-                    >
-                      <Icon size={16} />
-                    </button>
-                  );
-                })}
-              </div>
+            <div className="flex flex-col gap-5 mt-6 px-16">
+              <CornerButton uiFont={uiFont} disabled={!tableInfo} onClick={() => editor?.chain().focus().deleteTable().run()}>
+                {safeT('deleteTable', 'Delete Table')}
+              </CornerButton>
+              <CornerButton uiFont={uiFont} disabled={!tableInfo} onClick={() => editor?.chain().focus().deleteRow().run()}>
+                {safeT('deleteRow', 'Delete Row')}
+              </CornerButton>
+              <CornerButton uiFont={uiFont} disabled={!tableInfo} onClick={() => editor?.chain().focus().deleteColumn().run()}>
+                {safeT('deleteColumn', 'Delete Column')}
+              </CornerButton>
             </div>
+          </div>
+        </Accordion>
+
+        <Accordion title={safeT('alignment', 'Alignment')} uiFont={uiFont} c={theme as Record<string, unknown>}>
+          <div className="flex justify-between px-6 py-4 pb-8" style={{ color: theme.text }}>
+            {[
+              { align: 'left', icon: AlignLeft },
+              { align: 'center', icon: AlignCenter },
+              { align: 'right', icon: AlignRight },
+              { align: 'justify', icon: AlignJustify }
+            ].map(({ align, icon: Icon }) => {
+              const isActive = editor?.isActive({ textAlign: align });
+              return (
+                <button
+                  key={align}
+                  disabled={!tableInfo}
+                  onClick={() => editor?.chain().focus().setTextAlign(align).run()}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    color: 'inherit',
+                    cursor: tableInfo ? 'pointer' : 'not-allowed',
+                    opacity: isActive ? 1 : (tableInfo ? 0.5 : 0.2),
+                  }}
+                  className="hover:opacity-100 transition-opacity"
+                >
+                  <Icon size={22} strokeWidth={isActive ? 2.5 : 1.5} />
+                </button>
+              );
+            })}
           </div>
         </Accordion>
       </div>

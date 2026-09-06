@@ -8,13 +8,10 @@ import { exportTxt, exportJson } from './exportUtils';
 import { isMarkdownText, parseMarkdownToHtml, ensureRichTextHtml } from "./clipboardEngine";
 import { importFile, exportToOdt, exportToHtmlFile, exportToMarkdownFile, exportToJsonBackup } from './fileHandlers';
 import { saveApiKey, loadApiKey, injectGoogleFont, reinjectSavedFonts } from './googleFontsApi';
-import { X, Plus, Minus, ZoomIn, Eye, Maximize2, PanelLeft, Hourglass, Coffee, Settings, LayoutList, Columns, Brain, GitCompare } from 'lucide-react';
+import { X, Plus, Minus, ZoomIn, Eye, Maximize2, PanelLeft, Hourglass, Coffee, Settings, Columns, Brain, GitCompare, Moon, Book, Files, PanelRight } from 'lucide-react';
 import type { Editor as TiptapEditorType } from '@tiptap/react';
 import LeftPanel from './LeftPanel';
 import RightPanel from './RightPanel';
-import BlockOrganizerPanel from './BlockOrganizerPanel';
-import FlashcardStudio from './FlashcardStudio';
-import GoogleFontsPanel from './GoogleFontsPanel';
 import SplitRevisionStudio from './SplitRevisionStudio';
 import Editor from './Editor';
 import Toolbar from './Toolbar';
@@ -26,7 +23,7 @@ import LinkHoverPreview from './LinkHoverPreview';
 import WordCountDropdown from './WordCountDropdown';
 import type { Document, Folder, ThemeColors, ThemeMode, CustomTheme, CustomFont, Lang, Project, Page, FormatState, PageFormat, Panel } from './types';
 import { PAPER_SIZES_PX } from './types';
-import { getAllProjectsFromDB, saveProjectToDB, deleteProjectFromDB, getAppSettings, saveAppSettings, db, getAllFoldersFromDB } from './db';
+import { getAllProjectsFromDB, saveProjectToDB, deleteProjectFromDB, getAppSettings, saveAppSettings, db, getAllFoldersFromDB, saveFolderToDB } from './db';
 
 // --- localStorage helpers ---
 const LS = {
@@ -239,11 +236,8 @@ export default function App() {
   const [readerStyle, setReaderStyle] = useState<"classic" | "zen">("zen");
   const [typewriterMode, setTypewriterMode] = useState(false);
     const [isSplitRevisionOpen, setIsSplitRevisionOpen] = useState(false);
-  const [viewMode, setViewMode] = useState<'normal' | 'block' | 'flashcard'>('normal');
   const [activeFootnoteHighlight, setActiveFootnoteHighlight] = useState<string | null>(null);
-  const [blockViewOpen, setBlockViewOpen] = useState(false);
   const [githubModalOpen, setGithubModalOpen] = useState(false);
-  const [activeBlockEditor, setActiveBlockEditor] = useState<TiptapEditorType | null>(null);
   const [rightPanelTab, setRightPanelTab] = useState<Panel>('settings');
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [zoomPercent, setZoomPercent] = useState<number>(100);
@@ -441,8 +435,6 @@ export default function App() {
       setGithubModalOpen(prev => { if (prev) { handled = true; return false; } return prev; });
       if (handled) { window.history.pushState({ workspace: true }, ''); return; }
       
-      setFontExplorerOpen(prev => { if (prev) { handled = true; return false; } return prev; });
-      if (handled) { window.history.pushState({ workspace: true }, ''); return; }
       
       setIsFocusMode(prev => { if (prev) { handled = true; return false; } return prev; });
       if (handled) { window.history.pushState({ workspace: true }, ''); return; }
@@ -744,7 +736,6 @@ export default function App() {
     setIsFocusMode(prev => {
       const next = !prev;
       setIsPreviewMode(false);
-      setBlockViewOpen(false);
       restoreScroll();
       return next;
     });
@@ -754,7 +745,6 @@ export default function App() {
     setIsPreviewMode(prev => {
       const next = !prev;
       setIsFocusMode(false);
-      setBlockViewOpen(false);
       restoreScroll();
       return next;
     });
@@ -2270,133 +2260,72 @@ export default function App() {
       {/* Main Workspace Area with fluid flex expansion & smooth resize transition */}
       <main className="flex-1 min-w-0 h-full overflow-hidden flex flex-col transition-all duration-300 ease-in-out relative">
         
-        {/* Floating Panel Toggles */}
+        {/* Top Header Bar */}
         {!isFocusMode && !isPreviewMode && (
-          <>
-            {!sidebarOpen && (
-              <button
-                onClick={() => setSidebarOpen(true)}
-                className="absolute top-4 left-4 z-50 p-2 rounded-lg transition-all hover:opacity-80 active:scale-95 shadow-sm cursor-pointer"
-                style={{
-                  backgroundColor: theme.surface,
-                  color: theme.text,
-                  border: `1px solid ${theme.border}`
-                }}
-                title={t.openSidebar || 'Open Sidebar'}
-              >
-                <PanelLeft size={18} />
-              </button>
-            )}
-
-
-            <div className={`absolute top-4 z-50 flex items-center gap-2 pr-2 transition-all duration-300 right-16`}>
-              <WordCountDropdown
-                wordCount={wordCount}
-                charCount={charCount}
-                readMin={readMin}
-                theme={theme}
-                uiFont={uiFont}
-                lang={lang}
-                direction="down"
-              />
-              <button
-                onClick={handleToggleFocusMode}
-                className="p-1.5 rounded transition-all hover:opacity-80 active:scale-95"
-                style={{
-                  color: isFocusMode ? theme.accent : theme.text,
-                }}
-                title={isFocusMode ? (t.exitFocus || 'Exit Focus') : (t.focus || 'Focus Mode (DND)')}
-              >
-                <Hourglass size={16} />
-              </button>
-              <button
-                onClick={handleTogglePreviewMode}
-                className="p-1.5 rounded transition-all hover:opacity-80 active:scale-95"
-                style={{
-                  color: isPreviewMode ? theme.accent : theme.text,
-                }}
-                title={t.previewMode || 'Preview Mode'}
-              >
-                <Coffee size={16} />
-              </button>
-              <button
-                onClick={() => {
-                  setBlockViewOpen(prev => !prev);
-                  setIsFocusMode(false);
-                  setIsPreviewMode(false);
-                }}
-                className="p-1.5 rounded transition-all hover:opacity-80 active:scale-95"
-                style={{
-                  color: blockViewOpen ? theme.accent : theme.text,
-                }}
-                title={t.blockView || 'Block View Organizer'}
-              >
-                <LayoutList size={16} />
-              </button>
-              <button
-                onClick={handleToggleTypewriterMode}
-                className="p-1.5 rounded transition-all hover:opacity-80 active:scale-95"
-                style={{
-                  color: typewriterMode ? theme.accent : theme.text,
-                }}
-                title={t.typewriterMode || 'Typewriter Scroll'}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M4 14h16M7 18h10M12 14v4M9 10v4M15 10v4M6 10v4M18 10v4M4 8h16v6a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8zM8 4h8v4H8z"/>
-                </svg>
-              </button>
-              <button
-                onClick={() => {
-                  if (viewMode === 'flashcard') {
-                    setViewMode('normal');
-                  } else {
-                    setViewMode('flashcard');
-                    setBlockViewOpen(false);
-                    setIsFocusMode(false);
-                    setIsPreviewMode(false);
-                  }
-                }}
-                className="p-1.5 rounded transition-all hover:opacity-80 active:scale-95 flex items-center justify-center cursor-pointer"
-                style={{
-                  backgroundColor: viewMode === 'flashcard' ? theme.accentLight : 'transparent',
-                  color: viewMode === 'flashcard' ? theme.accent : theme.text,
-                  border: viewMode === 'flashcard' ? `1px solid ${theme.accent}` : '1px solid transparent',
-                }}
-                title={viewMode === 'flashcard' ? (t.normalView || 'Exit Flashcard Mode') : (t.flashcardMode || 'Flashcard Mode')}
-              >
-                <Brain size={16} />
-              </button>
+          <header className="w-full flex items-center justify-between px-4 sm:px-6 py-4 shrink-0 relative z-50 transition-all duration-300">
+            {/* Left Controls */}
+            <div className="flex items-center gap-3 w-1/3">
+              {!sidebarOpen && (
+                <button
+                  onClick={() => setSidebarOpen(true)}
+                  className="p-1.5 rounded transition-all hover:opacity-80 active:scale-95 flex items-center justify-center cursor-pointer"
+                  style={{ color: theme.text }}
+                  title="Toggle Sidebar"
+                >
+                  <PanelLeft size={20} strokeWidth={1.5} />
+                </button>
+              )}
               
-              <button
-                onClick={() => setIsSplitRevisionOpen(true)}
-                className="p-1.5 rounded transition-all hover:opacity-80 active:scale-95 flex items-center justify-center"
-                style={{ color: theme.text }}
-                title={t.splitRevisionStudio || 'Split Revision Studio'}
-              >
-                <GitCompare size={16} />
-              </button>
             </div>
 
-            <button
-              onClick={() => {
-                setRightOpen(prev => !prev);
-              }}
-              className={`absolute top-4 z-50 p-2 rounded-lg transition-all hover:opacity-80 active:scale-95 shadow-sm duration-300 right-4`}
-              style={{
-                backgroundColor: rightOpen ? theme.accentLight : theme.surface,
-                color: rightOpen ? theme.accent : theme.text,
-                border: `1px solid ${rightOpen ? theme.accent : theme.border}`
-              }}
-              title={t.settings || 'Toggle Settings'}
-            >
-              <Settings size={18} />
-            </button>
-          </>
+            {/* Center Title */}
+            <div className="flex-1 flex justify-center pointer-events-none">
+              <h1 className="text-[15px] sm:text-base uppercase tracking-widest font-medium" style={{ color: theme.text, fontFamily: `'${uiFont}', sans-serif` }}>
+                {activePage?.title || 'FILE NAME'}
+              </h1>
+            </div>
+
+            {/* Right Controls */}
+            <div className="flex items-center justify-end gap-3 sm:gap-6 w-1/3">
+              <div className="hidden sm:flex items-center text-sm tracking-wide" style={{ color: theme.text, opacity: 0.8, fontFamily: `'${uiFont}', sans-serif` }}>
+                <WordCountDropdown 
+                  wordCount={wordCount}
+                  charCount={charCount}
+                  readMin={readMin}
+                  theme={theme}
+                  uiFont={uiFont}
+                  lang={lang as Lang}
+                  direction="down"
+                />
+                <div className="w-px h-4 mx-3" style={{ backgroundColor: theme.border }} />
+                <div className="flex items-center gap-2">
+                  <button onClick={handleToggleFocusMode} title={t.focusMode || 'Focus Mode'} className="p-1.5 hover:opacity-80 transition-opacity">
+                    <Moon size={18} strokeWidth={1.5} />
+                  </button>
+                  <button onClick={handleTogglePreviewMode} title={t.previewMode || 'Preview Mode'} className="p-1.5 hover:opacity-80 transition-opacity">
+                    <Book size={18} strokeWidth={1.5} />
+                  </button>
+                  <button onClick={() => setIsSplitRevisionOpen(true)} title={t.splitRevisionStudio || 'Revision Mode'} className="p-1.5 hover:opacity-80 transition-opacity">
+                    <Files size={18} strokeWidth={1.5} />
+                  </button>
+                </div>
+              </div>
+              
+              <button 
+                onClick={() => setRightOpen(prev => !prev)} 
+                className="p-1.5 hover:opacity-80 transition-opacity" 
+                style={{ color: rightOpen ? theme.accent : theme.text }}
+                title={t.settings || 'Toggle Settings'}
+              >
+                <PanelRight size={20} strokeWidth={1.5} />
+              </button>
+            </div>
+          </header>
         )}
 
         {!isFocusMode && !isPreviewMode && editorInstance && (
           <Toolbar
-            editor={(activeBlockEditor || editorInstance) as TiptapEditorType}
+            editor={editorInstance as TiptapEditorType}
             theme={theme}
             uiFont={uiFont}
             t={t}
@@ -2405,7 +2334,7 @@ export default function App() {
             selectedSize={formatState.fontSize || fontSize}
             availableFonts={availableFonts}
             onFontChange={(fam) => {
-              const currentEditor = (activeBlockEditor || editorInstance) as TiptapEditorType;
+              const currentEditor = editorInstance as TiptapEditorType;
               currentEditor?.chain().focus().setFontFamily(fam).run();
             }}
             onSizeChange={(size) => {
@@ -2417,10 +2346,10 @@ export default function App() {
               else if (role === 'mono') handleSelectMonoFont(fontName);
               else if (role === 'ui') handleSelectUiFont(fontName);
             }}
-            onUndo={() => ((activeBlockEditor || editorInstance) as TiptapEditorType)?.chain().focus().undo().run()}
-            onRedo={() => ((activeBlockEditor || editorInstance) as TiptapEditorType)?.chain().focus().redo().run()}
-            canUndo={Boolean(!((activeBlockEditor || editorInstance)?.isDestroyed) && ((activeBlockEditor || editorInstance) as unknown as { can: () => { undo: () => boolean, redo: () => boolean } })?.can?.()?.undo?.())}
-            canRedo={Boolean(!((activeBlockEditor || editorInstance)?.isDestroyed) && ((activeBlockEditor || editorInstance) as unknown as { can: () => { undo: () => boolean, redo: () => boolean } })?.can?.()?.redo?.())}
+            onUndo={() => (editorInstance as TiptapEditorType)?.chain().focus().undo().run()}
+            onRedo={() => (editorInstance as TiptapEditorType)?.chain().focus().redo().run()}
+            canUndo={Boolean(!(editorInstance?.isDestroyed) && (editorInstance as unknown as { can: () => { undo: () => boolean, redo: () => boolean } })?.can?.()?.undo?.())}
+            canRedo={Boolean(!(editorInstance?.isDestroyed) && (editorInstance as unknown as { can: () => { undo: () => boolean, redo: () => boolean } })?.can?.()?.redo?.())}
             zoomPercent={zoomPercent}
             zoomInput={zoomInput}
             onZoomIn={() => setZoomPercent(prev => Math.min(250, prev + 10))}
@@ -2442,16 +2371,7 @@ export default function App() {
         )}
 
         {/* Flashcard Mode vs Split Screen Mode vs Standard Editor Mode */}
-        {viewMode === 'flashcard' ? (
-          <FlashcardStudio
-            theme={theme}
-            uiFont={uiFont}
-            lang={lang}
-            activePage={activePage || null}
-            onClose={() => setViewMode('normal')}
-          />
-        ) : (
-          <div className="flex-1 flex w-full h-[calc(100%-60px)] overflow-hidden">
+        <div className="flex-1 flex w-full h-[calc(100%-60px)] overflow-hidden">
             {/* Floating Paper Sheet Container & Dynamic Page Format Wrapper with momentum scroll & GPU locking */}
             <div className={`flex-1 overflow-y-auto kgv-scroll kgv-momentum-scroll kgv-hardware-accelerated transition-all duration-300 ease-in-out flex flex-col items-center pb-36 px-3 sm:px-6 relative ${
               (isFocusMode || isPreviewMode) 
@@ -2473,28 +2393,8 @@ export default function App() {
 
                 return (
                   <>
-                    <div
-                      className={`flex-1 flex flex-col w-full relative transition-all duration-300 ease-in-out kgv-hardware-accelerated h-full max-w-3xl px-4 md:px-6 pt-2 pb-24 md:pt-4 md:pb-32 ${blockViewOpen ? "flex" : "hidden"}`}
-                      style={{ backgroundColor: 'transparent' }}
-                    >
-                      {editorInstance && blockViewOpen && (
-                        <BlockOrganizerPanel 
-                          editor={editorInstance as TiptapEditorType}
-                          onClose={() => setBlockViewOpen(false)}
-                          theme={theme}
-                          lang={lang}
-                          uiFont={uiFont}
-                          docFont={docFont}
-                          headingFont={headingFont}
-                          fontSize={fontSize}
-                          formatState={formatState}
-                          setActiveBlockEditor={setActiveBlockEditor}
-                        />
-                      )}
-                    </div>
-
                     <div 
-                      className={`w-full flex-col items-center transition-all duration-300 relative ${blockViewOpen ? "hidden" : "flex"}`}
+                      className="w-full flex-col items-center transition-all duration-300 relative flex"
                       style={!isPreviewOrFocus && !isPageless ? { width: `${paperWidth}px`, zoom: autoFitScale } : {}}
                     >
                       <div className={!isPreviewOrFocus && !isPageless ? "flex flex-col items-center w-full no-print" : "w-full"}>
@@ -2562,7 +2462,6 @@ export default function App() {
               </div>
             </div>
           </div>
-        )}
       </main>
 
       {/* Right Panel with fluid width & smooth slide transitions */}
@@ -2590,7 +2489,7 @@ export default function App() {
               renamePage(activePageId, title);
             }
           }}
-          editor={(activeBlockEditor || editorInstance) as TiptapEditorType}
+          editor={editorInstance as TiptapEditorType}
           formatState={formatState}
           onFormatChange={handleFormatChange}
           pageFormat={pageFormat}
@@ -2625,7 +2524,6 @@ export default function App() {
           onSelectLang={handleSelectLang}
           onUploadFont={handleUploadFont}
           onRemoveCustomFont={handleRemoveCustomFont}
-          onOpenFontExplorer={() => setFontExplorerOpen(true)}
           apiKey={apiKey}
           onSaveApiKey={handleSaveApiKey}
           onExportJson={handleExportJson}
@@ -2657,24 +2555,6 @@ export default function App() {
       </div>
         </div>
 
-      {fontExplorerOpen && (
-        <GoogleFontsPanel onSaveApiKey={handleSaveApiKey}
-          theme={theme} uiFont={uiFont} t={t} apiKey={apiKey}
-          editor={editorInstance}
-          onClose={() => setFontExplorerOpen(false)}
-          onApplyToSelection={handleApplyFontToSelection}
-          onApplyToUi={handleSelectUiFont}
-          onApplyToDoc={handleSelectDocFont}
-          onAssignRole={(role, fontName) => {
-            if (role === 'body') handleSelectDocFont(fontName);
-            else if (role === 'heading') handleSelectHeadingFont(fontName);
-            else if (role === 'ui') handleSelectUiFont(fontName);
-          }}
-          bodyFont={docFont}
-          headingFont={headingFont}
-          uiFontRole={uiFont}
-        />
-      )}
 
       {exportToast && (
         <div className="fixed top-20 right-4 z-[60] flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg border animate-in fade-in slide-in-from-right-4"

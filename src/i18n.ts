@@ -1,6 +1,18 @@
 export type Lang = 'en' | 'vi' | 'fr' | 'de' | 'it' | 'es' | 'ko' | 'zh' | 'ja'
 
 interface Strings {
+  advanced?: string;
+  page?: string;
+  googleFonts?: string;
+  all?: string;
+  createTable?: string
+  row?: string
+  col?: string
+  addRow?: string
+  addCol?: string
+  deleteRow?: string
+  deleteColumn?: string
+  alignment?: string
   previewMode?: string
   zenStyle?: string;
   classicStyle?: string;
@@ -54,7 +66,6 @@ interface Strings {
   lineHeight: string
   letterSpacing: string
   wordSpacing: string
-  alignment: string
   paraSpacing: string
   firstLineIndent: string
   maxWidth: string
@@ -576,7 +587,6 @@ interface Strings {
   year?: string
   journalPublisher?: string
   doi?: string
-  switchProject?: string
   files?: string
   citations?: string
   liveCharacterCount?: string
@@ -616,22 +626,14 @@ interface Strings {
   addColumn?: string
   rowControls?: string
   removeRow?: string
-  addRow?: string
   cellPadding?: string
   tablePresets?: string
   insertTable?: string
   tableProperties?: string
-  alignment?: string
   rows?: string
   columns?: string
-  addRow?: string
-  addCol?: string
-  row?: string
-  col?: string
   deleteTable?: string
   tableInspector?: string
-  deleteTable?: string
-  deleteRow?: string
   deleteCol?: string
   clearContents?: string
   mergeCells?: string
@@ -640,7 +642,6 @@ interface Strings {
   center?: string
   right?: string
   fullWidth?: string
-  rows?: string
   cols?: string
   grid?: string
   templates?: string
@@ -712,27 +713,15 @@ interface Strings {
   confirmDeleteVersion?: string
   noVersionsFound?: string
   restoreThisVersion?: string
-  revertToSnapshot?: string
-  snapshotBaseline?: string
-  noSnapshotsForDiff?: string
-  compareLiveWriting?: string
-  snapshotLabel?: string
-  noSnapshotsFound?: string
-  archiveFolder?: string
-  unarchiveFolder?: string
-  archiveProject?: string
-  unarchiveProject?: string
-  archiveDocument?: string
-  unarchiveDocument?: string
-  unarchiveAll?: string
-  archivedItems?: string
-  archiveDesc?: string
-  archiveEmpty?: string
   moveItem?: string
 }
 
-export const translations = {
+export const translations: Record<Lang, Strings> = {
   en: {
+    advanced: "Advanced",
+    page: "Page",
+    googleFonts: "Google Fonts",
+    all: "All",
     enableSpellcheck: "Enable spell check",
     spellcheckLoadError: "Failed to load dictionary",
     switchProject: "Switch Project",
@@ -753,6 +742,7 @@ export const translations = {
     unarchiveAll: "Unarchive All",
     itemArchived: "Item moved to archive",
     itemUnarchived: "Item restored from archive",
+            createTable: "Create Table",
     insertTable: "Insert Table",
     deleteTable: "Delete Table",
     tableProperties: "Table Properties",
@@ -1482,6 +1472,10 @@ pageOf: 'of',
   },
 
   vi: {
+    advanced: "Nâng cao",
+    page: "Trang",
+    googleFonts: "Phông chữ Google",
+    all: "Tất cả",
     enableSpellcheck: "Bật kiểm tra chính tả",
     spellcheckLoadError: "Không thể tải từ điển",
     switchProject: "Chuyển dự án",
@@ -1502,6 +1496,7 @@ pageOf: 'of',
     unarchiveAll: "Bỏ lưu trữ tất cả",
     itemArchived: "Đã chuyển vào lưu trữ",
     itemUnarchived: "Đã khôi phục từ lưu trữ",
+            createTable: "Tạo Bảng",
     insertTable: "Chèn Bảng",
     deleteTable: "Xóa Bảng",
     tableProperties: "Thuộc Tính Bảng",
@@ -2231,6 +2226,10 @@ pageOf: 'trong',
   },
 
   fr: {
+    advanced: "Avancé",
+    page: "Page",
+    googleFonts: "Polices Google",
+    all: "Tout",
     enableSpellcheck: "Activer la vérification orthographique",
     spellcheckLoadError: "Échec du chargement du dictionnaire",
     switchProject: "Changer de projet",
@@ -2251,6 +2250,7 @@ pageOf: 'trong',
     unarchiveAll: "Tout désarchiver",
     itemArchived: "Élément archivé",
     itemUnarchived: "Élément restauré",
+            createTable: "Créer un tableau",
     insertTable: "Insérer un tableau",
     deleteTable: "Supprimer le tableau",
     tableProperties: "Propriétés du tableau",
@@ -2925,6 +2925,10 @@ pageOf: 'de',
   },
 
   de: {
+    advanced: "Erweitert",
+    page: "Seite",
+    googleFonts: "Google Fonts",
+    all: "Alle",
     enableSpellcheck: "Rechtschreibprüfung aktivieren",
     spellcheckLoadError: "Wörterbuch konnte nicht geladen werden",
     switchProject: "Projekt wechseln",
@@ -2945,6 +2949,7 @@ pageOf: 'de',
     unarchiveAll: "Alle wiederherstellen",
     itemArchived: "Element archiviert",
     itemUnarchived: "Element wiederhergestellt",
+            createTable: "Tabelle erstellen",
     insertTable: "Tabelle einfügen",
     deleteTable: "Tabelle löschen",
     tableProperties: "Tabelleneigenschaften",
@@ -3620,6 +3625,10 @@ pageOf: 'von',
   },
 
   it: {
+    advanced: "Avanzate",
+    page: "Pagina",
+    googleFonts: "Google Fonts",
+    all: "Tutti",
     enableSpellcheck: "Attiva controllo ortografico",
     spellcheckLoadError: "Impossibile caricare il dizionario",
     switchProject: "Cambia progetto",
@@ -3640,6 +3649,7 @@ pageOf: 'von',
     unarchiveAll: "Ripristina tutto",
     itemArchived: "Elemento archiviato",
     itemUnarchived: "Elemento ripristinato dall archivio",
+            createTable: "Crea tabella",
     insertTable: "Inserisci tabella",
     deleteTable: "Elimina tabella",
     tableProperties: "Proprietà tabella",
@@ -4315,6 +4325,10 @@ pageOf: 'di',
   },
 
   es: {
+    advanced: "Avanzado",
+    page: "Página",
+    googleFonts: "Fuentes de Google",
+    all: "Todo",
     enableSpellcheck: "Activar corrector ortográfico",
     spellcheckLoadError: "Error al cargar el diccionario",
     switchProject: "Cambiar de proyecto",
@@ -4335,6 +4349,7 @@ pageOf: 'di',
     unarchiveAll: "Desarchivar todo",
     itemArchived: "Elemento archivado",
     itemUnarchived: "Elemento restaurado",
+            createTable: "Crear tabla",
     insertTable: "Insertar tabla",
     deleteTable: "Eliminar tabla",
     tableProperties: "Propiedades de la tabla",
@@ -5010,6 +5025,10 @@ pageOf: 'de',
   },
 
   ko: {
+    advanced: "고급",
+    page: "페이지",
+    googleFonts: "Google 폰트",
+    all: "전체",
     enableSpellcheck: "맞춤법 검사 활성화",
     spellcheckLoadError: "사전을 불러오지 못했습니다",
     switchProject: "프로젝트 전환",
@@ -5030,6 +5049,7 @@ pageOf: 'de',
     unarchiveAll: "모두 보관 해제",
     itemArchived: "항목이 보관되었습니다",
     itemUnarchived: "항목이 복원되었습니다",
+            createTable: "표 만들기",
     insertTable: "표 삽입",
     deleteTable: "표 삭제",
     tableProperties: "표 속성",
@@ -5705,6 +5725,10 @@ pageOf: '/',
   },
 
   zh: {
+    advanced: "高级",
+    page: "页面",
+    googleFonts: "Google 字体",
+    all: "全部",
     enableSpellcheck: "启用拼写检查",
     spellcheckLoadError: "加载字典失败",
     switchProject: "切换项目",
@@ -5725,6 +5749,7 @@ pageOf: '/',
     unarchiveAll: "全部取消归档",
     itemArchived: "项目已归档",
     itemUnarchived: "项目已恢复",
+            createTable: "创建表格",
     insertTable: "插入表格",
     deleteTable: "删除表格",
     tableProperties: "表格属性",
@@ -6400,6 +6425,10 @@ pageOf: '/',
   },
 
   ja: {
+    advanced: "高度な設定",
+    page: "ページ",
+    googleFonts: "Google フォント",
+    all: "すべて",
     enableSpellcheck: "スペルチェックを有効化",
     spellcheckLoadError: "辞書の読み込みに失敗しました",
     switchProject: "プロジェクトを切り替える",
@@ -6420,6 +6449,7 @@ pageOf: '/',
     unarchiveAll: "すべてアーカイブを解除",
     itemArchived: "アイテムがアーカイブされました",
     itemUnarchived: "アイテムが復元されました",
+            createTable: "表を作成",
     insertTable: "表を挿入",
     deleteTable: "表を削除",
     tableProperties: "表のプロパティ",

@@ -1,37 +1,42 @@
 import React, { useState, useEffect } from 'react';
-import { Clock, Plus, RotateCcw, Trash2, ChevronRight, Save } from 'lucide-react';
-import { getPageVersionsFromDB, savePageVersionToDB, deletePageVersionFromDB } from './db';
-import type { ThemeColors, VersionSnapshot, Lang, Page } from './types';
-import { t } from './i18n';
+import { getPageVersionsFromDB, savePageVersionToDB, VersionSnapshot, deletePageVersionFromDB } from './db';
 import { format } from 'date-fns';
+import { t } from './i18n';
 
 interface Props {
-  activePage: Page | null;
-  theme: ThemeColors;
-  lang: Lang;
+  activePage: any;
+  theme: any;
+  lang: any;
   uiFont: string;
   onRestore: (content: string, title: string) => void;
 }
 
-export default function VersionHistoryPanel({
-  activePage,
-  theme,
-  lang,
-  uiFont,
-  onRestore,
-}: Props) {
+const CornerButton = ({ children, onClick, disabled, style, uiFont }: { children: React.ReactNode, onClick: () => void, disabled?: boolean, style?: React.CSSProperties, uiFont?: string }) => {
+  return (
+    <button
+      disabled={disabled}
+      onClick={onClick}
+      className={`relative flex items-center justify-center w-full py-2.5 group transition-opacity ${disabled ? 'opacity-30 cursor-not-allowed' : 'cursor-pointer hover:opacity-70'}`}
+      style={{ background: 'transparent', border: 'none', color: 'inherit', ...style }}
+    >
+      <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-current opacity-30 group-hover:opacity-100 transition-opacity" />
+      <div className="absolute top-0 right-0 w-2 h-2 border-t border-r border-current opacity-30 group-hover:opacity-100 transition-opacity" />
+      <div className="absolute bottom-0 left-0 w-2 h-2 border-b border-l border-current opacity-30 group-hover:opacity-100 transition-opacity" />
+      <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-current opacity-30 group-hover:opacity-100 transition-opacity" />
+      <span style={{ fontFamily: (uiFont || 'inherit'), fontSize: '0.85rem', letterSpacing: '0.05em', fontWeight: 500 }}>{children}</span>
+    </button>
+  );
+};
+
+export default function VersionHistoryPanel({ activePage, theme, lang, uiFont, onRestore }: Props) {
   const [versions, setVersions] = useState<VersionSnapshot[]>([]);
-  const [selectedVersionId, setSelectedVersionId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [newLabel, setNewLabel] = useState('');
-  const [isCreating, setIsCreating] = useState(false);
-  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   useEffect(() => {
     if (activePage?.id) {
       loadVersions();
     }
-  }, [activePage?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [activePage?.id]);
 
   const loadVersions = async () => {
     if (!activePage?.id) return;
@@ -53,137 +58,51 @@ export default function VersionHistoryPanel({
       timestamp: new Date().toISOString(),
       content: activePage.content,
       title: activePage.title,
-      label: newLabel.trim() || undefined,
     };
     await savePageVersionToDB(v);
-    setNewLabel('');
-    setIsCreating(false);
     await loadVersions();
   };
-
-  const executeDelete = async (id: string) => {
-    await deletePageVersionFromDB(id);
-    if (selectedVersionId === id) setSelectedVersionId(null);
-    setConfirmDeleteId(null);
-    await loadVersions();
-  };
-
 
   return (
-    <div className="flex-1 overflow-y-auto overflow-x-hidden flex flex-col" style={{ fontFamily: `'${uiFont}', sans-serif` }}>
-      {isCreating ? (
-        <div className="p-4 mb-4 rounded-xl border shadow-sm animate-fade-in-up" style={{ backgroundColor: theme.surface, borderColor: theme.border }}>
-          <h4 className="text-sm font-medium mb-2" style={{ color: theme.text }}>{t(lang, 'createSnapshot') || 'Create Snapshot'}</h4>
-          <input
-            type="text"
-            placeholder={t(lang, 'snapshotLabelPlaceholder') || 'E.g., Before rewrite...'}
-            value={newLabel}
-            onChange={(e) => setNewLabel(e.target.value)}
-            className="w-full bg-transparent border-b outline-none px-1 py-1 text-sm mb-3"
-            style={{ borderColor: theme.borderFaint, color: theme.text }}
-            autoFocus
-            onKeyDown={(e) => e.key === 'Enter' && handleCreateSnapshot()}
-          />
-          <div className="flex items-center justify-end gap-2">
-            <button
-              onClick={() => setIsCreating(false)}
-              className="px-3 py-1.5 text-xs rounded transition-colors hover:bg-black/5 dark:hover:bg-white/10"
-              style={{ color: theme.text }}
-            >
-              {t(lang, 'cancel')}
-            </button>
-            <button
-              onClick={handleCreateSnapshot}
-              className="px-3 py-1.5 text-xs rounded  font-medium flex items-center gap-1 transition-transform active:scale-95"
-              style={{ backgroundColor: theme.isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)', color: theme.text, border: `1px solid ${theme.border}` }}
-            >
-              <Save size={13} />
-              {t(lang, 'save')}
-            </button>
-          </div>
-        </div>
-      ) : (
-        <button
-          onClick={() => setIsCreating(true)}
-          className="w-full py-3 px-4 mb-6 rounded-xl border border-dashed flex items-center justify-center gap-2 text-sm transition-all hover:bg-black/5 dark:hover:bg-white/5 active:scale-[0.98]"
-          style={{ borderColor: theme.border, color: theme.text }}
-        >
-          <Plus size={16} />
-          <span>{t(lang, 'createNewSnapshot') || 'Create New Snapshot'}</span>
-        </button>
-      )}
+    <div className="flex-1 overflow-y-auto overflow-x-hidden flex flex-col pt-2 pb-6" style={{ fontFamily: (uiFont || 'inherit'), color: theme.text }}>
+      <div className="px-10 mb-6 mt-2">
+        <CornerButton uiFont={uiFont} onClick={handleCreateSnapshot}>
+          {t(lang, 'createNewSnapshot') || 'CREATE NEW SNAPSHOT'}
+        </CornerButton>
+      </div>
 
-      <div className="flex-1 flex flex-col gap-2">
+      <div className="flex-1 flex flex-col gap-3 px-4">
         {loading ? (
-          <p className="text-center text-sm my-4 opacity-50" style={{ color: theme.text }}>{t(lang, 'loading')}...</p>
+          <p className="text-center text-sm my-4 opacity-50">{t(lang, 'loading')}...</p>
         ) : versions.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-40 opacity-50" style={{ color: theme.text }}>
-            <Clock size={32} className="mb-2" />
-            <p className="text-sm">{t(lang, 'noVersionsFound') || 'No snapshots yet.'}</p>
-          </div>
+          <p className="text-sm opacity-50 text-center">No snapshots yet.</p>
         ) : (
-          versions.map((v) => (
-            <div
+          versions.map((v, i) => (
+            <button
               key={v.id}
-              className="group w-full text-left"
+              onClick={() => {
+                if(window.confirm('Restore this snapshot? Current unsaved changes will be lost.')) {
+                   onRestore(v.content, v.title || activePage?.title || 'Restored');
+                }
+              }}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: theme.text,
+                fontFamily: (uiFont || 'inherit'),
+                fontSize: '0.82rem',
+                cursor: 'pointer',
+                textAlign: 'left',
+                opacity: 0.9,
+                display: 'flex',
+                transition: 'opacity 0.2s',
+                fontWeight: 500
+              }}
+              onMouseEnter={e => e.currentTarget.style.opacity = '0.5'}
+              onMouseLeave={e => e.currentTarget.style.opacity = '0.9'}
             >
-              <div 
-                onClick={() => setSelectedVersionId(prev => prev === v.id ? null : v.id)}
-                className={`px-4 py-3 rounded-lg border cursor-pointer transition-all ${selectedVersionId === v.id ? 'shadow-sm' : 'hover:bg-black/5 dark:hover:bg-white/5'}`}
-                style={{ 
-                  borderColor: selectedVersionId === v.id ? theme.text : theme.borderFaint,
-                  backgroundColor: selectedVersionId === v.id ? theme.surface : 'transparent'
-                }}
-              >
-                <div className="flex justify-between items-start">
-                  <div>
-                    <p className="text-sm font-medium mb-0.5" style={{ color: theme.text }}>{format(new Date(v.timestamp), 'MMM d, yyyy - h:mm a')}</p>
-                    {v.label && (
-                      <p className="text-xs" style={{ color: theme.textMuted }}>{v.label}</p>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-1">
-                    {confirmDeleteId === v.id ? (
-                      <div className="flex items-center gap-1">
-                        <button onClick={(e) => { e.stopPropagation(); executeDelete(v.id); }} className="px-2 py-1 text-xs rounded bg-red-500  hover:bg-red-600 transition-colors">
-                          {t(lang, 'delete') || 'Delete'}
-                        </button>
-                        <button onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(null); }} className="px-2 py-1 text-xs rounded hover:bg-black/10 dark:hover:bg-white/10 transition-colors" style={{ color: theme.text }}>
-                          {t(lang, 'cancel') || 'Cancel'}
-                        </button>
-                      </div>
-                    ) : (
-                      <button onClick={(e) => { e.stopPropagation(); setConfirmDeleteId(v.id); }} className="p-1 rounded opacity-0 group-hover:opacity-100 transition-opacity text-red-500 hover:bg-red-500/10">
-                        <Trash2 size={14} />
-                      </button>
-                    )}
-                    <ChevronRight size={16} className={`transition-transform opacity-50 ${selectedVersionId === v.id ? 'rotate-90' : ''}`} style={{ color: theme.text }} />
-                  </div>
-                </div>
-              </div>
-
-              {selectedVersionId === v.id && (
-                <div className="mt-2 mb-4 p-4 rounded-lg border shadow-inner animate-fade-in-up" style={{ background: theme.bg, borderColor: theme.borderFaint }}>
-                  <div className="flex items-center justify-between mb-3 pb-3 border-b" style={{ borderColor: theme.borderFaint }}>
-                    <h5 className="text-xs font-semibold tracking-wider uppercase opacity-60" style={{ color: theme.text }}>{t(lang, 'preview') || 'Preview'}</h5>
-                    <button
-                      onClick={() => onRestore(v.content, v.title || activePage?.title || 'Restored')}
-                      className="px-3 py-1.5 text-xs rounded  font-medium flex items-center gap-1.5 transition-transform active:scale-95"
-                      style={{ backgroundColor: theme.isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)', color: theme.text, border: `1px solid ${theme.border}` }}
-                    >
-                      <RotateCcw size={13} />
-                      {t(lang, 'restoreThisVersion') || 'Restore'}
-                    </button>
-                  </div>
-                  
-                  <div 
-                    className="text-sm prose prose-sm max-w-none opacity-80"
-                    style={{ maxHeight: '250px', overflowY: 'auto', color: theme.text }}
-                    dangerouslySetInnerHTML={{ __html: v.content }}
-                  />
-                </div>
-              )}
-            </div>
+              Snapshot {versions.length - i} - {format(new Date(v.timestamp), 'd/M/yyyy - HH:mm')}
+            </button>
           ))
         )}
       </div>
