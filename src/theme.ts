@@ -48,18 +48,18 @@ export const THEME_CATEGORIES: ThemeCategory[] = [
     id: 'tet-trung-thu',
     label: 'Mid-Autumn Festival',
     presetNames: [
-      'Deep Midnight Navy & Gold Light', 'Deep Midnight Navy & Gold Dark',
-      'Obsidian Celadon & Vermilion Light', 'Obsidian Celadon & Vermilion Dark',
-      'Dark Pine & Moonlit Glow Light', 'Dark Pine & Moonlit Glow Dark'
+      'Midnight Gold Light', 'Midnight Gold Dark',
+      'Celadon Vermilion Light', 'Celadon Vermilion Dark',
+      'Moonlit Pine Light', 'Moonlit Pine Dark'
     ]
   },
   {
     id: 'tet-nguyen-dan',
     label: 'Lunar New Year',
     presetNames: [
-      'Dark Lacquer & Gold Dust Light', 'Dark Lacquer & Gold Dust Dark',
-      'Midnight Teak & Spring Peach Light', 'Midnight Teak & Spring Peach Dark',
-      'Dark Night & Spring Apricot Light', 'Dark Night & Spring Apricot Dark'
+      'Lacquer Gold Light', 'Lacquer Gold Dark',
+      'Teak Peach Light', 'Teak Peach Dark',
+      'Spring Apricot Light', 'Spring Apricot Dark'
     ]
   },
   {
@@ -82,30 +82,30 @@ export const THEME_CATEGORIES: ThemeCategory[] = [
       'Amber Forest Light', 'Amber Forest Dark',
       'Retro Mint Light', 'Retro Mint Dark',
       'Velvet Moss Light', 'Velvet Moss Dark',
-      'Smoked Celadon & Dried Rose Light', 'Smoked Celadon & Dried Rose Dark',
-      'Smoked Sage & Apricot Blossom Light', 'Smoked Sage & Apricot Blossom Dark',
-      'Misty Willow & Violet Light', 'Misty Willow & Violet Dark',
-      'Smoked Eucalyptus & Pear Light', 'Smoked Eucalyptus & Pear Dark',
-      'Smoked Tea & Cinnamon Light', 'Smoked Tea & Cinnamon Dark',
-      'Bamboo Mist & Plum Dew Light', 'Bamboo Mist & Plum Dew Dark'
+      'Celadon Rose Light', 'Celadon Rose Dark',
+      'Sage Apricot Light', 'Sage Apricot Dark',
+      'Willow Violet Light', 'Willow Violet Dark',
+      'Eucalyptus Pear Light', 'Eucalyptus Pear Dark',
+      'Tea Cinnamon Light', 'Tea Cinnamon Dark',
+      'Bamboo Mist Light', 'Bamboo Mist Dark'
     ]
   },
   {
     id: 'cinematic-retro',
     label: 'Cinematic & Retro Aesthetics',
     presetNames: [
-      'Chungking Jade & Crimson Light', 'Chungking Jade & Crimson Dark',
-      'Cha Chaan Teng Green Light', 'Cha Chaan Teng Green Dark',
-      'In the Mood for Velvet Light', 'In the Mood for Velvet Dark',
+      'Chungking Jade Light', 'Chungking Jade Dark',
+      'Cha Chaan Teng Light', 'Cha Chaan Teng Dark',
+      'Mood Velvet Light', 'Mood Velvet Dark',
       'Kowloon Harbour Light', 'Kowloon Harbour Dark',
       'Mido Cafe Tile Light', 'Mido Cafe Tile Dark',
-      'Poster Crimson & Gold Light', 'Poster Crimson & Gold Dark',
+      'Poster Crimson Light', 'Poster Crimson Dark',
       'Qipao Velvet Light', 'Qipao Velvet Dark',
       'Chow Mo-Wan Suit Light', 'Chow Mo-Wan Suit Dark',
-      'Corridor Shadow & Crimson Light', 'Corridor Shadow & Crimson Dark',
-      'Green Papaya & Latex Light', 'Green Papaya & Latex Dark',
-      'Vertical Ray of Sun Light', 'Vertical Ray of Sun Dark',
-      'Courtyard Rain & Moss Light', 'Courtyard Rain & Moss Dark',
+      'Corridor Crimson Light', 'Corridor Crimson Dark',
+      'Green Papaya Light', 'Green Papaya Dark',
+      'Vertical Sun Light', 'Vertical Sun Dark',
+      'Courtyard Moss Light', 'Courtyard Moss Dark',
       'Hanoi Nostalgia Light', 'Hanoi Nostalgia Dark',
       'Fujifilm Velvia 50 Light', 'Fujifilm Velvia 50 Dark',
       'Fujifilm Pro 400H Light', 'Fujifilm Pro 400H Dark',
@@ -122,10 +122,10 @@ export const THEME_CATEGORIES: ThemeCategory[] = [
       'Indochine Villa Light', 'Indochine Villa Dark',
       'Saigon Shutters Light', 'Saigon Shutters Dark',
       'Terracotta Light', 'Terracotta Dark',
-      'Indochine Noir & Emerald Light', 'Indochine Noir & Emerald Dark',
-      'Teakwood & Palm Light', 'Teakwood & Palm Dark',
-      'Rosewood & Colonial Teal Light', 'Rosewood & Colonial Teal Dark',
-      'Ebony & Celadon Moss Light', 'Ebony & Celadon Moss Dark',
+      'Indochine Emerald Light', 'Indochine Emerald Dark',
+      'Teakwood Palm Light', 'Teakwood Palm Dark',
+      'Rosewood Teal Light', 'Rosewood Teal Dark',
+      'Ebony Celadon Light', 'Ebony Celadon Dark',
       'Encaustic Indigo Light', 'Encaustic Indigo Dark',
       'Terracotta Majolica Light', 'Terracotta Majolica Dark',
       'Emerald Mosaic Light', 'Emerald Mosaic Dark',
@@ -135,7 +135,7 @@ export const THEME_CATEGORIES: ThemeCategory[] = [
       'Hanoi Yellow Wall Light', 'Hanoi Yellow Wall Dark',
       'Hue Imperial Purple Light', 'Hue Imperial Purple Dark',
       'Hue Perfume River Light', 'Hue Perfume River Dark',
-      'Saigon Cho Lon Tile Light', 'Saigon Cho Lon Tile Dark',
+      'Cho Lon Tile Light', 'Cho Lon Tile Dark',
       'Saigon Filter Coffee Light', 'Saigon Filter Coffee Dark'
     ]
   },
@@ -157,11 +157,11 @@ export const THEME_CATEGORIES: ThemeCategory[] = [
       'Spinel Plum Light', 'Spinel Plum Dark',
       'Smoky Quartz Light', 'Smoky Quartz Dark',
       'Deep Forest Charcoal Light', 'Deep Forest Charcoal Dark',
-      'Ancient Ebony & Moss Light', 'Ancient Ebony & Moss Dark',
+      'Ancient Ebony Light', 'Ancient Ebony Dark',
       'Night Ocean Abyss Light', 'Night Ocean Abyss Dark',
-      'Black Earth & Ochre Light', 'Black Earth & Ochre Dark',
+      'Earth Ochre Light', 'Earth Ochre Dark',
       'Midnight Camellia Light', 'Midnight Camellia Dark',
-      'Cured Tobacco & Amber Light', 'Cured Tobacco & Amber Dark',
+      'Tobacco Amber Light', 'Tobacco Amber Dark',
       'Ruby Light', 'Ruby Dark', 'Sapphire Light', 'Sapphire Dark',
       'Emerald Light', 'Emerald Dark', 'Amethyst Light', 'Amethyst Dark'
     ]
@@ -170,15 +170,15 @@ export const THEME_CATEGORIES: ThemeCategory[] = [
     id: 'global-cultural',
     label: 'Global & Traditional Heritage',
     presetNames: [
-      'Mediterranean Lemon & Olive Light', 'Mediterranean Lemon & Olive Dark',
+      'Mediterranean Olive Light', 'Mediterranean Olive Dark',
       'Aegean Terracotta Light', 'Aegean Terracotta Dark',
-      'Bordeaux & Oak Light', 'Bordeaux & Oak Dark',
+      'Bordeaux Oak Light', 'Bordeaux Oak Dark',
       'Forbidden City Light', 'Forbidden City Dark',
-      'Song Celadon & Bamboo Light', 'Song Celadon & Bamboo Dark',
+      'Song Celadon Light', 'Song Celadon Dark',
       'Yunnan Tea Mountains Light', 'Yunnan Tea Mountains Dark',
-      'Hanok Pine & Cheongja Light', 'Hanok Pine & Cheongja Dark',
+      'Hanok Cheongja Light', 'Hanok Cheongja Dark',
       'Dancheong Moss Light', 'Dancheong Moss Dark',
-      'Moshi & Persimmon Light', 'Moshi & Persimmon Dark',
+      'Moshi Persimmon Light', 'Moshi Persimmon Dark',
       'Sumi Washi Light', 'Sumi Washi Dark',
       'Tatami Reed Light', 'Tatami Reed Dark',
       'Koke Moss Light', 'Koke Moss Dark',
@@ -192,7 +192,7 @@ export const THEME_CATEGORIES: ThemeCategory[] = [
 
 export const PRESETS: PresetColors[] = [
   {
-    name: 'Deep Midnight Navy & Gold Light',
+    name: 'Midnight Gold Light',
     emoji: '🏮',
     accent: '#b87d10',
     bg: '#f5f7fa',
@@ -208,7 +208,7 @@ export const PRESETS: PresetColors[] = [
     isDark: false,
   },
   {
-    name: 'Deep Midnight Navy & Gold Dark',
+    name: 'Midnight Gold Dark',
     emoji: '🏮',
     accent: '#f0b437',
     bg: '#05080c',
@@ -224,7 +224,7 @@ export const PRESETS: PresetColors[] = [
     isDark: true,
   },
   {
-    name: 'Obsidian Celadon & Vermilion Light',
+    name: 'Celadon Vermilion Light',
     emoji: '🏮',
     accent: '#b84022',
     bg: '#f4f7f7',
@@ -240,7 +240,7 @@ export const PRESETS: PresetColors[] = [
     isDark: false,
   },
   {
-    name: 'Obsidian Celadon & Vermilion Dark',
+    name: 'Celadon Vermilion Dark',
     emoji: '🏮',
     accent: '#e85d3b',
     bg: '#060a0a',
@@ -256,7 +256,7 @@ export const PRESETS: PresetColors[] = [
     isDark: true,
   },
   {
-    name: 'Dark Pine & Moonlit Glow Light',
+    name: 'Moonlit Pine Light',
     emoji: '🏮',
     accent: '#b58210',
     bg: '#f5f7f5',
@@ -272,7 +272,7 @@ export const PRESETS: PresetColors[] = [
     isDark: false,
   },
   {
-    name: 'Dark Pine & Moonlit Glow Dark',
+    name: 'Moonlit Pine Dark',
     emoji: '🏮',
     accent: '#e6b135',
     bg: '#060a07',
@@ -288,7 +288,7 @@ export const PRESETS: PresetColors[] = [
     isDark: true,
   },
   {
-    name: 'Dark Lacquer & Gold Dust Light',
+    name: 'Lacquer Gold Light',
     emoji: '🧧',
     accent: '#b88114',
     bg: '#f7f4f4',
@@ -304,7 +304,7 @@ export const PRESETS: PresetColors[] = [
     isDark: false,
   },
   {
-    name: 'Dark Lacquer & Gold Dust Dark',
+    name: 'Lacquer Gold Dark',
     emoji: '🧧',
     accent: '#e8b03b',
     bg: '#0a0506',
@@ -320,7 +320,7 @@ export const PRESETS: PresetColors[] = [
     isDark: true,
   },
   {
-    name: 'Midnight Teak & Spring Peach Light',
+    name: 'Teak Peach Light',
     emoji: '🌸',
     accent: '#b84355',
     bg: '#f7f5f4',
@@ -336,7 +336,7 @@ export const PRESETS: PresetColors[] = [
     isDark: false,
   },
   {
-    name: 'Midnight Teak & Spring Peach Dark',
+    name: 'Teak Peach Dark',
     emoji: '🌸',
     accent: '#eb6e81',
     bg: '#0a0706',
@@ -352,7 +352,7 @@ export const PRESETS: PresetColors[] = [
     isDark: true,
   },
   {
-    name: 'Dark Night & Spring Apricot Light',
+    name: 'Spring Apricot Light',
     emoji: '🌼',
     accent: '#b87d09',
     bg: '#f5f7f5',
@@ -368,7 +368,7 @@ export const PRESETS: PresetColors[] = [
     isDark: false,
   },
   {
-    name: 'Dark Night & Spring Apricot Dark',
+    name: 'Spring Apricot Dark',
     emoji: '🌼',
     accent: '#f0ab29',
     bg: '#070a08',
@@ -2320,7 +2320,7 @@ export const PRESETS: PresetColors[] = [
     isDark: true,
   },
   {
-    name: 'Indochine Noir & Emerald Light',
+    name: 'Indochine Emerald Light',
     emoji: '',
     accent: '#1f6356',
     bg: '#f6f4ee',
@@ -2336,7 +2336,7 @@ export const PRESETS: PresetColors[] = [
     isDark: false,
   },
   {
-    name: 'Indochine Noir & Emerald Dark',
+    name: 'Indochine Emerald Dark',
     emoji: '',
     accent: '#2e7d6e',
     bg: '#12110f',
@@ -2352,7 +2352,7 @@ export const PRESETS: PresetColors[] = [
     isDark: true,
   },
   {
-    name: 'Teakwood & Palm Light',
+    name: 'Teakwood Palm Light',
     emoji: '',
     accent: '#366944',
     bg: '#f8f6f0',
@@ -2368,7 +2368,7 @@ export const PRESETS: PresetColors[] = [
     isDark: false,
   },
   {
-    name: 'Teakwood & Palm Dark',
+    name: 'Teakwood Palm Dark',
     emoji: '',
     accent: '#4d825c',
     bg: '#161311',
@@ -2384,7 +2384,7 @@ export const PRESETS: PresetColors[] = [
     isDark: true,
   },
   {
-    name: 'Rosewood & Colonial Teal Light',
+    name: 'Rosewood Teal Light',
     emoji: '',
     accent: '#1e6b62',
     bg: '#f7f4f2',
@@ -2400,7 +2400,7 @@ export const PRESETS: PresetColors[] = [
     isDark: false,
   },
   {
-    name: 'Rosewood & Colonial Teal Dark',
+    name: 'Rosewood Teal Dark',
     emoji: '',
     accent: '#2b8277',
     bg: '#140f11',
@@ -2416,7 +2416,7 @@ export const PRESETS: PresetColors[] = [
     isDark: true,
   },
   {
-    name: 'Ebony & Celadon Moss Light',
+    name: 'Ebony Celadon Light',
     emoji: '',
     accent: '#316349',
     bg: '#f6f5f0',
@@ -2432,7 +2432,7 @@ export const PRESETS: PresetColors[] = [
     isDark: false,
   },
   {
-    name: 'Ebony & Celadon Moss Dark',
+    name: 'Ebony Celadon Dark',
     emoji: '',
     accent: '#457a5e',
     bg: '#0f0e0c',
@@ -2672,7 +2672,7 @@ export const PRESETS: PresetColors[] = [
     isDark: true,
   },
   {
-    name: 'Mediterranean Lemon & Olive Light',
+    name: 'Mediterranean Olive Light',
     emoji: '',
     accent: '#ad8f1a',
     bg: '#f6f7ed',
@@ -2688,7 +2688,7 @@ export const PRESETS: PresetColors[] = [
     isDark: false,
   },
   {
-    name: 'Mediterranean Lemon & Olive Dark',
+    name: 'Mediterranean Olive Dark',
     emoji: '',
     accent: '#d6b838',
     bg: '#14170e',
@@ -2736,7 +2736,7 @@ export const PRESETS: PresetColors[] = [
     isDark: true,
   },
   {
-    name: 'Bordeaux & Oak Light',
+    name: 'Bordeaux Oak Light',
     emoji: '',
     accent: '#961b37',
     bg: '#faf0f2',
@@ -2752,7 +2752,7 @@ export const PRESETS: PresetColors[] = [
     isDark: false,
   },
   {
-    name: 'Bordeaux & Oak Dark',
+    name: 'Bordeaux Oak Dark',
     emoji: '',
     accent: '#ba2d4f',
     bg: '#150e10',
@@ -2800,7 +2800,7 @@ export const PRESETS: PresetColors[] = [
     isDark: true,
   },
   {
-    name: 'Song Celadon & Bamboo Light',
+    name: 'Song Celadon Light',
     emoji: '',
     accent: '#189670',
     bg: '#edf7f4',
@@ -2816,7 +2816,7 @@ export const PRESETS: PresetColors[] = [
     isDark: false,
   },
   {
-    name: 'Song Celadon & Bamboo Dark',
+    name: 'Song Celadon Dark',
     emoji: '',
     accent: '#2ebd91',
     bg: '#0a1714',
@@ -2864,7 +2864,7 @@ export const PRESETS: PresetColors[] = [
     isDark: true,
   },
   {
-    name: 'Hanok Pine & Cheongja Light',
+    name: 'Hanok Cheongja Light',
     emoji: '',
     accent: '#1b806d',
     bg: '#f7f4ee',
@@ -2880,7 +2880,7 @@ export const PRESETS: PresetColors[] = [
     isDark: false,
   },
   {
-    name: 'Hanok Pine & Cheongja Dark',
+    name: 'Hanok Cheongja Dark',
     emoji: '',
     accent: '#2da892',
     bg: '#16120e',
@@ -2928,7 +2928,7 @@ export const PRESETS: PresetColors[] = [
     isDark: true,
   },
   {
-    name: 'Moshi & Persimmon Light',
+    name: 'Moshi Persimmon Light',
     emoji: '',
     accent: '#ad4e18',
     bg: '#f9f6f0',
@@ -2944,7 +2944,7 @@ export const PRESETS: PresetColors[] = [
     isDark: false,
   },
   {
-    name: 'Moshi & Persimmon Dark',
+    name: 'Moshi Persimmon Dark',
     emoji: '',
     accent: '#d96f30',
     bg: '#161310',
@@ -2992,7 +2992,7 @@ export const PRESETS: PresetColors[] = [
     isDark: true,
   },
   {
-    name: 'Ancient Ebony & Moss Light',
+    name: 'Ancient Ebony Light',
     emoji: '',
     accent: '#477034',
     bg: '#f6f5ee',
@@ -3008,7 +3008,7 @@ export const PRESETS: PresetColors[] = [
     isDark: false,
   },
   {
-    name: 'Ancient Ebony & Moss Dark',
+    name: 'Ancient Ebony Dark',
     emoji: '',
     accent: '#5c8c4a',
     bg: '#090907',
@@ -3056,7 +3056,7 @@ export const PRESETS: PresetColors[] = [
     isDark: true,
   },
   {
-    name: 'Black Earth & Ochre Light',
+    name: 'Earth Ochre Light',
     emoji: '',
     accent: '#a87219',
     bg: '#faf6ed',
@@ -3072,7 +3072,7 @@ export const PRESETS: PresetColors[] = [
     isDark: false,
   },
   {
-    name: 'Black Earth & Ochre Dark',
+    name: 'Earth Ochre Dark',
     emoji: '',
     accent: '#d4982f',
     bg: '#0a0806',
@@ -3120,7 +3120,7 @@ export const PRESETS: PresetColors[] = [
     isDark: true,
   },
   {
-    name: 'Cured Tobacco & Amber Light',
+    name: 'Tobacco Amber Light',
     emoji: '',
     accent: '#9e5912',
     bg: '#faf4eb',
@@ -3136,7 +3136,7 @@ export const PRESETS: PresetColors[] = [
     isDark: false,
   },
   {
-    name: 'Cured Tobacco & Amber Dark',
+    name: 'Tobacco Amber Dark',
     emoji: '',
     accent: '#c77b28',
     bg: '#0a0705',
@@ -3312,7 +3312,7 @@ export const PRESETS: PresetColors[] = [
     isDark: true,
   },
   {
-    name: 'Chungking Jade & Crimson Light',
+    name: 'Chungking Jade Light',
     emoji: '',
     accent: '#a82234',
     bg: '#f4f8f6',
@@ -3328,7 +3328,7 @@ export const PRESETS: PresetColors[] = [
     isDark: false,
   },
   {
-    name: 'Chungking Jade & Crimson Dark',
+    name: 'Chungking Jade Dark',
     emoji: '',
     accent: '#c7384a',
     bg: '#060d0a',
@@ -3344,7 +3344,7 @@ export const PRESETS: PresetColors[] = [
     isDark: true,
   },
   {
-    name: 'Cha Chaan Teng Green Light',
+    name: 'Cha Chaan Teng Light',
     emoji: '',
     accent: '#a86417',
     bg: '#f5f7f4',
@@ -3360,7 +3360,7 @@ export const PRESETS: PresetColors[] = [
     isDark: false,
   },
   {
-    name: 'Cha Chaan Teng Green Dark',
+    name: 'Cha Chaan Teng Dark',
     emoji: '',
     accent: '#d48831',
     bg: '#070c08',
@@ -3376,7 +3376,7 @@ export const PRESETS: PresetColors[] = [
     isDark: true,
   },
   {
-    name: 'In the Mood for Velvet Light',
+    name: 'Mood Velvet Light',
     emoji: '',
     accent: '#941c2f',
     bg: '#f7f6f2',
@@ -3392,7 +3392,7 @@ export const PRESETS: PresetColors[] = [
     isDark: false,
   },
   {
-    name: 'In the Mood for Velvet Dark',
+    name: 'Mood Velvet Dark',
     emoji: '',
     accent: '#b82d43',
     bg: '#090a07',
@@ -3472,7 +3472,7 @@ export const PRESETS: PresetColors[] = [
     isDark: true,
   },
   {
-    name: 'Poster Crimson & Gold Light',
+    name: 'Poster Crimson Light',
     emoji: '',
     accent: '#b32231',
     bg: '#fbf5ee',
@@ -3488,7 +3488,7 @@ export const PRESETS: PresetColors[] = [
     isDark: false,
   },
   {
-    name: 'Poster Crimson & Gold Dark',
+    name: 'Poster Crimson Dark',
     emoji: '',
     accent: '#c72c3b',
     bg: '#0a0505',
@@ -3568,7 +3568,7 @@ export const PRESETS: PresetColors[] = [
     isDark: true,
   },
   {
-    name: 'Corridor Shadow & Crimson Light',
+    name: 'Corridor Crimson Light',
     emoji: '',
     accent: '#9e1d31',
     bg: '#f5f7f4',
@@ -3584,7 +3584,7 @@ export const PRESETS: PresetColors[] = [
     isDark: false,
   },
   {
-    name: 'Corridor Shadow & Crimson Dark',
+    name: 'Corridor Crimson Dark',
     emoji: '',
     accent: '#ba2d42',
     bg: '#070a08',
@@ -3600,7 +3600,7 @@ export const PRESETS: PresetColors[] = [
     isDark: true,
   },
   {
-    name: 'Green Papaya & Latex Light',
+    name: 'Green Papaya Light',
     emoji: '',
     accent: '#228f40',
     bg: '#f3f9f4',
@@ -3616,7 +3616,7 @@ export const PRESETS: PresetColors[] = [
     isDark: false,
   },
   {
-    name: 'Green Papaya & Latex Dark',
+    name: 'Green Papaya Dark',
     emoji: '',
     accent: '#38ab58',
     bg: '#060c07',
@@ -3632,7 +3632,7 @@ export const PRESETS: PresetColors[] = [
     isDark: true,
   },
   {
-    name: 'Vertical Ray of Sun Light',
+    name: 'Vertical Sun Light',
     emoji: '',
     accent: '#ad8211',
     bg: '#f8f8ef',
@@ -3648,7 +3648,7 @@ export const PRESETS: PresetColors[] = [
     isDark: false,
   },
   {
-    name: 'Vertical Ray of Sun Dark',
+    name: 'Vertical Sun Dark',
     emoji: '',
     accent: '#cca329',
     bg: '#080b06',
@@ -3664,7 +3664,7 @@ export const PRESETS: PresetColors[] = [
     isDark: true,
   },
   {
-    name: 'Courtyard Rain & Moss Light',
+    name: 'Courtyard Moss Light',
     emoji: '',
     accent: '#167a52',
     bg: '#eef7f3',
@@ -3680,7 +3680,7 @@ export const PRESETS: PresetColors[] = [
     isDark: false,
   },
   {
-    name: 'Courtyard Rain & Moss Dark',
+    name: 'Courtyard Moss Dark',
     emoji: '',
     accent: '#249969',
     bg: '#050a08',
@@ -3856,7 +3856,7 @@ export const PRESETS: PresetColors[] = [
     isDark: true,
   },
   {
-    name: 'Saigon Cho Lon Tile Light',
+    name: 'Cho Lon Tile Light',
     emoji: '',
     accent: '#178277',
     bg: '#f0f8f7',
@@ -3872,7 +3872,7 @@ export const PRESETS: PresetColors[] = [
     isDark: false,
   },
   {
-    name: 'Saigon Cho Lon Tile Dark',
+    name: 'Cho Lon Tile Dark',
     emoji: '',
     accent: '#22baa8',
     bg: '#030606',
@@ -4112,7 +4112,7 @@ export const PRESETS: PresetColors[] = [
     isDark: true,
   },
   {
-    name: 'Smoked Celadon & Dried Rose Light',
+    name: 'Celadon Rose Light',
     emoji: '',
     accent: '#a84f60',
     bg: '#f4f7f6',
@@ -4128,7 +4128,7 @@ export const PRESETS: PresetColors[] = [
     isDark: false,
   },
   {
-    name: 'Smoked Celadon & Dried Rose Dark',
+    name: 'Celadon Rose Dark',
     emoji: '',
     accent: '#c97384',
     bg: '#040706',
@@ -4144,7 +4144,7 @@ export const PRESETS: PresetColors[] = [
     isDark: true,
   },
   {
-    name: 'Smoked Sage & Apricot Blossom Light',
+    name: 'Sage Apricot Light',
     emoji: '',
     accent: '#ad6532',
     bg: '#f5f7f4',
@@ -4160,7 +4160,7 @@ export const PRESETS: PresetColors[] = [
     isDark: false,
   },
   {
-    name: 'Smoked Sage & Apricot Blossom Dark',
+    name: 'Sage Apricot Dark',
     emoji: '',
     accent: '#d48a55',
     bg: '#040604',
@@ -4176,7 +4176,7 @@ export const PRESETS: PresetColors[] = [
     isDark: true,
   },
   {
-    name: 'Misty Willow & Violet Light',
+    name: 'Willow Violet Light',
     emoji: '',
     accent: '#7f4d94',
     bg: '#f3f7f7',
@@ -4192,7 +4192,7 @@ export const PRESETS: PresetColors[] = [
     isDark: false,
   },
   {
-    name: 'Misty Willow & Violet Dark',
+    name: 'Willow Violet Dark',
     emoji: '',
     accent: '#a372b8',
     bg: '#030606',
@@ -4208,7 +4208,7 @@ export const PRESETS: PresetColors[] = [
     isDark: true,
   },
   {
-    name: 'Smoked Eucalyptus & Pear Light',
+    name: 'Eucalyptus Pear Light',
     emoji: '',
     accent: '#9e7a23',
     bg: '#f4f8f5',
@@ -4224,7 +4224,7 @@ export const PRESETS: PresetColors[] = [
     isDark: false,
   },
   {
-    name: 'Smoked Eucalyptus & Pear Dark',
+    name: 'Eucalyptus Pear Dark',
     emoji: '',
     accent: '#cca33d',
     bg: '#040705',
@@ -4240,7 +4240,7 @@ export const PRESETS: PresetColors[] = [
     isDark: true,
   },
   {
-    name: 'Smoked Tea & Cinnamon Light',
+    name: 'Tea Cinnamon Light',
     emoji: '',
     accent: '#94492b',
     bg: '#f6f7f5',
@@ -4256,7 +4256,7 @@ export const PRESETS: PresetColors[] = [
     isDark: false,
   },
   {
-    name: 'Smoked Tea & Cinnamon Dark',
+    name: 'Tea Cinnamon Dark',
     emoji: '',
     accent: '#b86847',
     bg: '#050705',
@@ -4272,7 +4272,7 @@ export const PRESETS: PresetColors[] = [
     isDark: true,
   },
   {
-    name: 'Bamboo Mist & Plum Dew Light',
+    name: 'Bamboo Mist Light',
     emoji: '',
     accent: '#944472',
     bg: '#f4f8f6',
@@ -4288,7 +4288,7 @@ export const PRESETS: PresetColors[] = [
     isDark: false,
   },
   {
-    name: 'Bamboo Mist & Plum Dew Dark',
+    name: 'Bamboo Mist Dark',
     emoji: '',
     accent: '#ba6a98',
     bg: '#030605',
@@ -4413,6 +4413,72 @@ export const BUILTIN_FONTS = [
 ]
 
 export const THEMES: Record<string, Theme> = {
+  'deep midnight navy & gold light': buildPresetTheme(PRESETS.find(p => p.name === 'Midnight Gold Light') || PRESETS[0]),
+  'deep midnight navy & gold dark': buildPresetTheme(PRESETS.find(p => p.name === 'Midnight Gold Dark') || PRESETS[0]),
+  'obsidian celadon & vermilion light': buildPresetTheme(PRESETS.find(p => p.name === 'Celadon Vermilion Light') || PRESETS[0]),
+  'obsidian celadon & vermilion dark': buildPresetTheme(PRESETS.find(p => p.name === 'Celadon Vermilion Dark') || PRESETS[0]),
+  'dark pine & moonlit glow light': buildPresetTheme(PRESETS.find(p => p.name === 'Moonlit Pine Light') || PRESETS[0]),
+  'dark pine & moonlit glow dark': buildPresetTheme(PRESETS.find(p => p.name === 'Moonlit Pine Dark') || PRESETS[0]),
+  'dark lacquer & gold dust light': buildPresetTheme(PRESETS.find(p => p.name === 'Lacquer Gold Light') || PRESETS[0]),
+  'dark lacquer & gold dust dark': buildPresetTheme(PRESETS.find(p => p.name === 'Lacquer Gold Dark') || PRESETS[0]),
+  'midnight teak & spring peach light': buildPresetTheme(PRESETS.find(p => p.name === 'Teak Peach Light') || PRESETS[0]),
+  'midnight teak & spring peach dark': buildPresetTheme(PRESETS.find(p => p.name === 'Teak Peach Dark') || PRESETS[0]),
+  'dark night & spring apricot light': buildPresetTheme(PRESETS.find(p => p.name === 'Spring Apricot Light') || PRESETS[0]),
+  'dark night & spring apricot dark': buildPresetTheme(PRESETS.find(p => p.name === 'Spring Apricot Dark') || PRESETS[0]),
+  'indochine noir & emerald light': buildPresetTheme(PRESETS.find(p => p.name === 'Indochine Emerald Light') || PRESETS[0]),
+  'indochine noir & emerald dark': buildPresetTheme(PRESETS.find(p => p.name === 'Indochine Emerald Dark') || PRESETS[0]),
+  'rosewood & colonial teal light': buildPresetTheme(PRESETS.find(p => p.name === 'Rosewood Teal Light') || PRESETS[0]),
+  'rosewood & colonial teal dark': buildPresetTheme(PRESETS.find(p => p.name === 'Rosewood Teal Dark') || PRESETS[0]),
+  'ebony & celadon moss light': buildPresetTheme(PRESETS.find(p => p.name === 'Ebony Celadon Light') || PRESETS[0]),
+  'ebony & celadon moss dark': buildPresetTheme(PRESETS.find(p => p.name === 'Ebony Celadon Dark') || PRESETS[0]),
+  'mediterranean lemon & olive light': buildPresetTheme(PRESETS.find(p => p.name === 'Mediterranean Olive Light') || PRESETS[0]),
+  'mediterranean lemon & olive dark': buildPresetTheme(PRESETS.find(p => p.name === 'Mediterranean Olive Dark') || PRESETS[0]),
+  'song celadon & bamboo light': buildPresetTheme(PRESETS.find(p => p.name === 'Song Celadon Light') || PRESETS[0]),
+  'song celadon & bamboo dark': buildPresetTheme(PRESETS.find(p => p.name === 'Song Celadon Dark') || PRESETS[0]),
+  'hanok pine & cheongja light': buildPresetTheme(PRESETS.find(p => p.name === 'Hanok Cheongja Light') || PRESETS[0]),
+  'hanok pine & cheongja dark': buildPresetTheme(PRESETS.find(p => p.name === 'Hanok Cheongja Dark') || PRESETS[0]),
+  'ancient ebony & moss light': buildPresetTheme(PRESETS.find(p => p.name === 'Ancient Ebony Light') || PRESETS[0]),
+  'ancient ebony & moss dark': buildPresetTheme(PRESETS.find(p => p.name === 'Ancient Ebony Dark') || PRESETS[0]),
+  'black earth & ochre light': buildPresetTheme(PRESETS.find(p => p.name === 'Earth Ochre Light') || PRESETS[0]),
+  'black earth & ochre dark': buildPresetTheme(PRESETS.find(p => p.name === 'Earth Ochre Dark') || PRESETS[0]),
+  'cured tobacco & amber light': buildPresetTheme(PRESETS.find(p => p.name === 'Tobacco Amber Light') || PRESETS[0]),
+  'cured tobacco & amber dark': buildPresetTheme(PRESETS.find(p => p.name === 'Tobacco Amber Dark') || PRESETS[0]),
+  'chungking jade & crimson light': buildPresetTheme(PRESETS.find(p => p.name === 'Chungking Jade Light') || PRESETS[0]),
+  'chungking jade & crimson dark': buildPresetTheme(PRESETS.find(p => p.name === 'Chungking Jade Dark') || PRESETS[0]),
+  'cha chaan teng green light': buildPresetTheme(PRESETS.find(p => p.name === 'Cha Chaan Teng Light') || PRESETS[0]),
+  'cha chaan teng green dark': buildPresetTheme(PRESETS.find(p => p.name === 'Cha Chaan Teng Dark') || PRESETS[0]),
+  'in the mood for velvet light': buildPresetTheme(PRESETS.find(p => p.name === 'Mood Velvet Light') || PRESETS[0]),
+  'in the mood for velvet dark': buildPresetTheme(PRESETS.find(p => p.name === 'Mood Velvet Dark') || PRESETS[0]),
+  'poster crimson & gold light': buildPresetTheme(PRESETS.find(p => p.name === 'Poster Crimson Light') || PRESETS[0]),
+  'poster crimson & gold dark': buildPresetTheme(PRESETS.find(p => p.name === 'Poster Crimson Dark') || PRESETS[0]),
+  'corridor shadow & crimson light': buildPresetTheme(PRESETS.find(p => p.name === 'Corridor Crimson Light') || PRESETS[0]),
+  'corridor shadow & crimson dark': buildPresetTheme(PRESETS.find(p => p.name === 'Corridor Crimson Dark') || PRESETS[0]),
+  'green papaya & latex light': buildPresetTheme(PRESETS.find(p => p.name === 'Green Papaya Light') || PRESETS[0]),
+  'green papaya & latex dark': buildPresetTheme(PRESETS.find(p => p.name === 'Green Papaya Dark') || PRESETS[0]),
+  'vertical ray of sun light': buildPresetTheme(PRESETS.find(p => p.name === 'Vertical Sun Light') || PRESETS[0]),
+  'vertical ray of sun dark': buildPresetTheme(PRESETS.find(p => p.name === 'Vertical Sun Dark') || PRESETS[0]),
+  'courtyard rain & moss light': buildPresetTheme(PRESETS.find(p => p.name === 'Courtyard Moss Light') || PRESETS[0]),
+  'courtyard rain & moss dark': buildPresetTheme(PRESETS.find(p => p.name === 'Courtyard Moss Dark') || PRESETS[0]),
+  'saigon cho lon tile light': buildPresetTheme(PRESETS.find(p => p.name === 'Cho Lon Tile Light') || PRESETS[0]),
+  'saigon cho lon tile dark': buildPresetTheme(PRESETS.find(p => p.name === 'Cho Lon Tile Dark') || PRESETS[0]),
+  'smoked celadon & dried rose light': buildPresetTheme(PRESETS.find(p => p.name === 'Celadon Rose Light') || PRESETS[0]),
+  'smoked celadon & dried rose dark': buildPresetTheme(PRESETS.find(p => p.name === 'Celadon Rose Dark') || PRESETS[0]),
+  'smoked sage & apricot blossom light': buildPresetTheme(PRESETS.find(p => p.name === 'Sage Apricot Light') || PRESETS[0]),
+  'smoked sage & apricot blossom dark': buildPresetTheme(PRESETS.find(p => p.name === 'Sage Apricot Dark') || PRESETS[0]),
+  'misty willow & violet light': buildPresetTheme(PRESETS.find(p => p.name === 'Willow Violet Light') || PRESETS[0]),
+  'misty willow & violet dark': buildPresetTheme(PRESETS.find(p => p.name === 'Willow Violet Dark') || PRESETS[0]),
+  'smoked eucalyptus & pear light': buildPresetTheme(PRESETS.find(p => p.name === 'Eucalyptus Pear Light') || PRESETS[0]),
+  'smoked eucalyptus & pear dark': buildPresetTheme(PRESETS.find(p => p.name === 'Eucalyptus Pear Dark') || PRESETS[0]),
+  'smoked tea & cinnamon light': buildPresetTheme(PRESETS.find(p => p.name === 'Tea Cinnamon Light') || PRESETS[0]),
+  'smoked tea & cinnamon dark': buildPresetTheme(PRESETS.find(p => p.name === 'Tea Cinnamon Dark') || PRESETS[0]),
+  'bamboo mist & plum dew light': buildPresetTheme(PRESETS.find(p => p.name === 'Bamboo Mist Light') || PRESETS[0]),
+  'bamboo mist & plum dew dark': buildPresetTheme(PRESETS.find(p => p.name === 'Bamboo Mist Dark') || PRESETS[0]),
+  'teakwood & palm light': buildPresetTheme(PRESETS.find(p => p.name === 'Teakwood Palm Light') || PRESETS[0]),
+  'teakwood & palm dark': buildPresetTheme(PRESETS.find(p => p.name === 'Teakwood Palm Dark') || PRESETS[0]),
+  'bordeaux & oak light': buildPresetTheme(PRESETS.find(p => p.name === 'Bordeaux Oak Light') || PRESETS[0]),
+  'bordeaux & oak dark': buildPresetTheme(PRESETS.find(p => p.name === 'Bordeaux Oak Dark') || PRESETS[0]),
+  'moshi & persimmon light': buildPresetTheme(PRESETS.find(p => p.name === 'Moshi Persimmon Light') || PRESETS[0]),
+  'moshi & persimmon dark': buildPresetTheme(PRESETS.find(p => p.name === 'Moshi Persimmon Dark') || PRESETS[0]),
   light: buildPresetTheme(PRESETS[0]),
   dark: buildPresetTheme(PRESETS[5]),
   sepia: buildPresetTheme(PRESETS[4]),

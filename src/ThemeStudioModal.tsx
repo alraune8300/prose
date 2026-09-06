@@ -5,6 +5,7 @@ import { HexColorPicker, HexColorInput } from 'react-colorful';
 import { THEME_CATEGORIES, PRESETS } from './theme';
 import { ThemeColors, ThemeMode, ThemeConfig, Lang } from './types';
 import { getDict } from './i18n';
+import { getThemeDisplayName, getThemeCategoryLabel, getThemeSettingsI18n } from './themeTranslations';
 
 interface ThemeStudioModalProps {
   isOpen: boolean;
@@ -24,6 +25,7 @@ export default function ThemeStudioModal({
   isOpen, onClose, theme, themeMode, onSelectTheme, uiFont, lang, customThemes, onSaveCustomTheme, onPreviewTheme, onDeleteCustomTheme
 }: ThemeStudioModalProps) {
   const t = useMemo(() => getDict(lang), [lang]);
+  const themeI18n = useMemo(() => getThemeSettingsI18n(lang), [lang]);
   
   const [themeSearchQuery, setThemeSearchQuery] = useState('');
   const [themeCategoryFilter, setThemeCategoryFilter] = useState('all');
@@ -116,10 +118,10 @@ export default function ThemeStudioModal({
         <div className="flex items-center justify-between px-6 py-4 border-b" style={{ borderColor: theme.borderFaint }}>
           <div>
             <h2 className="text-xl" style={{ color: theme.text, fontFamily: uiFont || "inherit" }}>
-              {isBuilderMode ? (t.editTheme || 'Edit theme') : (t.themePresets || 'Themes')}
+              {isBuilderMode ? themeI18n.editTheme : themeI18n.themePresets}
             </h2>
             <p className="text-xs mt-0.5" style={{ color: theme.textMuted }}>
-              {isBuilderMode ? t.customizeWritingExperience || 'Customize your writing experience and color palette.' : (t.customizeWritingExperience || 'Customize your writing experience and color palette.')}
+              {themeI18n.customizeWritingExperience}
             </p>
           </div>
           <div className="flex items-center gap-3">
@@ -127,7 +129,7 @@ export default function ThemeStudioModal({
               <div className="relative w-48 sm:w-64 flex items-center">
                 <input
                   type="text"
-                  placeholder={t.searchThemes || t.searchForThemes || 'Search themes...'}
+                  placeholder={themeI18n.searchThemes}
                   value={themeSearchQuery}
                   onChange={e => setThemeSearchQuery(e.target.value)}
                   className="w-full outline-none"
@@ -158,10 +160,10 @@ export default function ThemeStudioModal({
                 onClick={() => setEditingTheme(initialTheme)}
                 className="p-1.5 rounded-lg hover:opacity-80 transition-colors cursor-pointer flex items-center gap-1.5 px-3"
                 style={{ color: theme.textMuted, border: `1px solid ${theme.borderFaint}` }}
-                title={t.resetToDefault || "Revert to original"}
+                title={themeI18n.revert}
               >
                 <RotateCcw size={14} />
-                <span className="text-xs">Revert</span>
+                <span className="text-xs">{themeI18n.revert}</span>
               </button>
             )}
 
@@ -188,7 +190,7 @@ export default function ThemeStudioModal({
              <div className="max-w-2xl mx-auto space-y-6">
                 
                 <div>
-                  <label className="block text-xs font-semibold mb-1.5" style={{ color: theme.text }}>{t.themeName || "Theme name"}</label>
+                  <label className="block text-xs font-semibold mb-1.5" style={{ color: theme.text }}>{themeI18n.themeName}</label>
                   <input
                     type="text"
                     value={editingTheme?.name || ''}
@@ -205,11 +207,11 @@ export default function ThemeStudioModal({
 
                 <div className="space-y-4 mt-6">
                   {[
-                    { key: 'bg', label: t.mainBackground || 'Theme Background & Writing Surface', desc: t.bgDesc || 'Unified canvas and background color', icon: <LayoutTemplate size={14} /> },
-                    { key: 'text', label: t.textColor || 'Text color', desc: t.textDesc || 'Main text, headings & icons', icon: <Type size={14} /> },
-                    { key: 'textMuted', label: t.subtextColor || 'Subtext color', desc: t.subtextDesc || 'Muted text & secondary icons', icon: <Type size={14} opacity={0.6} /> },
-                    { key: 'accent', label: t.accentColor || 'Accent color', desc: t.accentDesc || 'Buttons & focus highlights', icon: <PenTool size={14} /> },
-                    { key: 'border', label: t.borderColor || 'Border color', desc: t.borderDesc || 'Menu & layout borders', icon: <Square size={14} /> },
+                    { key: 'bg', label: themeI18n.mainBackground, desc: themeI18n.bgDesc, icon: <LayoutTemplate size={14} /> },
+                    { key: 'text', label: themeI18n.textColor, desc: themeI18n.textDesc, icon: <Type size={14} /> },
+                    { key: 'textMuted', label: themeI18n.subtextColor, desc: themeI18n.subtextDesc, icon: <Type size={14} opacity={0.6} /> },
+                    { key: 'accent', label: themeI18n.accentColor, desc: themeI18n.accentDesc, icon: <PenTool size={14} /> },
+                    { key: 'border', label: themeI18n.borderColor, desc: themeI18n.borderDesc, icon: <Square size={14} /> },
                   ].map((field) => (
                     <div key={field.key} className="flex items-center justify-between p-3 rounded-xl border" style={{ borderColor: theme.borderFaint, backgroundColor: theme.isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.01)' }}>
                       <div className="flex items-center gap-3">
@@ -270,7 +272,7 @@ export default function ThemeStudioModal({
                      style={{ color: theme.text, backgroundColor: 'transparent', border: `1px solid ${theme.border}` }}
                      onMouseEnter={e => e.currentTarget.style.backgroundColor = theme.isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'}
                      onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
-                   >{t.cancel || "Cancel"}</button>
+                   >{themeI18n.cancel}</button>
                    <button 
                      onClick={() => {
                        if (editingTheme) {
@@ -289,7 +291,7 @@ export default function ThemeStudioModal({
                      }}
                      className="px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer text-white"
                      style={{ backgroundColor: theme.accent }}
-                   >{t.saveTheme || "Save Theme"}</button>
+                   >{themeI18n.saveTheme}</button>
                 </div>
              </div>
           </div>
@@ -307,15 +309,15 @@ export default function ThemeStudioModal({
               <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm p-4">
                 <div className="rounded-xl shadow-xl p-5 max-w-sm w-full border animate-in zoom-in-95 duration-200"
                   style={{ backgroundColor: theme.surface, borderColor: theme.border, fontFamily: uiFont }}>
-                  <h3 className="text-base font-semibold mb-2" style={{ color: theme.text }}>{t.deleteTheme}</h3>
-                  <p className="text-sm mb-6 leading-relaxed" style={{ color: theme.textMuted }}>{t.confirmDeleteTheme}</p>
+                  <h3 className="text-base font-semibold mb-2" style={{ color: theme.text }}>{themeI18n.deleteTheme}</h3>
+                  <p className="text-sm mb-6 leading-relaxed" style={{ color: theme.textMuted }}>{themeI18n.confirmDeleteTheme}</p>
                   <div className="flex justify-end gap-2">
                     <button
                       onClick={() => setDeleteConfirmThemeId(null)}
                       className="px-4 py-2 rounded-lg text-sm font-medium transition-colors hover:opacity-80"
                       style={{ backgroundColor: theme.bg, color: theme.text, border: `1px solid ${theme.border}` }}
                     >
-                      {t.cancel}
+                      {themeI18n.cancel}
                     </button>
                     <button
                       onClick={() => {
@@ -325,7 +327,7 @@ export default function ThemeStudioModal({
                       className="px-4 py-2 rounded-lg text-sm font-medium transition-colors hover:opacity-90 text-white"
                       style={{ backgroundColor: '#ef4444' }}
                     >
-                      {t.deleteTheme}
+                      {themeI18n.deleteTheme}
                     </button>
                   </div>
                 </div>
@@ -344,12 +346,13 @@ export default function ThemeStudioModal({
                   fontFamily: uiFont,
                 }}
               >
-                <span>{t.allThemes || 'All themes'}</span>
+                <span>{themeI18n.allThemes}</span>
                 <span className="text-[10px] opacity-70 font-mono">{PRESETS.length + customThemes.length}</span>
               </button>
               {THEME_CATEGORIES.map(cat => {
                 const count = PRESETS.filter(p => cat.presetNames.includes(p.name)).length;
                 const isActive = themeCategoryFilter === cat.id;
+                const catLabel = getThemeCategoryLabel(cat.id, lang, cat.label);
                 return (
                   <button
                     key={cat.id}
@@ -362,7 +365,7 @@ export default function ThemeStudioModal({
                       fontFamily: uiFont,
                     }}
                   >
-                    <span className="truncate mr-2">{cat.label}</span>
+                    <span className="truncate mr-2">{catLabel}</span>
                     <span className="text-[10px] opacity-70 font-mono flex-shrink-0">{count}</span>
                   </button>
                 );
@@ -376,9 +379,9 @@ export default function ThemeStudioModal({
               {(themeCategoryFilter === 'all' || themeSearchQuery) && (
                 <div className="mb-8">
                    <div className="flex items-center justify-between mb-4">
-                     <h3 className="text-sm font-semibold" style={{ color: theme.text, fontFamily: `'${uiFont}', sans-serif` }}>Custom <span className="text-xs font-mono px-1.5 py-0.5 rounded ml-2" style={{ background: theme.bg, border: `1px solid ${theme.border}` }}>{customThemes.length}</span></h3>
+                     <h3 className="text-sm font-semibold" style={{ color: theme.text, fontFamily: `'${uiFont}', sans-serif` }}>{themeI18n.custom} <span className="text-xs font-mono px-1.5 py-0.5 rounded ml-2" style={{ background: theme.bg, border: `1px solid ${theme.border}` }}>{customThemes.length}</span></h3>
                      <button onClick={handleCreateNew} className="text-xs font-medium flex items-center gap-1 cursor-pointer transition-colors px-2.5 py-1.5 rounded-lg border" style={{ color: theme.accent, borderColor: theme.accent, backgroundColor: theme.accentLight }}>
-                        <Plus size={14} /> Create new
+                        <Plus size={14} /> {themeI18n.createNew}
                      </button>
                    </div>
                    
@@ -390,7 +393,7 @@ export default function ThemeStudioModal({
                         style={{ border: `1.5px dashed ${theme.border}`, backgroundColor: 'transparent' }}
                       >
                          <Plus size={24} style={{ color: theme.textMuted, marginBottom: 8 }} />
-                         <span className="text-xs font-medium" style={{ color: theme.textMuted }}>{t.advancedCustomTheme || "Create new theme"}</span>
+                         <span className="text-xs font-medium" style={{ color: theme.textMuted }}>{themeI18n.advancedCustomTheme}</span>
                       </div>
 
                       {/* Custom Themes List */}
@@ -451,6 +454,7 @@ export default function ThemeStudioModal({
                                   onClick={(e) => handleEditTheme(e, cTheme, false)}
                                   className="p-2 rounded-full transition-colors cursor-pointer hover:bg-black/5 dark:hover:bg-white/5"
                                   style={{ backgroundColor: 'transparent', border: `1px solid ${theme.borderFaint}`, color: theme.textMuted }}
+                                  title={themeI18n.editTheme}
                                 >
                                   <PenTool size={13} />
                                 </button>
@@ -458,7 +462,7 @@ export default function ThemeStudioModal({
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     if (isActive) {
-                                      setDeleteAlertMsg(t.cannotDeleteActiveTheme);
+                                      setDeleteAlertMsg(themeI18n.cannotDeleteActiveTheme);
                                       setTimeout(() => setDeleteAlertMsg(null), 3000);
                                       return;
                                     }
@@ -466,7 +470,7 @@ export default function ThemeStudioModal({
                                   }}
                                   className="p-2 rounded-full transition-colors cursor-pointer hover:bg-black/5 dark:hover:bg-white/5"
                                   style={{ backgroundColor: 'transparent', border: `1px solid ${theme.borderFaint}`, color: isActive ? theme.border : '#ef4444' }}
-                                  title={isActive ? "Vui lòng chọn 1 theme khác trước khi xoá theme đang sử dụng" : "Xoá theme"}
+                                  title={isActive ? themeI18n.cannotDeleteActiveTheme : themeI18n.deleteTheme}
                                 >
                                   <Trash2 size={13} />
                                 </button>
@@ -476,7 +480,7 @@ export default function ThemeStudioModal({
                               <span className="text-xs font-semibold tracking-wide truncate" style={{ color: theme.text, fontFamily: uiFont }}>
                                 {cTheme.name}
                               </span>
-                              <span className="text-[10px] mt-0.5" style={{ color: theme.textMuted }}>Custom Theme</span>
+                              <span className="text-[10px] mt-0.5" style={{ color: theme.textMuted }}>{themeI18n.customThemeBadge}</span>
                             </div>
                           </div>
                         )
@@ -487,15 +491,18 @@ export default function ThemeStudioModal({
 
               {/* Presets */}
               <div>
-                <h3 className="text-sm font-semibold mb-4" style={{ color: theme.text, fontFamily: `'${uiFont}', sans-serif` }}>Presets <span className="text-xs font-mono px-1.5 py-0.5 rounded ml-2" style={{ background: theme.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)', border: `1px solid ${theme.borderFaint}` }}>{PRESETS.length}</span></h3>
+                <h3 className="text-sm font-semibold mb-4" style={{ color: theme.text, fontFamily: `'${uiFont}', sans-serif` }}>{themeI18n.presets} <span className="text-xs font-mono px-1.5 py-0.5 rounded ml-2" style={{ background: theme.isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)', border: `1px solid ${theme.borderFaint}` }}>{PRESETS.length}</span></h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {PRESETS.filter(preset => {
                     const matchesCategory = themeCategoryFilter === 'all' || 
                       THEME_CATEGORIES.find(c => c.id === themeCategoryFilter)?.presetNames.includes(preset.name);
-                    const matchesSearch = !themeSearchQuery.trim() || preset.name.toLowerCase().includes(themeSearchQuery.toLowerCase());
+                    const q = themeSearchQuery.trim().toLowerCase();
+                    const displayName = getThemeDisplayName(preset.name, lang);
+                    const matchesSearch = !q || preset.name.toLowerCase().includes(q) || displayName.toLowerCase().includes(q);
                     return matchesCategory && matchesSearch;
                   }).map(preset => {
                     const isActive = themeMode === preset.name;
+                    const displayName = getThemeDisplayName(preset.name, lang);
                     return (
                       <div
                         key={preset.name}
@@ -553,16 +560,17 @@ export default function ThemeStudioModal({
                             onClick={(e) => handleEditTheme(e, preset, true)}
                             className="p-2 rounded-full transition-opacity cursor-pointer hover:bg-black/5 dark:hover:bg-white/5"
                             style={{ backgroundColor: 'transparent', border: `1px solid ${theme.borderFaint}`, color: theme.textMuted }}
+                            title={themeI18n.editTheme}
                           >
                             <PenTool size={13} />
                           </button>
                         </div>
                         <div className="flex flex-col">
                           <span className="text-xs font-semibold tracking-wide truncate" style={{ color: theme.text, fontFamily: uiFont }}>
-                            {preset.name}
+                            {displayName}
                           </span>
                           <span className="text-[10px] mt-0.5" style={{ color: theme.textMuted }}>
-                            {preset.isDark ? (t.darkTheme || 'Dark Theme') : (t.lightTheme || 'Light Theme')}
+                            {preset.isDark ? themeI18n.darkTheme : themeI18n.lightTheme}
                           </span>
                         </div>
                       </div>

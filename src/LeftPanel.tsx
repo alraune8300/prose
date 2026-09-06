@@ -365,6 +365,7 @@ function LeftPanel(props: Record<string, unknown>) {
             {onOpenThemeModal && (
               <button
                 onClick={onOpenThemeModal}
+                title={i18nT(lang, 'themePresets') || 'Themes'}
                 style={{
                   padding: 0, border: 'none', background: 'transparent', display: 'flex', cursor: 'pointer'
                 }}
