@@ -190,9 +190,9 @@ export function FontsPanel({ c, uiFont, lang, bodyFont, headingFont, uiFont2, on
       
       <Accordion title={t(lang, 'fontRoles') || 'Font Roles'} uiFont={uiFont} c={c}>
         <div style={{ paddingTop: 8 }}>
-          <MinimalFontSelect label="BODY" value={bodyFont} options={allAvailable} onChange={v => { injectGoogleFont(v); onFontAssign('body', v); }} theme={c} uiFont={uiFont} />
-          <MinimalFontSelect label="HEADING" value={headingFont} options={allAvailable} onChange={v => { injectGoogleFont(v); onFontAssign('heading', v); }} theme={c} uiFont={uiFont} />
-          <MinimalFontSelect label="UI" value={uiFont2} options={allAvailable} onChange={v => { injectGoogleFont(v); onFontAssign('ui', v); }} theme={c} uiFont={uiFont} />
+          <MinimalFontSelect label={t(lang, 'bodyFont') || 'BODY'} value={bodyFont} options={allAvailable} onChange={v => { injectGoogleFont(v); onFontAssign('body', v); }} theme={c} uiFont={uiFont} />
+          <MinimalFontSelect label={t(lang, 'headingFont') || 'HEADING'} value={headingFont} options={allAvailable} onChange={v => { injectGoogleFont(v); onFontAssign('heading', v); }} theme={c} uiFont={uiFont} />
+          <MinimalFontSelect label={t(lang, 'uiFontRole') || 'UI'} value={uiFont2} options={allAvailable} onChange={v => { injectGoogleFont(v); onFontAssign('ui', v); }} theme={c} uiFont={uiFont} />
         </div>
       </Accordion>
 
@@ -239,11 +239,11 @@ export function FontsPanel({ c, uiFont, lang, bodyFont, headingFont, uiFont2, on
                     {allFonts.map(f => (
                       <button key={f} onClick={() => handleFontClick(f)} style={{ background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', fontFamily: `'${f}', serif`, fontSize: '0.85rem', color: c.text, padding: '4px 0' }}>{f}</button>
                     ))}
-                    {allFonts.length === 0 && <span style={{ color: c.textMuted, fontSize: '0.7rem', fontFamily: uiFont }}>No fonts found</span>}
+                    {allFonts.length === 0 && <span style={{ color: c.textMuted, fontSize: '0.7rem', fontFamily: uiFont }}>{t(lang, 'noFontsFound') || 'No fonts found'}</span>}
                   </div>
                 </SubAccordion>
                 
-                <SubAccordion title="SANS - SERIF" theme={c} uiFont={uiFont}>
+                <SubAccordion title={t(lang, 'sansSerif') || 'SANS - SERIF'} theme={c} uiFont={uiFont}>
                   <div className="kgv-scroll" style={{ display: 'flex', flexDirection: 'column', gap: 4, width: '100%', maxHeight: 180, overflowY: 'auto' }}>
                     {sansFonts.map(f => (
                       <button key={f} onClick={() => handleFontClick(f)} style={{ background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', fontFamily: `'${f}', sans-serif`, fontSize: '0.85rem', color: c.text, padding: '4px 0' }}>{f}</button>
@@ -251,7 +251,7 @@ export function FontsPanel({ c, uiFont, lang, bodyFont, headingFont, uiFont2, on
                   </div>
                 </SubAccordion>
                 
-                <SubAccordion title="SERIF" theme={c} uiFont={uiFont}>
+                <SubAccordion title={t(lang, 'serif') || 'SERIF'} theme={c} uiFont={uiFont}>
                   <div className="kgv-scroll" style={{ display: 'flex', flexDirection: 'column', gap: 4, width: '100%', maxHeight: 180, overflowY: 'auto' }}>
                     {serifFonts.map(f => (
                       <button key={f} onClick={() => handleFontClick(f)} style={{ background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', fontFamily: `'${f}', serif`, fontSize: '0.85rem', color: c.text, padding: '4px 0' }}>{f}</button>
@@ -259,7 +259,7 @@ export function FontsPanel({ c, uiFont, lang, bodyFont, headingFont, uiFont2, on
                   </div>
                 </SubAccordion>
                 
-                <SubAccordion title="MONOSPACE" theme={c} uiFont={uiFont}>
+                <SubAccordion title={t(lang, 'monospace') || 'MONOSPACE'} theme={c} uiFont={uiFont}>
                   <div className="kgv-scroll" style={{ display: 'flex', flexDirection: 'column', gap: 4, width: '100%', maxHeight: 180, overflowY: 'auto' }}>
                     {monoFonts.map(f => (
                       <button key={f} onClick={() => handleFontClick(f)} style={{ background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', fontFamily: `'${f}', monospace`, fontSize: '0.85rem', color: c.text, padding: '4px 0' }}>{f}</button>
@@ -281,7 +281,7 @@ export function FontsPanel({ c, uiFont, lang, bodyFont, headingFont, uiFont2, on
             color: c.text, fontFamily: uiFont, fontSize: '0.75rem', letterSpacing: '0.05em', cursor: 'pointer',
             textAlign: 'center'
           }}>
-            UPLOAD
+            {t(lang, 'uploadBtn') || t(lang, 'upload') || 'UPLOAD'}
           </button>
           <input
             ref={fileInputRef} type="file" accept=".ttf,.otf,.woff,.woff2"

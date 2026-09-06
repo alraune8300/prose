@@ -557,7 +557,7 @@ ${content.split('\n\n').map(para => {
     { key: 'outline', icon: List, label: t(lang, 'outline') || 'Outline' },
     { key: 'format', icon: Sliders, label: t(lang, 'format') || 'Format' },
     { key: 'table', icon: TableIcon, label: t(lang, 'table') || t(lang, 'insertTable') || 'Table' },
-    { key: 'export', icon: Download, label: t(lang, 'export') || 'Export & Snapshots' },
+    { key: 'export', icon: Download, label: t(lang, 'importExport') || t(lang, 'export') || 'Export & Snapshots' },
     { key: 'fonts', icon: Type, label: t(lang, 'fonts') || 'Fonts' },
     { key: 'archive', icon: Archive, label: t(lang, 'archive') || 'Archive' },
     { key: 'trash', icon: Trash2, label: t(lang, 'bin') || 'Trash' },
@@ -644,12 +644,12 @@ ${content.split('\n\n').map(para => {
                 {panel === 'outline' ? (t(lang, 'outline') || 'Outline') :
                  panel === 'format' ? (t(lang, 'format') || 'Format') :
                  panel === 'table' ? (t(lang, 'table') || t(lang, 'insertTable') || 'Table') :
-                 panel === 'export' ? 'IMPORT & EXPORT' :
+                 panel === 'export' ? (t(lang, 'importExport') || t(lang, 'export') || 'IMPORT & EXPORT') :
                  panel === 'fonts' ? (t(lang, 'fonts') || 'Fonts') :
                  panel === 'archive' ? (t(lang, 'archive') || 'Archive') :
                  panel === 'trash' ? (t(lang, 'bin') || 'Trash') :
                  panel === 'timer' ? (t(lang, 'timer') || 'Timer') :
-                 panel === 'review' ? ('Review Center') :
+                 panel === 'review' ? (t(lang, 'reviewCenter') || 'Review Center') :
                  panel === 'search' ? (t(lang, 'findAndReplace') || 'Find & replace') :
                  (t(lang, 'settings') || 'Settings')}
               </span>
@@ -827,7 +827,7 @@ ${content.split('\n\n').map(para => {
                   {[
                     { id: 'pomodoro', label: '25m' },
                     { id: 'deepwork', label: '50m' },
-                    { id: 'stopwatch', label: 'Stopwatch' },
+                    { id: 'stopwatch', label: t(lang, 'stopwatch') || 'Stopwatch' },
                   ].map(mode => (
                     <button
                       key={mode.id}
@@ -895,7 +895,7 @@ ${content.split('\n\n').map(para => {
                     }}
                     onMouseEnter={e => { e.currentTarget.style.borderColor = c.accent; e.currentTarget.style.color = c.accent }}
                     onMouseLeave={e => { e.currentTarget.style.borderColor = c.borderFaint; e.currentTarget.style.color = c.textMuted }}
-                    title="Reset"
+                    title={t(lang, 'resetTimer') || t(lang, 'reset') || 'Reset'}
                   >
                     <RotateCcw size={13} />
                   </button>
@@ -914,7 +914,7 @@ ${content.split('\n\n').map(para => {
                         background: 'transparent', textAlign: 'center', outline: 'none',
                       }}
                     />
-                    <span style={{ fontFamily: uiFont, fontSize: '0.72rem', color: c.textMuted }}>min</span>
+                    <span style={{ fontFamily: uiFont, fontSize: '0.72rem', color: c.textMuted }}>{t(lang, 'minuteShort') || 'min'}</span>
                   </div>
                 )}
 
@@ -970,7 +970,7 @@ ${content.split('\n\n').map(para => {
                     onClick={onTimerToggle}
                     style={{ background: c.accent, color: '#fff', border: 'none', padding: '2px 8px', borderRadius: 8, fontSize: '0.68rem', cursor: 'pointer', fontWeight: 600 }}
                   >
-                    {timerOn ? 'Pause' : 'Play'}
+                    {timerOn ? (t(lang, 'pause') || 'Pause') : (t(lang, 'playTimer') || t(lang, 'startFocus') || 'Play')}
                   </button>
                   <button
                     onClick={() => setIsMinimized(false)}
@@ -1017,18 +1017,7 @@ ${content.split('\n\n').map(para => {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                 <Accordion title={t(lang, 'language') || 'LANGUAGES'} uiFont={uiFont} c={c} >
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6, paddingTop: 4, paddingBottom: 16 }}>
-                    {(['en', 'fr', 'vi', 'it', 'de', 'ja', 'zh', 'ko', 'es'] as Lang[]).map((k) => {
-                      const labels: Record<Lang, string> = {
-                        en: 'English',
-                        fr: 'Français',
-                        vi: 'Vietnamese',
-                        it: 'Italiano',
-                        de: 'German',
-                        ja: 'Japanese',
-                        zh: 'Chinese',
-                        ko: 'Korean',
-                        es: 'Spanish',
-                      };
+                    {(Object.keys(LANG_LABELS) as Lang[]).map((k) => {
                       return (
                         <button
                           key={k}
@@ -1050,7 +1039,7 @@ ${content.split('\n\n').map(para => {
                           onMouseEnter={e => { e.currentTarget.style.opacity = '1' }}
                           onMouseLeave={e => { e.currentTarget.style.opacity = lang === k ? '1' : '0.8' }}
                         >
-                          {labels[k as Lang]}
+                          {LANG_LABELS[k]}
                         </button>
                       );
                     })}

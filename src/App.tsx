@@ -204,7 +204,11 @@ export default function App() {
   const [docFont, setDocFont] = useState(() => loadFont());
   const [headingFont, setHeadingFont] = useState(() => loadHeadingFont());
   const [monoFont, setMonoFont] = useState(() => loadMonoFont());
-  const [uiFont, setUiFont] = useState('Inter');
+  const [uiFont, setUiFont] = useState(() => {
+    const f = loadUiFont();
+    if (f && f !== 'Inter') injectGoogleFont(f);
+    return f;
+  });
   const [customFonts, setCustomFonts] = useState<CustomFont[]>(() => loadCustomFonts());
   const [injectedGoogleFonts, setInjectedGoogleFonts] = useState<string[]>(() => {
     try {

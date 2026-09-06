@@ -63,7 +63,7 @@ function LeftPanel(props: Record<string, unknown>) {
   const rawDrafts = (activeProject?.drafts || []) as Page[]
   const rawScratchpads = (activeProject?.scratchpad || []) as Page[]
 
-  const rootPages = rawPages.filter(p => !p.folderId && !p.isArchived)
+  const rootPages = rawPages.filter(p => !p.isArchived)
   const drafts = rawDrafts.filter(p => !p.isArchived)
   const scratchpads = rawScratchpads.filter(p => !p.isArchived)
   
@@ -106,10 +106,10 @@ function LeftPanel(props: Record<string, unknown>) {
   const [dragPageId, setDragPageId] = useState<string | null>(null)
   const [dragOverFolderId, setDragOverFolderId] = useState<string | null | 'root'>(null)
   
-  // Custom Accordion States for the 3 main sections
-  const [pagesExpanded, setPagesExpanded] = useState(false);
-  const [draftsExpanded, setDraftsExpanded] = useState(false);
-  const [scratchpadExpanded, setScratchpadExpanded] = useState(false);
+  // Custom Accordion States for the 3 main sections - default expanded so files show immediately
+  const [pagesExpanded, setPagesExpanded] = useState(true);
+  const [draftsExpanded, setDraftsExpanded] = useState(true);
+  const [scratchpadExpanded, setScratchpadExpanded] = useState(true);
 
   useEffect(() => {
     const timer = setInterval(() => setTick(t => t + 1), 60000)
@@ -148,15 +148,15 @@ function LeftPanel(props: Record<string, unknown>) {
     })
   }
 
+  const t = i18nT
+
   let syncDotColor = '#4caf50'
   if (syncStatus === 'syncing') syncDotColor = '#fbbf24'
   if (syncStatus === 'error') syncDotColor = '#ef4444'
 
-  let syncLabel = 'Saved just now'
-  if (syncStatus === 'syncing') syncLabel = 'Saving...'
-  if (syncStatus === 'error') syncLabel = 'Sync error'
-
-  const t = i18nT
+  let syncLabel = t(lang, 'savedJustNow') || 'Saved just now'
+  if (syncStatus === 'syncing') syncLabel = t(lang, 'savingEllipsis') || 'Saving...'
+  if (syncStatus === 'error') syncLabel = t(lang, 'syncError') || 'Sync error'
   
   const handleAddNewPage = (isDraft: boolean, isScratchpad: boolean) => {
     onNewPage(isDraft, undefined, isScratchpad);
@@ -234,7 +234,7 @@ function LeftPanel(props: Record<string, unknown>) {
               onClick={e => { e.stopPropagation(); setRenamingId(p.id); setRenameVal(p.title); setPageMenuOpenId(null); }}
               style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: c.text, display: 'flex', fontSize: '1rem', fontFamily: (uiFont || 'inherit'), width: '100%', textAlign: 'right', justifyContent: 'flex-end' }}
             >
-              Rename
+              {t(lang, 'rename') || 'Rename'}
             </button>
             <button
               onClick={e => { 
@@ -244,13 +244,13 @@ function LeftPanel(props: Record<string, unknown>) {
               }}
               style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: c.text, display: 'flex', fontSize: '1rem', fontFamily: (uiFont || 'inherit'), width: '100%', textAlign: 'right', justifyContent: 'flex-end' }}
             >
-              Archive
+              {t(lang, 'archive') || 'Archive'}
             </button>
             <button
               onClick={e => { e.stopPropagation(); onDeletePage(p.id); setPageMenuOpenId(null); }}
               style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: c.text, display: 'flex', fontSize: '1rem', fontFamily: (uiFont || 'inherit'), width: '100%', textAlign: 'right', justifyContent: 'flex-end' }}
             >
-              Delete
+              {t(lang, 'delete') || 'Delete'}
             </button>
           </div>
         )}
@@ -291,7 +291,7 @@ function LeftPanel(props: Record<string, unknown>) {
             </button>
             <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
               <span style={{ fontFamily: (uiFont || 'inherit'), fontSize: '1.2rem', color: c.text }}>
-                {activeProject?.name || activeProject?.title || 'My Notes'}
+                {activeProject?.name || activeProject?.title || t(lang, 'myNotes') || 'My Notes'}
               </span>
               <ChevronDown size={16} strokeWidth={1.5} style={{ color: c.text, display: 'none' }} />
             </div>
@@ -301,15 +301,15 @@ function LeftPanel(props: Record<string, unknown>) {
           </div>
           
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, borderBottom: `1px solid ${c.textMuted}`, paddingBottom: 12 }}>
-            <span onClick={() => { if (onGoHome) onGoHome(); }} style={{ fontFamily: (uiFont || 'inherit'), fontSize: '0.85rem', color: c.text, cursor: 'pointer' }}>Home</span>
+            <span onClick={() => { if (onGoHome) onGoHome(); }} style={{ fontFamily: (uiFont || 'inherit'), fontSize: '0.85rem', color: c.text, cursor: 'pointer' }}>{t(lang, 'home') || 'Home'}</span>
             {activePage?.folderId && (
               <>
                 <ChevronRight size={10} strokeWidth={3} style={{ color: c.text }} />
-                <span style={{ fontFamily: (uiFont || 'inherit'), fontSize: '0.85rem', color: c.text }}>{folders.find(f => f.id === activePage.folderId)?.name || 'Folder'}</span>
+                <span style={{ fontFamily: (uiFont || 'inherit'), fontSize: '0.85rem', color: c.text }}>{folders.find(f => f.id === activePage.folderId)?.name || t(lang, 'folderLabel') || 'Folder'}</span>
               </>
             )}
             <ChevronRight size={10} strokeWidth={3} style={{ color: c.text }} />
-            <span style={{ fontFamily: (uiFont || 'inherit'), fontSize: '0.85rem', color: c.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 100 }}>{activePage?.title || 'File name'}</span>
+            <span style={{ fontFamily: (uiFont || 'inherit'), fontSize: '0.85rem', color: c.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 100 }}>{activePage?.title || t(lang, 'fileNameLabel') || 'File name'}</span>
           </div>
         </div>
 
@@ -320,7 +320,7 @@ function LeftPanel(props: Record<string, unknown>) {
               
               {/* Pages Section */}
               <div style={{ marginBottom: 16 }}>
-                {renderSectionHeader('Pages', () => { handleAddNewPage(false, false); }, pagesExpanded, setPagesExpanded)}
+                {renderSectionHeader(t(lang, 'pagesSection') || t(lang, 'pages') || 'Pages', () => { handleAddNewPage(false, false); }, pagesExpanded, setPagesExpanded)}
                 {pagesExpanded && (
                   <div style={{ display: 'flex', flexDirection: 'column' }}>
                     {rootPages.map(p => renderPage(p, 0))}
@@ -331,7 +331,7 @@ function LeftPanel(props: Record<string, unknown>) {
 
               {/* Drafts Section */}
               <div style={{ marginBottom: 16 }}>
-                {renderSectionHeader('Draft', () => { handleAddNewPage(true, false); }, draftsExpanded, setDraftsExpanded)}
+                {renderSectionHeader(t(lang, 'draftsSection') || t(lang, 'draft') || 'Draft', () => { handleAddNewPage(true, false); }, draftsExpanded, setDraftsExpanded)}
                 {draftsExpanded && (
                   <div style={{ display: 'flex', flexDirection: 'column' }}>
                     {drafts.map(p => renderPage(p, 0))}
@@ -342,7 +342,7 @@ function LeftPanel(props: Record<string, unknown>) {
 
               {/* Scratchpad Section */}
               <div style={{ marginBottom: 16 }}>
-                {renderSectionHeader('Scratchpad', () => { 
+                {renderSectionHeader(t(lang, 'scratchpadSection') || t(lang, 'scratchpad') || 'Scratchpad', () => { 
                    if (onNewScratchpad) {
                      onNewScratchpad();
                    } else {

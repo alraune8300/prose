@@ -48,9 +48,21 @@ const FileAccordion = ({
   docFont: string 
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isOpen]);
 
   return (
-    <div className="relative z-50">
+    <div ref={containerRef} className="relative z-50">
       <button 
         type="button"
         onClick={() => setIsOpen(!isOpen)}
@@ -62,7 +74,20 @@ const FileAccordion = ({
       </button>
 
       {isOpen && (
-        <div className="absolute top-full left-0 mt-4 flex flex-col gap-6 min-w-[200px]">
+        <div 
+          className="absolute top-full left-0 mt-3 flex flex-col gap-6 min-w-[220px] max-h-[70vh] overflow-y-auto p-4 rounded-xl border shadow-xl z-50 transition-all duration-150"
+          style={{
+            backgroundColor: theme.isDark 
+              ? 'rgba(20, 26, 20, 0.82)' 
+              : 'rgba(255, 255, 255, 0.86)',
+            borderColor: theme.borderFaint || (theme.isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.08)'),
+            backdropFilter: 'blur(16px)',
+            WebkitBackdropFilter: 'blur(16px)',
+            boxShadow: theme.isDark 
+              ? '0 16px 40px -4px rgba(0, 0, 0, 0.65)' 
+              : '0 12px 32px -4px rgba(0, 0, 0, 0.12)',
+          }}
+        >
           {groups.map((group, gIdx) => (
             <div key={gIdx} className="flex flex-col gap-2">
               <div 
