@@ -226,6 +226,7 @@ export function FormatPanel({ editor, formatState, onFormatChange, pageFormat, o
           <SmartToggle label="SMART ARROWS" checked={Boolean(formatState.smartArrows ?? true)} onChange={() => onFormatChange({ smartArrows: !(formatState.smartArrows ?? true) })} theme={c} uiFont={uiFont} />
           <SmartToggle label={t(lang as Lang, 'markdownShortcuts') || 'Markdown Shortcuts'} checked={Boolean(formatState.markdownShortcuts ?? true)} onChange={() => onFormatChange({ markdownShortcuts: !(formatState.markdownShortcuts ?? true) })} theme={c} uiFont={uiFont} />
           <SmartToggle label={t(lang as Lang, 'doubleSpacePeriod') || 'Double-Space Period'} checked={Boolean(formatState.doubleSpacePeriod)} onChange={() => onFormatChange({ doubleSpacePeriod: !formatState.doubleSpacePeriod })} theme={c} uiFont={uiFont} />
+          <SmartToggle label={t(lang as Lang, 'typewriterMode') || 'Typewriter Mode'} checked={Boolean(formatState.typewriterScroll)} onChange={() => onFormatChange({ typewriterScroll: !formatState.typewriterScroll })} theme={c} uiFont={uiFont} />
         </div>
       </Accordion>
 

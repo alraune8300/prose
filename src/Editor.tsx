@@ -58,32 +58,64 @@ function Editor({
   const updateTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const callbacksRef = useRef({ onContentChange, onEditorReady, typewriterMode });
   
-  const handleTypewriterScroll = (editor: import("@tiptap/react").Editor) => {
+  const getScrollContainer = (view: import("prosemirror-view").EditorView): HTMLElement | null => {
+    const explicit = document.getElementById('kgv-editor-scroll-container');
+    if (explicit && (explicit.contains(view.dom) || explicit.scrollHeight > explicit.clientHeight)) {
+      return explicit;
+    }
+    let curr = view.dom.parentElement;
+    while (curr && curr !== document.body) {
+      if (curr.id === 'kgv-editor-scroll-container' || curr.classList.contains('kgv-editor-scroll-container')) {
+        return curr;
+      }
+      const style = window.getComputedStyle(curr);
+      if ((style.overflowY === 'auto' || style.overflowY === 'scroll') && curr.scrollHeight > curr.clientHeight) {
+        return curr;
+      }
+      curr = curr.parentElement;
+    }
+    return explicit || document.querySelector('#kgv-editor-scroll-container');
+  };
+
+  const handleTypewriterScroll = (editor: import("@tiptap/react").Editor, immediate = false) => {
     if (!callbacksRef.current.typewriterMode) return;
-    // Optimize by checking if we actually need to scroll
+    if (!editor || editor.isDestroyed || !editor.view) return;
+
     if (editor._typewriterRaf) cancelAnimationFrame(editor._typewriterRaf);
-    
+
     editor._typewriterRaf = requestAnimationFrame(() => {
       try {
         const view = editor.view;
-        const state = editor.state;
-        if (!state.selection.empty) return; // Skip if text is selected
-        
-        const coords = view.coordsAtPos(state.selection.head);
-        const scrollContainer = document.querySelector(".kgv-scroll");
+        if (!view || !view.dom) return;
+        const state = view.state;
+        if (!state || !state.selection || !state.selection.empty) return;
+
+        const pos = state.selection.head;
+        const coords = view.coordsAtPos(pos);
+        if (!coords) return;
+
+        const scrollContainer = getScrollContainer(view);
         if (coords && scrollContainer) {
-          const containerHeight = scrollContainer.clientHeight;
-          
-          // Fallback to bounding rect if offsetTop is not reliable for absolute positioning, 
-          // but in our layout kgv-scroll is relative/absolute.
-          const topOffset = scrollContainer.getBoundingClientRect().top;
-          
-          const caretY = coords.top - topOffset + scrollContainer.scrollTop;
-          const targetScroll = caretY - (containerHeight / 2);
-          
-          // Only scroll if the difference is significant (> 10px) to save CPU and battery
-          if (Math.abs(scrollContainer.scrollTop - Math.max(0, targetScroll)) > 10) {
-            scrollContainer.scrollTo({ top: Math.max(0, targetScroll), behavior: "smooth" });
+          const containerRect = scrollContainer.getBoundingClientRect();
+          const caretCenterY = (coords.top + coords.bottom) / 2;
+
+          // Target eye level at ~45% of container height
+          const desiredY = containerRect.top + (containerRect.height * 0.45);
+          const delta = caretCenterY - desiredY;
+
+          // Only scroll if difference is noticeable (> 3px) to prevent micro-jitter while typing on the same line
+          if (Math.abs(delta) > 3) {
+            const currentScroll = scrollContainer.scrollTop;
+            const targetScroll = Math.max(0, currentScroll + delta);
+
+            if (immediate) {
+              scrollContainer.scrollTop = targetScroll;
+            } else {
+              scrollContainer.scrollTo({
+                top: targetScroll,
+                behavior: 'smooth',
+              });
+            }
           }
         }
       } catch (e) {
@@ -91,7 +123,10 @@ function Editor({
       }
     });
   };
-  useEffect(() => { callbacksRef.current = { onContentChange, onEditorReady, typewriterMode }; }, [onContentChange, onEditorReady, typewriterMode]);
+
+  useEffect(() => {
+    callbacksRef.current = { onContentChange, onEditorReady, typewriterMode };
+  }, [onContentChange, onEditorReady, typewriterMode]);
 
   useEffect(() => {
     return () => {
@@ -111,6 +146,11 @@ function Editor({
       requestAnimationFrame(() => {
         if (editor && !editor.isDestroyed) {
           editor?.commands?.focus('end');
+          if (callbacksRef.current.typewriterMode) {
+            setTimeout(() => {
+              handleTypewriterScroll(editor, false);
+            }, 120);
+          }
         }
       });
     },
@@ -133,7 +173,7 @@ function Editor({
       // Only apply this logic if the document hasn't changed (e.g., purely a selection change like Ctrl+A)
       // or if it's explicitly flagged, to avoid layout thrashing (synchronous reflows) on every single keystroke.
       if (transaction.selectionSet && !transaction.docChanged && !callbacksRef.current.typewriterMode) {
-        const scrollContainer = document.querySelector('.kgv-scroll');
+        const scrollContainer = getScrollContainer(editor.view);
         if (scrollContainer) {
           const prevScroll = scrollContainer.scrollTop;
           requestAnimationFrame(() => {
@@ -481,6 +521,15 @@ function Editor({
       },
     },
   });
+  useEffect(() => {
+    if (typewriterMode && editor && !editor.isDestroyed) {
+      const timer = setTimeout(() => {
+        handleTypewriterScroll(editor, false);
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [typewriterMode, editor]);
+
   useEffect(() => {
     if (editor && !editor.isDestroyed && creativeOptions) {
       editor.view.dispatch(editor.state.tr.setMeta(rhythmPluginKey, { enabled: creativeOptions.rhythmEnabled, lang: creativeOptions.lang }));
@@ -843,17 +892,14 @@ function Editor({
               ? 'px-4 sm:px-8 md:px-12 pt-6 pb-20 tracking-normal'
               : 'px-4 sm:px-6 md:px-8 pt-6 pb-24'
           }`}
-          style={Object.assign({
-            paddingTop: typewriterMode ? '45vh' : undefined,
-            paddingBottom: typewriterMode ? '50vh' : undefined,
-          }, {
+          style={{
             fontFamily: `'${currentBodyFont}', Georgia, serif`,
             fontSize: `${formatState?.fontSize || fontSize}px`,
             lineHeight: `${Math.round((formatState?.fontSize || fontSize || 16) * ((isPreviewMode || isFocusMode) ? 1.8 : (formatState?.lineH || 1.7)))}px`,
             ['--kgv-body-font']: `'${currentBodyFont}', Georgia, serif`,
             ['--kgv-heading-font']: `'${currentHeadingFont}', serif`,
             ['--kgv-mono-font']: `'${currentMonoFont}', monospace`,
-          } as React.CSSProperties)}>
+          } as React.CSSProperties}>
 
 
 

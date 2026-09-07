@@ -649,12 +649,53 @@ export default function App() {
 
   const [editorInstance, setEditorInstance] = useState<TiptapEditorType | null>(null);
 
+  const restoreScroll = useCallback(() => {
+    setTimeout(() => {
+      window.scrollTo(0, 0);
+      if (editorInstance) {
+        const editor = editorInstance as unknown as {
+          commands: { focus: () => void };
+          view: {
+            state: { selection: { head: number } };
+            coordsAtPos: (pos: number) => { top: number, bottom?: number } | null;
+          };
+          isDestroyed: boolean;
+        };
+        if (!editor?.isDestroyed && typeof editor?.commands?.focus === 'function') {
+          try {
+            editor.commands.focus();
+            const view = editor.view;
+            if (view && view.state) {
+              const coords = view.coordsAtPos(view.state.selection.head);
+              const container = document.getElementById('kgv-editor-scroll-container') || (document.querySelector('.kgv-scroll') as HTMLElement);
+              if (coords && container) {
+                const containerRect = container.getBoundingClientRect();
+                const caretCenterY = (coords.top + (coords.bottom || coords.top)) / 2;
+                const desiredCenter = containerRect.top + (containerRect.height * 0.45);
+                const delta = caretCenterY - desiredCenter;
+                const targetScroll = Math.max(0, container.scrollTop + delta);
+                container.scrollTo({ top: targetScroll, behavior: 'smooth' });
+              }
+            }
+          } catch (err) {
+            console.warn('Restore scroll failed:', err);
+          }
+        }
+      }
+    }, 100);
+  }, [editorInstance]);
+
   const handleFormatChange = useCallback((updates: Partial<FormatState>) => {
     setFormatState(prev => {
       const next = { ...prev, ...updates };
       if (updates.typewriterScroll !== undefined) {
         setTypewriterMode(updates.typewriterScroll);
         saveAppSettings({ typewriterMode: updates.typewriterScroll, formatState: next });
+        if (updates.typewriterScroll && editorInstance) {
+          setTimeout(() => {
+            restoreScroll();
+          }, 120);
+        }
       }
       return next;
     });
@@ -671,50 +712,11 @@ export default function App() {
       setMonoFont(updates.monoFontFam);
       LS.set('kgv-mono-font', updates.monoFontFam);
     }
-  }, []);
+  }, [editorInstance, restoreScroll]);
 
   useEffect(() => {
     window.__formatState = formatState;
   }, [formatState]);
-
-  const restoreScroll = useCallback(() => {
-    setTimeout(() => {
-      window.scrollTo(0, 0);
-      if (editorInstance) {
-        const editor = editorInstance as unknown as {
-          commands: { focus: () => void };
-          view: {
-            state: { selection: { head: number } };
-            coordsAtPos: (pos: number) => { top: number } | null;
-          };
-          isDestroyed: boolean;
-        };
-        if (!editor?.isDestroyed && typeof editor?.commands?.focus === 'function') {
-          try {
-            editor.commands.focus();
-            const view = editor.view;
-            if (view && view.state) {
-              const coords = view.coordsAtPos(view.state.selection.head);
-              const scrollContainers = document.querySelectorAll('.kgv-scroll');
-              if (coords) {
-                scrollContainers.forEach((scrollContainer) => {
-                  const container = scrollContainer as HTMLElement;
-                  if (container.scrollHeight > container.clientHeight) {
-                    const containerRect = container.getBoundingClientRect();
-                    const caretY = coords.top - containerRect.top + container.scrollTop;
-                    const targetScroll = caretY - (containerRect.height / 2);
-                    container.scrollTo({ top: targetScroll, behavior: 'smooth' });
-                  }
-                });
-              }
-            }
-          } catch (err) {
-            console.warn('Restore scroll failed:', err);
-          }
-        }
-      }
-    }, 100);
-  }, [editorInstance]);
 
   const handleExitFocusOrPreview = useCallback(() => {
     setIsFocusMode(false);
@@ -732,9 +734,14 @@ export default function App() {
         saveAppSettings({ formatState: nextFormat });
         return nextFormat;
       });
+      if (next && editorInstance) {
+        setTimeout(() => {
+          restoreScroll();
+        }, 120);
+      }
       return next;
     });
-  }, []);
+  }, [editorInstance, restoreScroll]);
 
   const handleToggleFocusMode = useCallback(() => {
     setIsFocusMode(prev => {
@@ -2315,14 +2322,16 @@ export default function App() {
                 </div>
               </div>
               
-              <button 
-                onClick={() => setRightOpen(prev => !prev)} 
-                className="p-1.5 hover:opacity-80 transition-opacity" 
-                style={{ color: rightOpen ? theme.accent : theme.text }}
-                title={t.settings || 'Toggle Settings'}
-              >
-                <PanelRight size={20} strokeWidth={1.5} />
-              </button>
+              {!rightOpen && (
+                <button 
+                  onClick={() => setRightOpen(true)} 
+                  className="p-1.5 rounded transition-all hover:opacity-80 active:scale-95 flex items-center justify-center cursor-pointer" 
+                  style={{ color: theme.text }}
+                  title={t.settings || 'Toggle Settings'}
+                >
+                  <PanelRight size={20} strokeWidth={1.5} />
+                </button>
+              )}
             </div>
           </header>
         )}
@@ -2377,11 +2386,20 @@ export default function App() {
         {/* Flashcard Mode vs Split Screen Mode vs Standard Editor Mode */}
         <div className="flex-1 flex w-full h-[calc(100%-60px)] overflow-hidden">
             {/* Floating Paper Sheet Container & Dynamic Page Format Wrapper with momentum scroll & GPU locking */}
-            <div className={`flex-1 overflow-y-auto kgv-scroll kgv-momentum-scroll kgv-hardware-accelerated transition-all duration-300 ease-in-out flex flex-col items-center pb-36 px-3 sm:px-6 relative ${
-              (isFocusMode || isPreviewMode) 
-                ? 'pt-12 sm:pt-16 md:pt-20' 
-                : 'pt-2 sm:pt-3 md:pt-4'
-            }`}>
+            <div 
+              id="kgv-editor-scroll-container"
+              className={`flex-1 overflow-y-auto kgv-scroll kgv-momentum-scroll kgv-editor-scroll-container kgv-hardware-accelerated transition-all duration-300 ease-in-out flex flex-col items-center pb-36 px-3 sm:px-6 relative ${
+                typewriterMode
+                  ? 'pt-[42vh] pb-[55vh]'
+                  : (isFocusMode || isPreviewMode) 
+                    ? 'pt-12 sm:pt-16 md:pt-20' 
+                    : 'pt-2 sm:pt-3 md:pt-4'
+              }`}
+              style={typewriterMode ? {
+                paddingTop: 'calc(45vh - 2rem)',
+                paddingBottom: '55vh',
+              } : undefined}
+            >
               <div className="w-full flex flex-col items-center transition-all duration-200" style={{ zoom: zoomPercent / 100 }}>
               {(() => {
                 const isPreviewOrFocus = isPreviewMode || isFocusMode;
@@ -2555,6 +2573,8 @@ export default function App() {
           onScrollToEditorMarker={handleScrollToEditorMarker}
           activeFootnoteHighlight={activeFootnoteHighlight}
           onClearFootnoteHighlight={() => setActiveFootnoteHighlight(null)}
+          typewriterMode={typewriterMode}
+          onToggleTypewriterMode={handleToggleTypewriterMode}
         />
       </div>
         </div>

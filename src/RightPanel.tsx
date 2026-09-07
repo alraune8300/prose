@@ -45,49 +45,55 @@ const MONO_FONTS = ['JetBrains Mono', 'Space Mono', 'Courier Prime', 'Courier Ne
 
 
 function ToggleSwitch({
-  checked, onChange, label, description, uiFont, c
+  label, value, onChange, theme, uiFont, title
 }: {
-  checked: boolean, onChange: () => void, label: string, description?: string, uiFont: string, c: Record<string, unknown>
+  label: string;
+  value: boolean;
+  onChange: (v: boolean) => void;
+  theme: Record<string, unknown>;
+  uiFont?: string;
+  title?: string;
 }) {
+  const cText = (theme.text || 'currentColor') as string;
+  const cMuted = (theme.textMuted || 'rgba(0,0,0,0.4)') as string;
   return (
-    <div style={{
-      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-      padding: '7px 0', gap: 12
-    }}>
-      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0 }}>
-        <span style={{ fontFamily: uiFont, fontSize: '0.75rem', fontWeight: 500, color: c.text as string, lineHeight: 1.35 }}>
-          {label}
-        </span>
-        {description && (
-          <span style={{ fontFamily: uiFont, fontSize: '0.64rem', color: c.textMuted as string, lineHeight: 1.3, marginTop: 2 }}>
-            {description}
-          </span>
-        )}
+    <div
+      title={title}
+      style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, padding: '2px 0' }}
+    >
+      <span style={{ fontFamily: (uiFont || 'inherit'), fontSize: '0.65rem', letterSpacing: '0.05em', color: cText, textTransform: 'uppercase' }}>
+        {label}
+      </span>
+      <div style={{ display: 'flex', gap: 10 }}>
+        <button
+          type="button"
+          onClick={() => onChange(true)}
+          style={{
+            background: 'none', border: 'none', cursor: 'pointer',
+            fontFamily: (uiFont || 'inherit'), fontSize: '0.6rem',
+            color: value ? cText : cMuted,
+            fontWeight: value ? 600 : 400,
+            textTransform: 'uppercase', padding: 0
+          }}
+        >
+          ON
+        </button>
+        <button
+          type="button"
+          onClick={() => onChange(false)}
+          style={{
+            background: 'none', border: 'none', cursor: 'pointer',
+            fontFamily: (uiFont || 'inherit'), fontSize: '0.6rem',
+            color: !value ? cText : cMuted,
+            fontWeight: !value ? 600 : 400,
+            textTransform: 'uppercase', padding: 0
+          }}
+        >
+          OFF
+        </button>
       </div>
-      <button
-        type="button"
-        onClick={onChange}
-        style={{
-          width: 36, height: 20, borderRadius: 10,
-          background: checked ? (c.accent as string) : (c.isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.12)'),
-          border: 'none', cursor: 'pointer', position: 'relative',
-          transition: 'background 0.2s ease', flexShrink: 0
-        }}
-      >
-        <div style={{
-          position: 'absolute', top: 2,
-          left: checked ? 18 : 2,
-          width: 16, height: 16, borderRadius: '50%',
-          background: '#ffffff',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
-          transition: 'left 0.2s ease',
-          display: 'flex', alignItems: 'center', justifyContent: 'center'
-        }}>
-          {checked && <Check size={10} color={c.accent as string} strokeWidth={3} />}
-        </div>
-      </button>
     </div>
-  )
+  );
 }
 
 function NumInputItem({
@@ -263,6 +269,11 @@ function RightPanel(props: Record<string, unknown>) {
     if (updates.headingFontFam && props.onSelectHeadingFont) (props.onSelectHeadingFont as (f: string) => void)(updates.headingFontFam)
     if (updates.monoFontFam && props.onSelectMonoFont) (props.onSelectMonoFont as (f: string) => void)(updates.monoFontFam)
   }
+
+  const typewriterMode = Boolean(props.typewriterMode ?? formatState.typewriterScroll ?? false)
+  const onToggleTypewriterMode = (props.onToggleTypewriterMode as (() => void)) || (() => {
+    onFormatChange({ typewriterScroll: !typewriterMode })
+  })
 
   const textareaRef = (props.textareaRef as React.RefObject<HTMLTextAreaElement | null>) || { current: null }
   const docsProp = props.docs as Array<Record<string, unknown>> | undefined
@@ -1015,6 +1026,23 @@ ${content.split('\n\n').map(para => {
             {/* SETTINGS PANEL */}
             {panel === 'settings' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <Accordion title={t(lang, 'editor') || 'EDITOR'} defaultOpen={true} uiFont={uiFont} c={c}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6, paddingTop: 4, paddingBottom: 10 }}>
+                    <ToggleSwitch
+                      label={t(lang, 'typewriterMode') || 'TYPEWRITER MODE'}
+                      title={t(lang, 'typewriterModeDesc')}
+                      value={typewriterMode}
+                      onChange={(nextVal) => {
+                        if (nextVal !== typewriterMode) {
+                          onToggleTypewriterMode();
+                        }
+                      }}
+                      theme={c}
+                      uiFont={uiFont}
+                    />
+                  </div>
+                </Accordion>
+
                 <Accordion title={t(lang, 'language') || 'LANGUAGES'} uiFont={uiFont} c={c} >
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6, paddingTop: 4, paddingBottom: 16 }}>
                     {(Object.keys(LANG_LABELS) as Lang[]).map((k) => {
