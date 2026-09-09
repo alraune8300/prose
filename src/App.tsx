@@ -816,7 +816,7 @@ export default function App() {
           setActiveProjectId(matchedProj.id);
           const savedActivePageId = settings?.activePageId;
           const allPages = [...(matchedProj.pages || []), ...(matchedProj.drafts || []), ...(matchedProj.scratchpad || [])];
-          const matchedPage = allPages.find(p => p.id === savedActivePageId) || allPages[0];
+          const matchedPage = allPages.find(p => p.id === savedActivePageId) || allPages.find(p => p.id === matchedProj.lastOpenedPageId) || allPages[0];
           if (matchedPage) {
             setActivePageId(matchedPage.id);
             if (matchedPage.pageFormat) {
@@ -889,12 +889,6 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (activeProjectId) {
-      saveAppSettings({ activeProjectId, activePageId });
-    }
-  }, [activeProjectId, activePageId]);
-
-  useEffect(() => {
     saveAppSettings({ isWorkspaceActive });
   }, [isWorkspaceActive]);
 
@@ -950,6 +944,25 @@ export default function App() {
       }
     }, 3500);
   }, [isOnline]);
+
+  useEffect(() => {
+    if (activeProjectId) {
+      saveAppSettings({ activeProjectId, activePageId });
+      
+      if (activePageId) {
+        setProjects(prev => {
+          const pIdx = prev.findIndex(p => p.id === activeProjectId);
+          if (pIdx === -1) return prev;
+          if (prev[pIdx].lastOpenedPageId === activePageId) return prev;
+          
+          const next = [...prev];
+          next[pIdx] = { ...next[pIdx], lastOpenedPageId: activePageId };
+          scheduleSaveProject(next[pIdx]);
+          return next;
+        });
+      }
+    }
+  }, [activeProjectId, activePageId, scheduleSaveProject]);
 
   // Update active page content or title in active project state & trigger auto-save for active project only
   const updateActivePage = useCallback((patch: Partial<Page>) => {
@@ -1135,7 +1148,9 @@ export default function App() {
 
     const targetProj = projects.find((p) => p.id === projectId);
     if (targetProj) {
-      const firstPage = targetProj.pages?.[0] || targetProj.drafts?.[0] || targetProj.scratchpad?.[0];
+      const allPages = [...(targetProj.pages || []), ...(targetProj.drafts || []), ...(targetProj.scratchpad || [])];
+      const targetPageId = targetProj.lastOpenedPageId || allPages[0]?.id;
+      const firstPage = allPages.find(p => p.id === targetPageId) || allPages[0];
       if (firstPage) {
         setActivePageId(firstPage.id);
         if (firstPage.pageFormat) {
@@ -2094,7 +2109,7 @@ export default function App() {
             }
             handleSelectProject(projectId);
             const allPages = [...(target?.pages || []), ...(target?.drafts || []), ...(target?.scratchpad || [])];
-            const chosenPageId = pageId || allPages[0]?.id;
+            const chosenPageId = pageId || target?.lastOpenedPageId || allPages[0]?.id;
             if (chosenPageId) {
               setActivePageId(chosenPageId);
             }

@@ -51,6 +51,7 @@ export interface Project {
   bin: Page[]
   archive?: Page[]
   createdAt: string
+  lastOpenedPageId?: string
   lastModified: string
   lastOpened?: string
   folderId?: string | null
