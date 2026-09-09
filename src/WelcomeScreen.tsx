@@ -338,7 +338,7 @@ function WelcomeScreen({ theme, onSelectTheme, onOpenThemeModal, uiFont, lang = 
       isDeleted: true, 
       deletedAt: new Date().toISOString() 
     });
-    loadData();
+    await loadData();
   };
 
   const handleRestoreProject = async (project: Project, e: React.MouseEvent) => {
@@ -348,7 +348,7 @@ function WelcomeScreen({ theme, onSelectTheme, onOpenThemeModal, uiFont, lang = 
       isDeleted: false, 
       deletedAt: null 
     });
-    loadData();
+    await loadData();
   };
 
   const handleSoftDeleteFolder = async (folder: Folder, e: React.MouseEvent) => {
@@ -358,7 +358,7 @@ function WelcomeScreen({ theme, onSelectTheme, onOpenThemeModal, uiFont, lang = 
       isDeleted: true,
       deletedAt: new Date().toISOString()
     });
-    loadData();
+    await loadData();
   };
 
   const handleRestoreFolder = async (folder: Folder, e: React.MouseEvent) => {
@@ -368,7 +368,7 @@ function WelcomeScreen({ theme, onSelectTheme, onOpenThemeModal, uiFont, lang = 
       isDeleted: false,
       deletedAt: null
     });
-    loadData();
+    await loadData();
   };
 
   const promptHardDelete = (type: 'project' | 'folder', id: string, name: string, e: React.MouseEvent) => {
@@ -390,7 +390,7 @@ function WelcomeScreen({ theme, onSelectTheme, onOpenThemeModal, uiFont, lang = 
     }
     
     setDeleteConfirmDialog({ isOpen: false, type: null, id: null, name: '' });
-    loadData();
+    await loadData();
   };
 
   const handleEmptyAllTrash = async () => {
@@ -416,18 +416,22 @@ function WelcomeScreen({ theme, onSelectTheme, onOpenThemeModal, uiFont, lang = 
 
   const handleSaveEditProject = async (project: Project, e: React.MouseEvent) => {
     e.stopPropagation();
+    e.preventDefault();
     if (editName.trim()) {
       await saveProjectToDB({ ...project, title: editName.trim() });
-      loadData();
+      await loadData();
+      if (onReloadProjects) onReloadProjects();
     }
     setEditingProjectId(null);
   };
 
   const handleSaveEditFolder = async (folder: Folder, e: React.MouseEvent) => {
     e.stopPropagation();
+    e.preventDefault();
     if (editName.trim()) {
       await saveFolderToDB({ ...folder, name: editName.trim() });
-      loadData();
+      await loadData();
+      if (onReloadProjects) onReloadProjects();
     }
     setEditingFolderId(null);
   };
@@ -468,6 +472,7 @@ function WelcomeScreen({ theme, onSelectTheme, onOpenThemeModal, uiFont, lang = 
     };
     await saveFolderToDB(newFld);
     await loadData();
+    if (onReloadProjects) onReloadProjects();
   };
 
   

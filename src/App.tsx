@@ -805,6 +805,7 @@ export default function App() {
           if (settings.isPreviewMode) setIsPreviewMode(settings.isPreviewMode);
           if (settings.readerStyle) setReaderStyle(settings.readerStyle);
           if (settings.pageFormat) setPageFormat(settings.pageFormat);
+          if (settings.isWorkspaceActive !== undefined) setIsWorkspaceActive(settings.isWorkspaceActive);
         }
 
         // Initialize projects
@@ -892,6 +893,10 @@ export default function App() {
       saveAppSettings({ activeProjectId, activePageId });
     }
   }, [activeProjectId, activePageId]);
+
+  useEffect(() => {
+    saveAppSettings({ isWorkspaceActive });
+  }, [isWorkspaceActive]);
 
   const availableFonts = useMemo(() => {
     const fonts = [...BUILTIN_FONTS];

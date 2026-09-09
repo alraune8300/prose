@@ -21,6 +21,7 @@ export interface AppSettings {
   isPreviewMode?: boolean;
   readerStyle?: "classic" | "zen";
   language?: string;
+  isWorkspaceActive?: boolean;
   injectedGoogleFonts?: string[];
   updatedAt?: string;
 }

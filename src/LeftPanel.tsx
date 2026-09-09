@@ -189,8 +189,15 @@ function LeftPanel(props: Record<string, unknown>) {
               onChange={e => setRenameVal(e.target.value)}
               onBlur={() => commitRename(p.id)}
               onKeyDown={e => {
-                if (e.key === 'Enter') commitRename(p.id)
-                if (e.key === 'Escape') setRenamingId(null)
+                if (e.key === 'Enter') {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  commitRename(p.id);
+                }
+                if (e.key === 'Escape') {
+                  e.stopPropagation();
+                  setRenamingId(null);
+                }
               }}
               style={{
                 width: '100%', padding: 0,
