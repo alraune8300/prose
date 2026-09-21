@@ -59,7 +59,15 @@ function loadCustomThemes(): CustomTheme[] {
   }
   return [];
 }
-function loadFont(): string { return LS.get('kgv-font') || 'Merriweather'; }
+function loadFont(): string {
+  try {
+    const fromFormat = LS.getJSON<FormatState>('kgv-format-state')?.fontFam;
+    if (fromFormat) return fromFormat;
+    const fromLs = LS.get('kgv-font');
+    if (fromLs) return fromLs;
+  } catch { /* ignore */ }
+  return 'EB Garamond';
+}
 function loadHeadingFont(): string { return LS.get('kgv-heading-font') || 'Playfair Display'; }
 function loadMonoFont(): string { return LS.get('kgv-mono-font') || 'JetBrains Mono'; }
 function loadUiFont(): string { return LS.get('kgv-ui-font') || 'Inter'; }
@@ -201,9 +209,21 @@ export default function App() {
   // We can still use customTheme state for the CURRENT active custom theme if themeMode === 'custom' or its id
   const [customTheme, setCustomTheme] = useState<CustomTheme | null>(null);
   const [isThemeModalOpen, setIsThemeModalOpen] = useState(false);
-  const [docFont, setDocFont] = useState(() => loadFont());
-  const [headingFont, setHeadingFont] = useState(() => loadHeadingFont());
-  const [monoFont, setMonoFont] = useState(() => loadMonoFont());
+  const [docFont, setDocFont] = useState(() => {
+    const f = loadFont();
+    if (f) injectGoogleFont(f);
+    return f;
+  });
+  const [headingFont, setHeadingFont] = useState(() => {
+    const f = loadHeadingFont();
+    if (f) injectGoogleFont(f);
+    return f;
+  });
+  const [monoFont, setMonoFont] = useState(() => {
+    const f = loadMonoFont();
+    if (f) injectGoogleFont(f);
+    return f;
+  });
   const [uiFont, setUiFont] = useState(() => {
     const f = loadUiFont();
     if (f && f !== 'Inter') injectGoogleFont(f);
@@ -651,7 +671,6 @@ export default function App() {
 
   const restoreScroll = useCallback(() => {
     setTimeout(() => {
-      window.scrollTo(0, 0);
       if (editorInstance) {
         const editor = editorInstance as unknown as {
           commands: { focus: () => void };
@@ -664,17 +683,21 @@ export default function App() {
         if (!editor?.isDestroyed && typeof editor?.commands?.focus === 'function') {
           try {
             editor.commands.focus();
-            const view = editor.view;
-            if (view && view.state) {
-              const coords = view.coordsAtPos(view.state.selection.head);
-              const container = document.getElementById('kgv-editor-scroll-container') || (document.querySelector('.kgv-scroll') as HTMLElement);
-              if (coords && container) {
-                const containerRect = container.getBoundingClientRect();
-                const caretCenterY = (coords.top + (coords.bottom || coords.top)) / 2;
-                const desiredCenter = containerRect.top + (containerRect.height * 0.45);
-                const delta = caretCenterY - desiredCenter;
-                const targetScroll = Math.max(0, container.scrollTop + delta);
-                container.scrollTo({ top: targetScroll, behavior: 'smooth' });
+            if (typewriterMode) {
+              const view = editor.view;
+              if (view && view.state) {
+                const coords = view.coordsAtPos(view.state.selection.head);
+                const container = document.getElementById('kgv-editor-scroll-container') || (document.querySelector('.kgv-scroll') as HTMLElement);
+                if (coords && container) {
+                  const containerRect = container.getBoundingClientRect();
+                  const caretCenterY = (coords.top + (coords.bottom || coords.top)) / 2;
+                  const desiredCenter = containerRect.top + (containerRect.height * 0.45);
+                  const delta = caretCenterY - desiredCenter;
+                  if (delta > 8) {
+                    const targetScroll = Math.max(0, container.scrollTop + delta);
+                    container.scrollTo({ top: targetScroll, behavior: 'smooth' });
+                  }
+                }
               }
             }
           } catch (err) {
@@ -683,7 +706,7 @@ export default function App() {
         }
       }
     }, 100);
-  }, [editorInstance]);
+  }, [editorInstance, typewriterMode]);
 
   const handleFormatChange = useCallback((updates: Partial<FormatState>) => {
     setFormatState(prev => {
@@ -696,21 +719,34 @@ export default function App() {
             restoreScroll();
           }, 120);
         }
+      } else {
+        saveAppSettings({ formatState: next });
       }
+      LS.setJSON('kgv-format-state', next);
       return next;
     });
     if (updates.fontSize) setFontSize(updates.fontSize);
     if (updates.fontFam) {
       setDocFont(updates.fontFam);
+      injectGoogleFont(updates.fontFam);
       LS.set('kgv-font', updates.fontFam);
+      saveAppSettings({ fontFamily: updates.fontFam });
+      document.documentElement.style.setProperty('--kgv-body-font', `'${updates.fontFam}', Georgia, serif`);
+      document.documentElement.style.setProperty('--kgv-doc-font', `'${updates.fontFam}', Georgia, serif`);
     }
     if (updates.headingFontFam) {
       setHeadingFont(updates.headingFontFam);
+      injectGoogleFont(updates.headingFontFam);
       LS.set('kgv-heading-font', updates.headingFontFam);
+      saveAppSettings({ headingFont: updates.headingFontFam });
+      document.documentElement.style.setProperty('--kgv-heading-font', `'${updates.headingFontFam}', serif`);
     }
     if (updates.monoFontFam) {
       setMonoFont(updates.monoFontFam);
+      injectGoogleFont(updates.monoFontFam);
       LS.set('kgv-mono-font', updates.monoFontFam);
+      saveAppSettings({ monoFont: updates.monoFontFam });
+      document.documentElement.style.setProperty('--kgv-mono-font', `'${updates.monoFontFam}', monospace`);
     }
   }, [editorInstance, restoreScroll]);
 
@@ -794,13 +830,51 @@ export default function App() {
 
         // Apply settings if available
         if (settings) {
+          const loadedFont = settings.fontFamily || settings.formatState?.fontFam || LS.get('kgv-font');
+          if (loadedFont) {
+            setDocFont(loadedFont);
+            injectGoogleFont(loadedFont);
+            LS.set('kgv-font', loadedFont);
+            document.documentElement.style.setProperty('--kgv-body-font', `'${loadedFont}', Georgia, serif`);
+            document.documentElement.style.setProperty('--kgv-doc-font', `'${loadedFont}', Georgia, serif`);
+          }
+          if (settings.headingFont || settings.formatState?.headingFontFam) {
+            const hFont = settings.headingFont || settings.formatState?.headingFontFam;
+            if (hFont) {
+              setHeadingFont(hFont);
+              injectGoogleFont(hFont);
+              LS.set('kgv-heading-font', hFont);
+              document.documentElement.style.setProperty('--kgv-heading-font', `'${hFont}', serif`);
+            }
+          }
+          if (settings.monoFont || settings.formatState?.monoFontFam) {
+            const mFont = settings.monoFont || settings.formatState?.monoFontFam;
+            if (mFont) {
+              setMonoFont(mFont);
+              injectGoogleFont(mFont);
+              LS.set('kgv-mono-font', mFont);
+              document.documentElement.style.setProperty('--kgv-mono-font', `'${mFont}', monospace`);
+            }
+          }
+          if (settings.uiFont) {
+            setUiFont(settings.uiFont);
+            injectGoogleFont(settings.uiFont);
+            LS.set('kgv-ui-font', settings.uiFont);
+            document.documentElement.style.setProperty('--kgv-ui-font', `'${settings.uiFont}', sans-serif`);
+          }
           if (settings.typewriterMode !== undefined) setTypewriterMode(settings.typewriterMode);
           if (settings.isLeftPanelOpen !== undefined) setSidebarOpen(settings.isLeftPanelOpen);
           if (settings.isRightPanelOpen !== undefined) setRightOpen(settings.isRightPanelOpen);
           if (settings.fontSize) setFontSize(settings.fontSize);
           if (settings.currentTheme) setThemeMode(settings.currentTheme as ThemeMode);
           if (settings.language) setLang(settings.language as Lang);
-          if (settings.formatState) setFormatState(settings.formatState);
+          if (settings.formatState) {
+            setFormatState(prev => ({
+              ...prev,
+              ...settings.formatState,
+              fontFam: loadedFont || settings.formatState?.fontFam || prev.fontFam
+            }));
+          }
           if (settings.isFocusMode) setIsFocusMode(settings.isFocusMode);
           if (settings.isPreviewMode) setIsPreviewMode(settings.isPreviewMode);
           if (settings.readerStyle) setReaderStyle(settings.readerStyle);
@@ -1712,22 +1786,53 @@ export default function App() {
       }
     }
   }, []);
-  const handleSelectDocFont = useCallback((family: string) => { injectGoogleFont(family); 
+  const handleSelectDocFont = useCallback((family: string) => {
+    injectGoogleFont(family); 
     setDocFont(family);
     LS.set('kgv-font', family);
-    setFormatState(prev => ({ ...prev, fontFam: family }));
+    setFormatState(prev => {
+      const next = { ...prev, fontFam: family };
+      LS.setJSON('kgv-format-state', next);
+      saveAppSettings({ fontFamily: family, formatState: next });
+      return next;
+    });
+    saveAppSettings({ fontFamily: family });
+    document.documentElement.style.setProperty('--kgv-body-font', `'${family}', Georgia, serif`);
+    document.documentElement.style.setProperty('--kgv-doc-font', `'${family}', Georgia, serif`);
   }, []);
-  const handleSelectHeadingFont = useCallback((family: string) => { injectGoogleFont(family); 
+  const handleSelectHeadingFont = useCallback((family: string) => {
+    injectGoogleFont(family); 
     setHeadingFont(family);
     LS.set('kgv-heading-font', family);
-    setFormatState(prev => ({ ...prev, headingFontFam: family }));
+    setFormatState(prev => {
+      const next = { ...prev, headingFontFam: family };
+      LS.setJSON('kgv-format-state', next);
+      saveAppSettings({ headingFont: family, formatState: next });
+      return next;
+    });
+    saveAppSettings({ headingFont: family });
+    document.documentElement.style.setProperty('--kgv-heading-font', `'${family}', serif`);
   }, []);
-  const handleSelectMonoFont = useCallback((family: string) => { injectGoogleFont(family); 
+  const handleSelectMonoFont = useCallback((family: string) => {
+    injectGoogleFont(family); 
     setMonoFont(family);
     LS.set('kgv-mono-font', family);
-    setFormatState(prev => ({ ...prev, monoFontFam: family }));
+    setFormatState(prev => {
+      const next = { ...prev, monoFontFam: family };
+      LS.setJSON('kgv-format-state', next);
+      saveAppSettings({ monoFont: family, formatState: next });
+      return next;
+    });
+    saveAppSettings({ monoFont: family });
+    document.documentElement.style.setProperty('--kgv-mono-font', `'${family}', monospace`);
   }, []);
-  const handleSelectUiFont = useCallback((family: string) => { injectGoogleFont(family);  setUiFont(family); LS.set('kgv-ui-font', family); }, []);
+  const handleSelectUiFont = useCallback((family: string) => {
+    injectGoogleFont(family);
+    setUiFont(family);
+    LS.set('kgv-ui-font', family);
+    saveAppSettings({ uiFont: family });
+    document.documentElement.style.setProperty('--kgv-ui-font', `'${family}', sans-serif`);
+  }, []);
   const handleSelectLang = useCallback((l: Lang) => {
     setLang(l);
     LS.set('kgv-lang', l);
@@ -2369,6 +2474,7 @@ export default function App() {
             onFontChange={(fam) => {
               const currentEditor = editorInstance as TiptapEditorType;
               currentEditor?.chain().focus().setFontFamily(fam).run();
+              handleSelectDocFont(fam);
             }}
             onSizeChange={(size) => {
               handleFormatChange({ fontSize: size });
@@ -2409,15 +2515,12 @@ export default function App() {
             <div 
               id="kgv-editor-scroll-container"
               className={`flex-1 overflow-y-auto kgv-scroll kgv-momentum-scroll kgv-editor-scroll-container kgv-hardware-accelerated transition-all duration-300 ease-in-out flex flex-col items-center pb-36 px-3 sm:px-6 relative ${
-                typewriterMode
-                  ? 'pt-[42vh] pb-[55vh]'
-                  : (isFocusMode || isPreviewMode) 
-                    ? 'pt-12 sm:pt-16 md:pt-20' 
-                    : 'pt-2 sm:pt-3 md:pt-4'
+                (isFocusMode || isPreviewMode) 
+                  ? 'pt-10 sm:pt-14 md:pt-16' 
+                  : 'pt-2 sm:pt-3 md:pt-4'
               }`}
               style={typewriterMode ? {
-                paddingTop: 'calc(45vh - 2rem)',
-                paddingBottom: '55vh',
+                paddingBottom: '50vh',
               } : undefined}
             >
               <div className="w-full flex flex-col items-center transition-all duration-200" style={{ zoom: zoomPercent / 100 }}>

@@ -103,18 +103,22 @@ function Editor({
           const desiredY = containerRect.top + (containerRect.height * 0.45);
           const delta = caretCenterY - desiredY;
 
-          // Only scroll if difference is noticeable (> 3px) to prevent micro-jitter while typing on the same line
-          if (Math.abs(delta) > 3) {
+          // Only scroll if caret is below the target eye-level (delta > 8)
+          // or if navigating upward while already scrolled down (delta < -8 && scrollContainer.scrollTop > 0)
+          // NEVER scroll if the caret is comfortably in the upper half of the document at scrollTop === 0!
+          if (delta > 8 || (delta < -8 && scrollContainer.scrollTop > 0)) {
             const currentScroll = scrollContainer.scrollTop;
             const targetScroll = Math.max(0, currentScroll + delta);
 
-            if (immediate) {
-              scrollContainer.scrollTop = targetScroll;
-            } else {
-              scrollContainer.scrollTo({
-                top: targetScroll,
-                behavior: 'smooth',
-              });
+            if (Math.abs(targetScroll - currentScroll) > 2) {
+              if (immediate) {
+                scrollContainer.scrollTop = targetScroll;
+              } else {
+                scrollContainer.scrollTo({
+                  top: targetScroll,
+                  behavior: 'smooth',
+                });
+              }
             }
           }
         }
@@ -836,7 +840,7 @@ function Editor({
   if (!editor) return null;
 
   const isPaginated = !isPreviewMode && !isFocusMode && !isSplitMode;
-  const currentBodyFont = formatState?.fontFam || docFont || 'Merriweather';
+  const currentBodyFont = formatState?.fontFam || docFont || 'EB Garamond';
   const currentHeadingFont = formatState?.headingFontFam || headingFont || 'Playfair Display';
   const currentMonoFont = formatState?.monoFontFam || monoFont || 'JetBrains Mono';
 

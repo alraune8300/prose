@@ -250,7 +250,13 @@ function Toolbar({
             <CustomSelect
               value={currentFont}
               onOpen={() => setSavedSelection(editor?.state.selection)}
-              onChange={(fam) => { if(savedSelection && editor) { editor.commands.setTextSelection(savedSelection); } onFontChange(fam); }}
+              onChange={(fam) => {
+                if(savedSelection && editor) {
+                  editor.commands.setTextSelection(savedSelection);
+                }
+                onFontChange(fam);
+                onFontAssign?.('body', fam);
+              }}
               groups={groups}
               theme={theme}
               buttonClassName="text-xs py-1 px-2 rounded-lg outline-none cursor-pointer hover:bg-black/5 dark:hover:bg-white/10 max-w-[110px] shrink-0 bg-transparent border-none transition-colors truncate"
@@ -301,12 +307,14 @@ function Toolbar({
           onSelect={name => {
             if (savedSelection && editor) { editor.commands.setTextSelection(savedSelection); } injectGoogleFont(name);
             onFontChange(name);
+            onFontAssign?.('body', name);
             window.dispatchEvent(new CustomEvent('kgv-apply-font-selection', { detail: name }));
             setShowGoogleFonts(false);
           }}
           onApplyToSelection={name => {
             if (savedSelection && editor) { editor.commands.setTextSelection(savedSelection); } injectGoogleFont(name);
             onFontChange(name);
+            onFontAssign?.('body', name);
             window.dispatchEvent(new CustomEvent('kgv-apply-font-selection', { detail: name }));
             setShowGoogleFonts(false);
           }}
